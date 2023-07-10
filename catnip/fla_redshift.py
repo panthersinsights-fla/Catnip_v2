@@ -158,10 +158,11 @@ class FLA_Redshift(BaseModel):
     def _connect_to_redshift(self):
 
         conn = psycopg2.connect(
-            dbname = self.dbname,
-            host = self.host,
+            dbname = self.dbname.get_secret_value(),
+            host = self.host.get_secret_value(),
             port = self.port,
-            user = self.user,
+            user = self.user.get_secret_value(),
+            password = self.password.get_secret_value()
         )
 
         return conn 
@@ -170,8 +171,8 @@ class FLA_Redshift(BaseModel):
 
         return resource(
             "s3",
-            aws_access_key_id = self.aws_access_key_id,
-            aws_secret_access_key = self.aws_secret_access_key
+            aws_access_key_id = self.aws_access_key_id.get_secret_value(),
+            aws_secret_access_key = self.aws_secret_access_key.get_secret_value()
         )
     
 
