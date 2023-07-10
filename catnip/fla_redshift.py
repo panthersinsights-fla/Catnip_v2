@@ -125,6 +125,11 @@ class FLA_Redshift(BaseModel):
                 columns_list = [desc[0] for desc in cursor.description]
                 df = pd.DataFrame(cursor.fetchall(), columns=columns_list)
 
+        ## close up shop
+        cursor.close()
+        conn.commit()
+        conn.close()
+
         return df 
 
     
@@ -137,6 +142,11 @@ class FLA_Redshift(BaseModel):
             with conn.cursor() as cursor:
                 cursor.execute(sql_string)
                 conn.commit()
+
+        ## close up shop
+        cursor.close()
+        conn.commit()
+        conn.close()
 
         return None
 
@@ -294,6 +304,11 @@ class FLA_Redshift(BaseModel):
                     conn.rollback()
                     raise
 
+        ## close up shop
+        cursor.close()
+        conn.commit()
+        conn.close()
+
         return None 
 
     ## data types to redshift data types
@@ -392,5 +407,10 @@ class FLA_Redshift(BaseModel):
                 cursor.execute(f"DROP TABLE IF EXISTS {redshift_table_name}")
                 cursor.execute(create_table_query)
                 conn.commit()
+
+        ## close up shop
+        cursor.close()
+        conn.commit()
+        conn.close()
 
         return None
