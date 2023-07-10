@@ -155,7 +155,7 @@ class FLA_Redshift(BaseModel):
     ### CONNECTION HELPERS ###
     ##########################
 
-    def _connect_to_redshift(self) -> psycopg2.connection:
+    def _connect_to_redshift(self):
 
         conn = psycopg2.connect(
             dbname = self.dbname,
@@ -166,7 +166,7 @@ class FLA_Redshift(BaseModel):
 
         return conn 
     
-    def _connect_to_s3(self) -> ServiceResource:
+    def _connect_to_s3(self):
 
         return resource(
             "s3",
