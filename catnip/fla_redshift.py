@@ -18,6 +18,7 @@ from boto3.resources.factory import ServiceResource
 
 from catnip.lookups import REDSHIFT_RESERVED_WORDS
 
+
 class FLA_Redshift(BaseModel):
 
     ## Database Info
@@ -123,7 +124,7 @@ class FLA_Redshift(BaseModel):
             with conn.cursor() as cursor:
                 cursor.execute(sql_string)
                 columns_list = [desc[0] for desc in cursor.description]
-                df = pd.DataFrame(cursor.fetchall(), columns=columns_list)
+                df = pd.DataFrame(cursor.fetchall(), columns = columns_list)
 
         ## close up shop
         cursor.close()
