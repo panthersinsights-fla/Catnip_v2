@@ -12,7 +12,7 @@ import os
 import tempfile
 
 
-class FLA_Sharepoint:
+class FLA_Sharepoint(BaseModel):
 
     ## Windows Login Credentials
     username: str 
