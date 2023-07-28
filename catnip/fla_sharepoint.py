@@ -18,15 +18,21 @@ class FLA_Sharepoint(BaseModel):
     username: str 
     password: str 
 
-    def __post_init__(self):
+    _site_url: str 
+    _my_credentials: UserCredential
+    _my_ctx: ClientContext
 
-        ## Set base url
-        self.site_url = "https://floridapanthers.sharepoint.com/sites/SP-BS/Shared Documents/Data Science/"
+    class Config:
+        underscore_attrs_are_private = True
 
-        ## Authorize
-        self.my_credentials = UserCredential(self.username, self.password)
-        self.my_ctx = ClientContext(self.site_url).with_credentials(self.my_credentials)
+    def __init__(self, **data):
 
+        super().__init__(**data)
+        
+        self._site_url = "https://floridapanthers.sharepoint.com/sites/SP-BS/"
+        
+        self._my_credentials = UserCredential(self.username, self.password)
+        self._my_ctx = ClientContext(self._site_url).with_credentials(self._my_credentials)
 
     ######################
     ### USER FUNCTIONS ###
@@ -69,7 +75,7 @@ class FLA_Sharepoint(BaseModel):
             print("You Failed! Please select a file type to write to!")
 
         ## Connect folder
-        this_folder = self.my_ctx.web.get_folder_by_server_relative_path(folder_path)
+        this_folder = self._my_ctx.web.get_folder_by_server_relative_path(f"Shared Documents/Data Science/{folder_path}")
 
         ## Filename
         if add_log_date:
@@ -89,21 +95,34 @@ class FLA_Sharepoint(BaseModel):
         self,
         folder_path: str,
         file_name: str,
-        is_csv: bool = True,
+        is_csv: bool = False,
         is_xml: bool = False,
         is_excel: bool = False,
         is_text: bool = False,
         sheet_name: str | None = None,
         skiprows: int | None = None
-    ) -> pd.DataFrame | str:
+    ) -> pd.DataFrame | str | None:
         
+        ## Determine File Type
+        if is_csv:
+            file_suffix = "csv"
+        elif is_xml:
+            file_suffix = "xml"
+        elif is_excel:
+            file_suffix = "xlsx"
+        elif is_text:
+            file_suffix = "txt"
+        else:
+            print("You Failed! Please select a file type!")
+            return None
+
         ## Create path strings
-        file_url = f"{self.site_url}{folder_path}/{file_name}"
+        file_url = f"Shared Documents/Data Science/{folder_path}/{file_name}.{file_suffix}"
         download_path = os.path.join(tempfile.mkdtemp(), os.path.basename(file_url))
 
         ## Download to temp file location
         with open(download_path, "wb") as local_file:
-            self.my_ctx.web.get_file_by_server_relative_url(file_url).download(local_file).execute_query()
+            self._my_ctx.web.get_file_by_server_relative_url(file_url).download(local_file).execute_query()
 
         ## Read in based on file type
         if is_csv:
