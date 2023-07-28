@@ -1,18 +1,24 @@
 from pydantic import BaseModel
-import pymsteams
+from pymsteams import connectorcard
 
 class FLA_Teams(BaseModel):
 
     webhook: str 
 
-    def __post_init__(self):
+    _my_message: connectorcard
 
-        self.my_message = pymsteams.connectorcard(self.webhook)
+    class Config:
+        underscore_attrs_are_private = True
+
+    def __init__(self, **data):
+
+        super().__init__(**data)
+        self._my_message = connectorcard(self.webhook)
 
 
     def send_message(self, body_text: str) -> None:
 
-        self.my_message.text(body_text)
-        self.my_message.send()
+        self._my_message.text(body_text)
+        self._my_message.send()
 
         return None
