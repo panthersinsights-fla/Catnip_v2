@@ -23,9 +23,9 @@ class FLA_Tradeable_Bits(BaseModel):
         self.base_url = "https://tradablebits.com/api/v1/crm/"
 
 
-    ######################
-    ### USER FUNCTIONS ###
-    ######################
+    #######################
+    ### CLASS FUNCTIONS ###
+    #######################
 
     def get_campaigns(self) -> pd.DataFrame:
 

@@ -25,14 +25,18 @@ class FLA_Sharepoint(BaseModel):
     class Config:
         underscore_attrs_are_private = True
 
-    def __init__(self, **data):
+    @property
+    def _site_url(self) -> str:
+        return "https://floridapanthers.sharepoint.com/sites/SP-BS/"
+    
+    @property
+    def _my_credentials(self) -> UserCredential:
+        return UserCredential(self.username, self.password)
+    
+    @property
+    def _my_ctx(self) -> ClientContext:
+        return ClientContext(self._site_url).with_credentials(self._my_credentials)
 
-        super().__init__(**data)
-        
-        self._site_url = "https://floridapanthers.sharepoint.com/sites/SP-BS/"
-        
-        self._my_credentials = UserCredential(self.username, self.password)
-        self._my_ctx = ClientContext(self._site_url).with_credentials(self._my_credentials)
 
     ######################
     ### USER FUNCTIONS ###
