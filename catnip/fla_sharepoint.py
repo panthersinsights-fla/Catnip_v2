@@ -18,13 +18,6 @@ class FLA_Sharepoint(BaseModel):
     username: str 
     password: str 
 
-    _site_url: str 
-    _my_credentials: UserCredential
-    _my_ctx: ClientContext
-
-    class Config:
-        underscore_attrs_are_private = True
-
     @property
     def _site_url(self) -> str:
         return "https://floridapanthers.sharepoint.com/sites/SP-BS/"
