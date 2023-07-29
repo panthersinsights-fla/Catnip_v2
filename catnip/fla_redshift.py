@@ -266,7 +266,7 @@ class FLA_Redshift(BaseModel):
             FROM '{bucket_file_name}'
             DELIMITER '{delimiter}'
             IGNOREHEADER 1
-            CSV QUOTE AS {quotechar}
+            CSV QUOTE AS '{quotechar}'
             DATEFORMAT '{dateformat}'
             TIMEFORMAT '{timeformat}'
             {authorization_string}
