@@ -115,10 +115,7 @@ class FLA_Redshift(BaseModel):
         return None 
 
 
-    def query_warehouse(
-            self,
-            sql_string: str
-    ) -> pd.DataFrame:
+    def query_warehouse(self, sql_string: str) -> pd.DataFrame:
         
         with self._connect_to_redshift() as conn:
             with conn.cursor() as cursor:
@@ -134,10 +131,7 @@ class FLA_Redshift(BaseModel):
         return df 
 
     
-    def execute_and_commit(
-            self,
-            sql_string: str
-    ) -> None:
+    def execute_and_commit(self, sql_string: str) -> None:
         
         with self._connect_to_redshift() as conn:
             with conn.cursor() as cursor:
@@ -235,15 +229,15 @@ class FLA_Redshift(BaseModel):
         df.to_csv(csv_buffer, index = index, sep = delimiter)
 
         self._connect_to_s3()\
-            .Bucket(self.bucket)\
+            .Bucket(self.bucket.get_secret_value())\
                 .put_object(
-                    Key = f"{self.subdirectory}/{csv_name}",
+                    Key = f"{self.subdirectory.get_secret_value()}/{csv_name}",
                     Body = csv_buffer.getvalue()
                 )
         
         if self.verbose:
             ## add logger!
-            print(f"Saved file {csv_name} in bucket {self.subdirectory} 🙌")
+            print(f"Saved file {csv_name} in bucket {self.subdirectory.get_secret_value()} 🙌")
 
         return None
 
@@ -261,10 +255,10 @@ class FLA_Redshift(BaseModel):
     ) -> None:
         
         ## Construct query
-        bucket_file_name = f"s3://{self.bucket}/{self.subdirectory}/{csv_name}"
+        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{self.subdirectory.get_secret_value()}/{csv_name}"
         authorization_string = f"""
-            access_key_id '{self.aws_access_key_id}'
-            secret_access_key '{self.aws_secret_access_key}'
+            access_key_id '{self.aws_access_key_id.get_secret_value()}'
+            secret_access_key '{self.aws_secret_access_key.get_secret_value()}'
         """
 
         s3_to_sql = f""" 
@@ -321,7 +315,7 @@ class FLA_Redshift(BaseModel):
             index: bool
     ) -> List[str]:
         
-        def _pd_dtype_to_redshift_dtype(dtype: str, is_varchar_max: bool) -> str:
+        def _pd_dtype_to_redshift_dtype(dtype: str) -> str:
 
             if dtype.startswith("int64"):
                 return "BIGINT"

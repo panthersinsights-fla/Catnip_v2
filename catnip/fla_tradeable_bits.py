@@ -13,14 +13,16 @@ class FLA_Tradeable_Bits(BaseModel):
     api_key: str
     api_secret: str 
 
-    def __post_init__(self):
-
-        self.headers = {
+    @property
+    def _headers(self) -> Dict:
+        return {
             'Api-Key': self.api_key, 
             'Api-Secret': self.api_secret
         }
-
-        self.base_url = "https://tradablebits.com/api/v1/crm/"
+    
+    @property
+    def _base_url(self) -> str:
+        return "https://tradablebits.com/api/v1/crm/"
 
 
     #######################
@@ -29,13 +31,13 @@ class FLA_Tradeable_Bits(BaseModel):
 
     def get_campaigns(self) -> pd.DataFrame:
 
-        return self._get_dataframe(self._get_response(url = f"{self.base_url}/campaigns"))
+        return self._get_dataframe(self._get_response(url = f"{self._base_url}/campaigns"))
     
 
     def get_fans(self) -> pd.DataFrame:
 
         ## Initial Request
-        response = self._get_response(url=f"{self.base_url}/fans")
+        response = self._get_response(url=f"{self._base_url}/fans")
         search_uid = response.json()['meta']['search_uid']
 
         df = self._get_dataframe(response=response)
@@ -44,7 +46,7 @@ class FLA_Tradeable_Bits(BaseModel):
         while response.json()['data']:
 
             response = self._get_response(
-                url=f"{self.base_url}/fans", 
+                url=f"{self._base_url}/fans", 
                 params={'search_uid': search_uid}
             )
 
@@ -59,14 +61,14 @@ class FLA_Tradeable_Bits(BaseModel):
         if max_activity_id:
 
             ## Initial Request
-            response = self._get_response(url=f"{self.base_url}/activities")
+            response = self._get_response(url=f"{self._base_url}/activities")
             df = self._get_dataframe(response=response)
 
             ## Retrieve all
             while response.json()['data']:
 
                 response = self._get_response(
-                    url=f"{self.base_url}/activities", 
+                    url=f"{self._base_url}/activities", 
                     params={'max_activity_id': response.json()['meta']['min_activity_id']}
                 )
 
@@ -76,7 +78,7 @@ class FLA_Tradeable_Bits(BaseModel):
         else:
 
             response = self._get_response(
-                url = f"{self.base_url}/activities", 
+                url = f"{self._base_url}/activities", 
                 params={'min_activity_id': str(max_activity_id)}
             )
 
@@ -86,7 +88,7 @@ class FLA_Tradeable_Bits(BaseModel):
             while response.json()['data']:
 
                 response = self._get_response(
-                    url=f"{self.base_url}/activities", 
+                    url=f"{self._base_url}/activities", 
                     params={'min_activity_id': response.json()['meta']['max_activity_id']}
                 )
 
@@ -109,13 +111,9 @@ class FLA_Tradeable_Bits(BaseModel):
 
         return session
 
-    def _get_response(
-        self, 
-        url: str, 
-        params: Dict = {}
-    ) -> requests.Response:
+    def _get_response(self, url: str, params: Dict = {}) -> requests.Response:
 
-        return self._create_session().get(url, headers=self.headers, params=params)
+        return self._create_session().get(url, headers=self._headers, params=params)
     
     def _get_dataframe(self, response: requests.Response) -> pd.DataFrame:
 
