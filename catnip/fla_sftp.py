@@ -5,6 +5,8 @@ from paramiko import Transport, SFTPClient, SFTPError
 from os import getcwd
 
 import pandas as pd
+from pandera import DataFrameModel
+from pandera.typing import DataFrame
 
 
 class FLA_Sftp(BaseModel):
@@ -16,6 +18,8 @@ class FLA_Sftp(BaseModel):
 
     port: int = 22
 
+    ## Import Pandera Schema
+    this_schema: DataFrameModel = None
 
     ######################
     ### USER FUNCTIONS ###
@@ -60,7 +64,11 @@ class FLA_Sftp(BaseModel):
         if self.file_exists(conn):
             with conn.open(self.remote_path) as file:
                 file.prefetch()
-                df = pd.read_csv(file, sep = separator)
+
+                if self.this_schema:
+                    df = DataFrame[self.this_schema](pd.read_csv(file, sep = separator))
+                else:
+                    df = pd.read_csv(file, sep = separator)
 
         ## Close connection
         conn.close()

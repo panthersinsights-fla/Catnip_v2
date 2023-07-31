@@ -1,4 +1,6 @@
 import pandas as pd
+from pandera import DataFrameModel
+from pandera.typing import DataFrame
 
 from pydantic import BaseModel, SecretStr
 from typing import List
@@ -36,6 +38,9 @@ class FLA_Redshift(BaseModel):
 
     ## Options
     verbose: bool = True
+
+    ## Import Pandera Schema
+    this_schema: DataFrameModel = None
     
     ######################
     ### USER FUNCTIONS ###
@@ -121,7 +126,11 @@ class FLA_Redshift(BaseModel):
             with conn.cursor() as cursor:
                 cursor.execute(sql_string)
                 columns_list = [desc[0] for desc in cursor.description]
-                df = pd.DataFrame(cursor.fetchall(), columns = columns_list)
+
+                if self.this_schema:
+                    df = DataFrame[self.this_schema](cursor.fetchall(), columns = columns_list)
+                else:
+                    df = pd.DataFrame(cursor.fetchall(), columns = columns_list)
 
         ## close up shop
         cursor.close()

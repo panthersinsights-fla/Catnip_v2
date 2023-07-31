@@ -5,6 +5,8 @@ from office365.sharepoint.client_context import ClientContext
 from office365.runtime.auth.user_credential import UserCredential
 
 import pandas as pd
+from pandera import DataFrameModel
+from pandera.typing import DataFrame
 from datetime import datetime
 
 from io import BytesIO
@@ -17,6 +19,9 @@ class FLA_Sharepoint(BaseModel):
     ## Windows Login Credentials
     username: str 
     password: str 
+
+    ## Import Pandera Schema
+    this_schema: DataFrameModel = None
 
     @property
     def _site_url(self) -> str:
@@ -123,17 +128,35 @@ class FLA_Sharepoint(BaseModel):
 
         ## Read in based on file type
         if is_csv:
-            file = pd.read_csv(download_path, skiprows = skiprows)
+
+            if self.this_schema:
+                file = DataFrame[self.this_schema](pd.read_csv(download_path, skiprows = skiprows))
+            else:
+                file = pd.read_csv(download_path, skiprows = skiprows)
 
         elif is_xml:
-            file = pd.read_xml(download_path)
+
+            if self.this_schema:
+                file = DataFrame[self.this_schema](pd.read_xml(download_path))
+            else:
+                file = pd.read_xml(download_path)
 
         elif is_excel:
-            file = pd.read_excel(
-                download_path, 
-                sheet_name = sheet_name,
-                skiprows = skiprows
-            )
+
+            if self.this_schema:
+                file = DataFrame[self.this_schema](
+                    pd.read_excel(
+                        download_path, 
+                        sheet_name = sheet_name,
+                        skiprows = skiprows
+                    )
+                )
+            else:
+                file = pd.read_excel(
+                    download_path, 
+                    sheet_name = sheet_name,
+                    skiprows = skiprows
+                )
 
         elif is_text:
             with open(download_path, 'r') as f:

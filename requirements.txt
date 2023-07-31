@@ -1,6 +1,7 @@
 boto3 >= 1.27.0
 Office365-REST-Python-Client >= 2.4.0, < 3.0.0
 pandas >= 2.0.0, < 3.0.0
+pandera >= 0.16.1, < 1.0.0
 paramiko >= 3.2.0, < 4.0.0
 prefect >= 2.10.0, < 3.0.0
 psycopg2 >= 2.9.0, < 3.0.0

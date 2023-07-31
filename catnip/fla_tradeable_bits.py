@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import Dict
 
 import pandas as pd
+from pandera import DataFrameModel
+from pandera.typing import DataFrame
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -12,6 +14,9 @@ class FLA_Tradeable_Bits(BaseModel):
 
     api_key: str
     api_secret: str 
+
+    ## Import Pandera Schema
+    this_schema: DataFrameModel = None
 
     @property
     def _headers(self) -> Dict:
@@ -118,6 +123,12 @@ class FLA_Tradeable_Bits(BaseModel):
     def _get_dataframe(self, response: requests.Response) -> pd.DataFrame:
 
         if "data" in response.json():
-            return pd.json_normalize(response.json()['data'])
+            if self.this_schema:
+                return DataFrame[self.this_schema](pd.json_normalize(response.json()['data']))
+            else:
+                return pd.json_normalize(response.json()['data'])
         else:
-            return pd.json_normalize(response.json())
+            if self.this_schema:
+                return DataFrame[self.this_schema](pd.json_normalize(response.json()))
+            else:
+                return pd.json_normalize(response.json())
