@@ -40,7 +40,8 @@ class FLA_Redshift(BaseModel):
     verbose: bool = True
 
     ## Import Pandera Schema
-    this_schema: DataFrameModel = None
+    input_schema: DataFrameModel = None
+    output_schema: DataFrameModel = None
     
     ######################
     ### USER FUNCTIONS ###
@@ -76,8 +77,10 @@ class FLA_Redshift(BaseModel):
         ## Create processed date field
         df['processed_date'] = datetime.utcnow()
 
-        ## Validate column names
+        ## Validate & reorder column names
         self._validate_column_names(df)
+        if self.output_schema:
+            df = df.reindex(columns = [*self.output_schema.__dict__['__annotations__']])
 
         ## Write to S3
         redshift_table_name = f"custom.{table_name}"
@@ -127,8 +130,8 @@ class FLA_Redshift(BaseModel):
                 cursor.execute(sql_string)
                 columns_list = [desc[0] for desc in cursor.description]
 
-                if self.this_schema:
-                    df = DataFrame[self.this_schema](cursor.fetchall(), columns = columns_list)
+                if self.input_schema:
+                    df = DataFrame[self.input_schema](cursor.fetchall(), columns = columns_list)
                 else:
                     df = pd.DataFrame(cursor.fetchall(), columns = columns_list)
 

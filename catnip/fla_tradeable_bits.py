@@ -16,7 +16,7 @@ class FLA_Tradeable_Bits(BaseModel):
     api_secret: str 
 
     ## Import Pandera Schema
-    this_schema: DataFrameModel = None
+    input_schema: DataFrameModel = None
 
     @property
     def _headers(self) -> Dict:
@@ -123,12 +123,12 @@ class FLA_Tradeable_Bits(BaseModel):
     def _get_dataframe(self, response: requests.Response) -> pd.DataFrame:
 
         if "data" in response.json():
-            if self.this_schema:
-                return DataFrame[self.this_schema](pd.json_normalize(response.json()['data']))
+            if self.input_schema:
+                return DataFrame[self.input_schema](pd.json_normalize(response.json()['data']))
             else:
                 return pd.json_normalize(response.json()['data'])
         else:
-            if self.this_schema:
-                return DataFrame[self.this_schema](pd.json_normalize(response.json()))
+            if self.input_schema:
+                return DataFrame[self.input_schema](pd.json_normalize(response.json()))
             else:
                 return pd.json_normalize(response.json())

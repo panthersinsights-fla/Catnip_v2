@@ -21,7 +21,8 @@ class FLA_Sharepoint(BaseModel):
     password: str 
 
     ## Import Pandera Schema
-    this_schema: DataFrameModel = None
+    input_schema: DataFrameModel = None
+    output_schema: DataFrameModel = None
 
     @property
     def _site_url(self) -> str:
@@ -50,7 +51,12 @@ class FLA_Sharepoint(BaseModel):
         as_excel: bool = False,
         add_log_date: bool = False 
     ) -> str:
-        
+
+        ## Update dataframe
+        df['processed_date'] = datetime.utcnow()
+        if self.output_schema:
+            df = df.reindex(columns = [*self.output_schema.__dict__['__annotations__']])
+
         ## Convert dataframe
         if as_csv:
             file = BytesIO()
@@ -129,22 +135,22 @@ class FLA_Sharepoint(BaseModel):
         ## Read in based on file type
         if is_csv:
 
-            if self.this_schema:
-                file = DataFrame[self.this_schema](pd.read_csv(download_path, skiprows = skiprows))
+            if self.input_schema:
+                file = DataFrame[self.input_schema](pd.read_csv(download_path, skiprows = skiprows))
             else:
                 file = pd.read_csv(download_path, skiprows = skiprows)
 
         elif is_xml:
 
-            if self.this_schema:
-                file = DataFrame[self.this_schema](pd.read_xml(download_path))
+            if self.input_schema:
+                file = DataFrame[self.input_schema](pd.read_xml(download_path))
             else:
                 file = pd.read_xml(download_path)
 
         elif is_excel:
 
-            if self.this_schema:
-                file = DataFrame[self.this_schema](
+            if self.input_schema:
+                file = DataFrame[self.input_schema](
                     pd.read_excel(
                         download_path, 
                         sheet_name = sheet_name,

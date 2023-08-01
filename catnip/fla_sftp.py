@@ -8,6 +8,7 @@ import pandas as pd
 from pandera import DataFrameModel
 from pandera.typing import DataFrame
 
+from datetime import datetime
 
 class FLA_Sftp(BaseModel):
 
@@ -19,7 +20,8 @@ class FLA_Sftp(BaseModel):
     port: int = 22
 
     ## Import Pandera Schema
-    this_schema: DataFrameModel = None
+    input_schema: DataFrameModel = None
+    output_schema: DataFrameModel = None
 
     ######################
     ### USER FUNCTIONS ###
@@ -65,8 +67,8 @@ class FLA_Sftp(BaseModel):
             with conn.open(self.remote_path) as file:
                 file.prefetch()
 
-                if self.this_schema:
-                    df = DataFrame[self.this_schema](pd.read_csv(file, sep = separator))
+                if self.input_schema:
+                    df = DataFrame[self.input_schema](pd.read_csv(file, sep = separator))
                 else:
                     df = pd.read_csv(file, sep = separator)
 
@@ -99,6 +101,11 @@ class FLA_Sftp(BaseModel):
 
     def upload_csv(self, df: pd.DataFrame) -> None:
 
+        ## Update dataframe
+        df['processed_date'] = datetime.utcnow()
+        if self.output_schema:
+            df = df.reindex(columns = [*self.output_schema.__dict__['__annotations__']])
+            
         ## Create connection
         conn = self._create_connection()
 
