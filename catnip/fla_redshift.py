@@ -74,13 +74,13 @@ class FLA_Redshift(BaseModel):
                 - can change column data_types
         """
 
-        ## Create processed date field
-        df['processed_date'] = datetime.utcnow()
-
         ## Validate & reorder column names
         self._validate_column_names(df)
         if self.output_schema:
             df = df.reindex(columns = [*self.output_schema.__dict__['__annotations__']])
+
+        ## Create processed date field
+        df['processed_date'] = datetime.utcnow()
 
         ## Write to S3
         redshift_table_name = f"custom.{table_name}"
