@@ -70,8 +70,6 @@ class FLA_SeatGeek(BaseModel):
     def get_sales(self) -> pd.DataFrame:
 
         ## Initial request
-        # w/ schema
-
         self._headers['Authorization'] = f"Bearer {self.bearer_token.get_secret_value()}"
 
         response = self._create_session().get(
@@ -101,7 +99,6 @@ class FLA_SeatGeek(BaseModel):
 
                 print(e); print(e.args)
 
-            
 
         return df 
     
