@@ -84,24 +84,26 @@ class FLA_SeatGeek(BaseModel):
         i = 0
         ## Request rest of data
         while response['has_more']:
-            while i < 100:
-                print(i)
+                
+            print(i)
 
-                try:
-                    response = self._create_session().get(
-                        url = f"{self._base_url}/sales",
-                        headers = self._headers,
-                        params = {"cursor": response['cursor']}
-                    ).json()
+            try:
+                response = self._create_session().get(
+                    url = f"{self._base_url}/sales",
+                    headers = self._headers,
+                    params = {"cursor": response['cursor']}
+                ).json()
 
-                    response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                    response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
-                    df = pd.concat([df, DataFrame[self.input_schema](response['data'])], ignore_index = True)
+                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+                response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
+                df = pd.concat([df, DataFrame[self.input_schema](response['data'])], ignore_index = True)
 
-                except BaseException as e:
+            except BaseException as e:
 
-                    print(e); print(e.args)
+                print(e); print(e.args)
 
+            if i > 100:
+                break
             i += 1
 
         return df 
