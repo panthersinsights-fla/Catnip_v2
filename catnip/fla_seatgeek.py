@@ -85,6 +85,7 @@ class FLA_SeatGeek(BaseModel):
         ## Request rest of data
         while response['has_more']:
             while i < 100:
+                print(i)
 
                 try:
                     response = self._create_session().get(
