@@ -104,8 +104,9 @@ class FLA_Sftp(BaseModel):
         ## Update dataframe
         df['processed_date'] = datetime.utcnow()
         if self.output_schema:
-            df = df.reindex(columns = [*self.output_schema.__dict__['__annotations__']])
-            
+            df = self.output_schema.validate(df)
+            df = df.reindex(columns = [*self.output_schema.to_schema().columns])
+
         ## Create connection
         conn = self._create_connection()
 
