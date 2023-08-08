@@ -84,8 +84,6 @@ class FLA_SeatGeek(BaseModel):
         i = 0
         ## Request rest of data
         while response['has_more']:
-                
-            print(i)
 
             try:
                 response = self._create_session().get(
@@ -102,7 +100,9 @@ class FLA_SeatGeek(BaseModel):
 
                 print(e); print(e.args)
 
-            if i > 100:
+            if i % 100 == 0:
+                print(i)
+            if i > 750000:
                 break
             i += 1
 
