@@ -83,7 +83,7 @@ class FLA_SeatGeek(BaseModel):
 
         i = 0
         ## Request rest of data
-        while ['has_more'] in response:
+        while "has_more" in response:
             while response['has_more']:
 
                 try:
