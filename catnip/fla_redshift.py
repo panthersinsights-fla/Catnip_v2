@@ -78,7 +78,7 @@ class FLA_Redshift(BaseModel):
         self._validate_column_names(df)
         if self.output_schema:
             df = self.output_schema.validate(df)
-            df = df.reindex(columns = [*self.output_schema.to_schema().columns])
+            df = df.reindex(columns = [x for x in [*self.output_schema.to_schema().columns] if x in df.columns.to_list()])
 
         ## Create processed date field
         df['processed_date'] = datetime.utcnow()

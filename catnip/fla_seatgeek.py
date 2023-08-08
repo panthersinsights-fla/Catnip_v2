@@ -67,9 +67,9 @@ class FLA_SeatGeek(BaseModel):
         return None 
 
 
-    def get_sales(self) -> pd.DataFrame:
+    def get_sales(self) -> pd.DataFrame | None:
 
-        def clean_response(r: requests.Response) -> pd.DataFrame:
+        def clean_response(r: requests.Response) -> pd.DataFrame | None:
             
             response = r.json()        
 
@@ -108,30 +108,42 @@ class FLA_SeatGeek(BaseModel):
             params = {"limit": 100}
         )
 
+        if response != 200:
+            return None
+
         df = clean_response(response)
-        is_has_more = get_is_has_more(response)
+        #is_has_more = get_is_has_more(response)
+        _has_more = response.json()['has_more']
+        _cursor = response.json()['cursor']
 
         i = 0
         ## Request rest of data
-        while is_has_more:
+        while _has_more:
 
             try:
 
                 response = self._create_session().get(
                     url = f"{self._base_url}/sales",
                     headers = self._headers,
-                    params = {"cursor": response.json()['cursor'], "limit": 100}
+                    params = {"cursor": _cursor, "limit": 100}
                 )
+
+                if response >= 500:
+                    continue
+
+                if response != 200:
+                    break
 
                 temp_df = clean_response(response)
 
                 if temp_df is not None:
                     
                     df = pd.concat([df, temp_df], ignore_index = True)
-                    is_has_more = get_is_has_more(response)
+                    _has_more = get_is_has_more(response)
+                    _cursor = response.json()['cursor']
                 
                 else:
-                    continue
+                    break
 
             except KeyError as e:
 
