@@ -71,9 +71,7 @@ class FLA_SeatGeek(BaseModel):
 
         def clean_response(r: requests.Response) -> pd.DataFrame:
             
-            print(r.status_code)
-            response = r.json()
-            print(response)
+            response = r.json()        
 
             if r.status_code == 200:
 
@@ -84,17 +82,21 @@ class FLA_SeatGeek(BaseModel):
 
             else:
 
+                print(r.status_code)
+                print(response)
+
                 return None
         
         def get_is_has_more(r: requests.Response) -> bool:
-
-            print(r.status_code)
-            print(response)
 
             if r.status_code == 200:
                 return r.json()['has_more']
 
             else:
+
+                print(r.status_code)
+                print(response)
+
                 return False
 
         ## Initial request
@@ -131,17 +133,6 @@ class FLA_SeatGeek(BaseModel):
                 else:
                     continue
 
-
-                # if "has_more" not in response:
-                #     print(f"Iteration: {i}")
-                #     print(response)
-                #     continue
-                # else:
-                #     is_has_more = response['has_more']
-
-
-                # df = pd.concat([df, DataFrame[self.input_schema](response['data'])], ignore_index = True)
-
             except KeyError as e:
 
                 print("Response:"); print(response)
@@ -152,9 +143,9 @@ class FLA_SeatGeek(BaseModel):
                 print("Response:"); print(response)
                 print(f"Error: {e}"); print(f"Error Args: {e.args}")
 
-            if i % 100 == 0:
+            if i % 10 == 0:
                 print(i)
-            if i > 100:
+            if i > 19000:
                 break
             i += 1
 
