@@ -69,41 +69,77 @@ class FLA_SeatGeek(BaseModel):
 
     def get_sales(self) -> pd.DataFrame:
 
+        def clean_response(r: requests.Response) -> pd.DataFrame:
+            
+            print(r.status_code)
+            response = r.json()
+            print(response)
+
+            if r.status_code == 200:
+
+                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+                response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
+
+                return DataFrame[self.input_schema](response['data'])
+
+            else:
+
+                return None
+        
+        def get_is_has_more(r: requests.Response) -> bool:
+
+            print(r.status_code)
+            print(response)
+
+            if r.status_code == 200:
+                return r.json()['has_more']
+
+            else:
+                return False
+
         ## Initial request
         self._headers['Authorization'] = f"Bearer {self.bearer_token.get_secret_value()}"
 
         response = self._create_session().get(
             url = f"{self._base_url}/sales",
             headers = self._headers
-        ).json()
+        )
 
-        response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-        response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
-        df = DataFrame[self.input_schema](response['data'])
-
-        is_has_more = response['has_more']
+        df = clean_response(response)
+        is_has_more = get_is_has_more(response)
 
         i = 0
         ## Request rest of data
         while is_has_more:
 
             try:
+                
                 response = self._create_session().get(
                     url = f"{self._base_url}/sales",
                     headers = self._headers,
                     params = {"cursor": response['cursor']}
-                ).json()
+                )
 
-                if "has_more" not in response:
-                    print(f"Iteration: {i}")
-                    print(response)
-                    continue
+                temp_df = clean_response(response)
+
+                if temp_df:
+                    
+                    df = pd.concat([df, temp_df], ignore_index = True)
+                    is_has_more = get_is_has_more(response)
+                
                 else:
-                    is_has_more = response['has_more']
+                    continue
 
-                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
-                df = pd.concat([df, DataFrame[self.input_schema](response['data'])], ignore_index = True)
+
+                # if "has_more" not in response:
+                #     print(f"Iteration: {i}")
+                #     print(response)
+                #     continue
+                # else:
+                #     is_has_more = response['has_more']
+
+
+                # df = pd.concat([df, DataFrame[self.input_schema](response['data'])], ignore_index = True)
 
             except KeyError as e:
 
