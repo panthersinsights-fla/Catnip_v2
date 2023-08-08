@@ -83,28 +83,35 @@ class FLA_SeatGeek(BaseModel):
 
         i = 0
         ## Request rest of data
-        while response['has_more']:
+        while ['has_more'] in response:
+            while response['has_more']:
 
-            try:
-                response = self._create_session().get(
-                    url = f"{self._base_url}/sales",
-                    headers = self._headers,
-                    params = {"cursor": response['cursor']}
-                ).json()
+                try:
+                    response = self._create_session().get(
+                        url = f"{self._base_url}/sales",
+                        headers = self._headers,
+                        params = {"cursor": response['cursor']}
+                    ).json()
 
-                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
-                df = pd.concat([df, DataFrame[self.input_schema](response['data'])], ignore_index = True)
+                    response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+                    response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
+                    df = pd.concat([df, DataFrame[self.input_schema](response['data'])], ignore_index = True)
 
-            except BaseException as e:
+                except KeyError as e:
 
-                print(e); print(e.args)
+                    print(response)
+                    print(e); print(e.args)
 
-            if i % 100 == 0:
-                print(i)
-            if i > 750000:
-                break
-            i += 1
+                except BaseException as e:
+
+                    print(response)
+                    print(e); print(e.args)
+
+                if i % 100 == 0:
+                    print(i)
+                if i > 750000:
+                    break
+                i += 1
 
         return df 
     
