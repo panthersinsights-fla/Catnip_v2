@@ -114,11 +114,11 @@ class FLA_SeatGeek(BaseModel):
         while is_has_more:
 
             try:
-                
+
                 response = self._create_session().get(
                     url = f"{self._base_url}/sales",
                     headers = self._headers,
-                    params = {"cursor": response['cursor'], "limit": 100}
+                    params = {"cursor": response.json()['cursor'], "limit": 100}
                 )
 
                 temp_df = clean_response(response)
