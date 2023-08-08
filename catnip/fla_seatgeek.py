@@ -123,7 +123,7 @@ class FLA_SeatGeek(BaseModel):
 
                 temp_df = clean_response(response)
 
-                if temp_df:
+                if temp_df is not None:
                     
                     df = pd.concat([df, temp_df], ignore_index = True)
                     is_has_more = get_is_has_more(response)
