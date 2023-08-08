@@ -102,7 +102,8 @@ class FLA_SeatGeek(BaseModel):
 
         response = self._create_session().get(
             url = f"{self._base_url}/sales",
-            headers = self._headers
+            headers = self._headers,
+            params = {"limit": 100}
         )
 
         df = clean_response(response)
@@ -117,7 +118,7 @@ class FLA_SeatGeek(BaseModel):
                 response = self._create_session().get(
                     url = f"{self._base_url}/sales",
                     headers = self._headers,
-                    params = {"cursor": response['cursor']}
+                    params = {"cursor": response['cursor'], "limit": 100}
                 )
 
                 temp_df = clean_response(response)
@@ -153,7 +154,7 @@ class FLA_SeatGeek(BaseModel):
 
             if i % 100 == 0:
                 print(i)
-            if i > 750000:
+            if i > 100:
                 break
             i += 1
 
