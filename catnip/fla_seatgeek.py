@@ -108,7 +108,7 @@ class FLA_SeatGeek(BaseModel):
             params = {"limit": 100}
         )
 
-        if response != 200:
+        if response.status_code != 200:
             return None
 
         df = clean_response(response)
@@ -128,10 +128,10 @@ class FLA_SeatGeek(BaseModel):
                     params = {"cursor": _cursor, "limit": 100}
                 )
 
-                if response >= 500:
+                if response.status_code >= 500:
                     continue
 
-                if response != 200:
+                if response.status_code != 200:
                     break
 
                 temp_df = clean_response(response)
@@ -147,12 +147,12 @@ class FLA_SeatGeek(BaseModel):
 
             except KeyError as e:
 
-                print("Response:"); print(response)
+                print(f"Response: {response} -- Status Code: {response.status_code}")
                 print(f"KeyError: {e}"); print(f"KeyError Args: {e.args}")
 
             except BaseException as e:
 
-                print("Response:"); print(response)
+                print(f"Response: {response} -- Status Code: {response.status_code}")
                 print(f"Error: {e}"); print(f"Error Args: {e.args}")
 
             if i % 10 == 0:
