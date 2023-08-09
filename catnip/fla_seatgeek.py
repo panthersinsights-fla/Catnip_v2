@@ -149,11 +149,13 @@ class FLA_SeatGeek(BaseModel):
 
                 print(f"Response: {response} -- Status Code: {response.status_code}")
                 print(f"KeyError: {e}"); print(f"KeyError Args: {e.args}")
+                break
 
             except BaseException as e:
 
                 print(f"Response: {response} -- Status Code: {response.status_code}")
                 print(f"Error: {e}"); print(f"Error Args: {e.args}")
+                break
 
             if i % 10 == 0:
                 print(i)
