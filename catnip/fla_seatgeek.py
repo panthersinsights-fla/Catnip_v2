@@ -59,62 +59,56 @@ class FLA_SeatGeek(BaseModel):
         bearer_token = response.json()['access_token']
 
         ## Override Prefect block
-        secret_block = Secret(value = bearer_token)
-        secret_block.save(name = "seatgeek-fla-bearer-token", overwrite = True)
-
-        print("Saved Bearer Token to Secret -> seatgeek-fla-bearer-token 🔒")
+        self._create_secret_block(name = "seatgeek-fla-bearer-token", value = bearer_token)
 
         return None 
 
 
-    def get_sales(self) -> pd.DataFrame | None:
+    def get_sales(self, _cursor: str | None) -> pd.DataFrame | None:
+
+        def check_reponse(r: requests.Response) -> None:
+            
+            if r.status_code != 200:
+                raise ConnectionError(f"""
+                    Uh-Oh! 😩 
+                    Status Code: {r.status_code}
+                    Response: {response.json()['message']}
+                """)
+
+            return None 
 
         def clean_response(r: requests.Response) -> pd.DataFrame | None:
             
             response = r.json()        
 
-            if r.status_code == 200:
+            response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+            response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
 
-                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
+            return DataFrame[self.input_schema](response['data'])
 
-                return DataFrame[self.input_schema](response['data'])
 
-            else:
-
-                print(r.status_code)
-                print(response)
-
-                return None
-        
-        def get_is_has_more(r: requests.Response) -> bool:
-
-            if r.status_code == 200:
-                return r.json()['has_more']
-
-            else:
-
-                print(r.status_code)
-                print(response)
-
-                return False
-
-        ## Initial request
+        ## Initial request - Headers
         self._headers['Authorization'] = f"Bearer {self.bearer_token.get_secret_value()}"
 
+        ## Initial request - Paramaters
+        _params = {"limit": 1000}
+        if _cursor is not None:
+            _params["cursor"] = _cursor
+
+        ## Try Initial request
         response = self._create_session().get(
             url = f"{self._base_url}/sales",
             headers = self._headers,
-            params = {"limit": 100}
+            params = _params
         )
 
-        if response.status_code != 200:
-            return None
+        ## Check Response
+        check_reponse(response)
 
+        ## Pass Check -> update variables
         df = clean_response(response)
-        #is_has_more = get_is_has_more(response)
         _has_more = response.json()['has_more']
-        _cursor = response.json()['cursor']
+        _params["cursor"] = response.json()['cursor']
 
         i = 0
         ## Request rest of data
@@ -122,46 +116,43 @@ class FLA_SeatGeek(BaseModel):
 
             try:
 
-                response = self._create_session().get(
+                ## Try Additional Request
+                temp_response = self._create_session().get(
                     url = f"{self._base_url}/sales",
                     headers = self._headers,
-                    params = {"cursor": _cursor, "limit": 100}
+                    params = _params
                 )
 
-                if response.status_code >= 500:
-                    continue
+                ## Check Reponse
+                check_reponse(temp_response)
 
-                if response.status_code != 200:
-                    break
-
-                temp_df = clean_response(response)
-
-                if temp_df is not None:
-                    
-                    df = pd.concat([df, temp_df], ignore_index = True)
-                    _has_more = get_is_has_more(response)
-                    _cursor = response.json()['cursor']
+                ## Pass Check -> update variables
+                reponse = temp_response
+                temp_df = clean_response(reponse)
+                df = pd.concat([df, temp_df], ignore_index = True)
+                _has_more = response.json()['has_more']
+                _params["cursor"]  = response.json()['cursor']
                 
-                else:
-                    break
 
             except KeyError as e:
 
-                print(f"Response: {response} -- Status Code: {response.status_code}")
+                print(f"Response: {temp_response} -- Status Code: {temp_response.status_code}")
                 print(f"KeyError: {e}"); print(f"KeyError Args: {e.args}")
                 break
 
             except BaseException as e:
 
-                print(f"Response: {response} -- Status Code: {response.status_code}")
+                print(f"Response: {temp_response} -- Status Code: {temp_response.status_code}")
                 print(f"Error: {e}"); print(f"Error Args: {e.args}")
                 break
 
             if i % 10 == 0:
                 print(i)
-            if i > 19000:
-                break
+
             i += 1
+
+        ## Update Cursor in Block
+        self._create_secret_block(name = "seatgeek-fla-last-cursor-sales", value = response.json()['cursor'])
 
         return df 
     
@@ -172,8 +163,17 @@ class FLA_SeatGeek(BaseModel):
     def _create_session(self) -> requests.Session:
 
         session = requests.Session()
-        retry = Retry(total = 5, backoff_factor = 0.5)
+        retry = Retry(total = 5, backoff_factor = 0.2)
         adapter = HTTPAdapter(max_retries = retry)
         session.mount('https://', adapter)
 
         return session
+    
+    def _create_secret_block(self, name: str, value: str) -> None:
+
+        secret_block = Secret(value = value)
+        secret_block.save(name = name, overwrite = True)
+
+        print(f"Saved to Secret -> {name} 🔒")
+
+        return None 
