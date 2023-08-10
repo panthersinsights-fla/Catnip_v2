@@ -14,9 +14,7 @@ import traceback
 import sys
 
 import psycopg2
-
 from boto3 import resource
-from boto3.resources.factory import ServiceResource
 
 from catnip.lookups import REDSHIFT_RESERVED_WORDS
 

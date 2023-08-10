@@ -80,7 +80,7 @@ class FLA_Sharepoint(BaseModel):
             file_suffix = "xlsx"
 
         else:
-            print("You Failed! Please select a file type to write to!")
+            raise SyntaxError("You Failed! 👎 Please select a file type to write to!")
 
         ## Connect folder
         this_folder = self._my_ctx.web.get_folder_by_server_relative_path(f"Shared Documents/Data Science/{folder_path}")
@@ -121,8 +121,7 @@ class FLA_Sharepoint(BaseModel):
         elif is_text:
             file_suffix = "txt"
         else:
-            print("You Failed! Please select a file type!")
-            return None
+            raise SyntaxError("You Failed! 👎 Please select a file type!")
 
         ## Create path strings
         file_url = f"Shared Documents/Data Science/{folder_path}/{file_name}.{file_suffix}"
@@ -169,6 +168,6 @@ class FLA_Sharepoint(BaseModel):
                 file = f.read()
 
         else:
-            print("I'm Lazy! Please select a file type to download file as!")
+            raise SyntaxError("I'm Lazy! 🥱 Please select a file type to download file as!")
 
         return file 

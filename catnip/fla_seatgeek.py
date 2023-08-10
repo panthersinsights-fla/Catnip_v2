@@ -149,6 +149,9 @@ class FLA_SeatGeek(BaseModel):
             if i % 10 == 0:
                 print(i)
 
+            if i > 1000:
+                break
+
             i += 1
 
         ## Update Cursor in Block
