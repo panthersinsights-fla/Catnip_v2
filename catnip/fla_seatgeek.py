@@ -79,12 +79,18 @@ class FLA_SeatGeek(BaseModel):
 
         def clean_response(r: requests.Response) -> pd.DataFrame | None:
             
-            response = r.json()        
+            response = r.json()     
 
-            response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-            response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
+            if response['data']:   
 
-            return DataFrame[self.input_schema](response['data'])
+                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+                response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
+
+                return DataFrame[self.input_schema](response['data'])
+            
+            else:
+
+                return None
 
 
         ## Initial request - Headers
@@ -103,10 +109,13 @@ class FLA_SeatGeek(BaseModel):
         )
 
         ## Check Response
-        check_reponse(response)
+        check_reponse(response); print(response); print(response.text)
 
         ## Pass Check -> update variables
         df = clean_response(response)
+        if df is None:
+            return None
+        
         _has_more = response.json()['has_more']
         _params["cursor"] = response.json()['cursor']; print(_params["cursor"])
 
