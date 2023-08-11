@@ -108,7 +108,7 @@ class FLA_SeatGeek(BaseModel):
         ## Pass Check -> update variables
         df = clean_response(response)
         _has_more = response.json()['has_more']
-        _params["cursor"] = response.json()['cursor']
+        _params["cursor"] = response.json()['cursor']; print(_params["cursor"])
 
         i = 0
         ## Request rest of data
@@ -131,7 +131,7 @@ class FLA_SeatGeek(BaseModel):
                 temp_df = clean_response(reponse)
                 df = pd.concat([df, temp_df], ignore_index = True)
                 _has_more = response.json()['has_more']
-                _params["cursor"]  = response.json()['cursor']
+                _params["cursor"]  = response.json()['cursor']; print(_params["cursor"])
                 
 
             except KeyError as e:
