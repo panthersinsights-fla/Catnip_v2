@@ -127,8 +127,8 @@ class FLA_SeatGeek(BaseModel):
                 check_reponse(temp_response)
 
                 ## Pass Check -> update variables
-                reponse = temp_response
-                temp_df = clean_response(reponse)
+                response = temp_response
+                temp_df = clean_response(response)
                 df = pd.concat([df, temp_df], ignore_index = True)
                 _has_more = response.json()['has_more']
                 _params["cursor"]  = response.json()['cursor']; print(_params["cursor"])
