@@ -149,7 +149,7 @@ class FLA_SeatGeek(BaseModel):
             if i % 10 == 0:
                 print(i)
 
-            if i > 100:
+            if i > 10:
                 break
 
             i += 1
