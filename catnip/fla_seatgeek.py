@@ -179,7 +179,7 @@ class FLA_SeatGeek(BaseModel):
 
         return None 
     
-    def _check_reponse(r: requests.Response) -> None:
+    def _check_reponse(self, r: requests.Response) -> None:
         
         if r.status_code != 200:
             raise ConnectionError(f"""
