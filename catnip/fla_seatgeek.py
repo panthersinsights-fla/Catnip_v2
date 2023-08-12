@@ -66,17 +66,6 @@ class FLA_SeatGeek(BaseModel):
 
     def get_sales(self, _cursor: str | None) -> pd.DataFrame | None:
 
-        def check_reponse(r: requests.Response) -> None:
-            
-            if r.status_code != 200:
-                raise ConnectionError(f"""
-                    Uh-Oh! 😩 
-                    Status Code: {r.status_code}
-                    Response: {response.json()['message']}
-                """)
-
-            return None 
-
         def clean_response(r: requests.Response) -> pd.DataFrame | None:
             
             response = r.json()     
@@ -109,7 +98,7 @@ class FLA_SeatGeek(BaseModel):
         )
 
         ## Check Response
-        check_reponse(response); print(response); print(response.text)
+        self._check_reponse(response); print(f"Intial Request: {response}") #; print(response.text)
 
         ## Pass Check -> update variables
         df = clean_response(response)
@@ -117,7 +106,7 @@ class FLA_SeatGeek(BaseModel):
             return None
         
         _has_more = response.json()['has_more']
-        _params["cursor"] = response.json()['cursor']; print(_params["cursor"])
+        _params["cursor"] = response.json()['cursor'] #; print(_params["cursor"])
 
         i = 0
         ## Request rest of data
@@ -133,14 +122,14 @@ class FLA_SeatGeek(BaseModel):
                 )
 
                 ## Check Reponse
-                check_reponse(temp_response)
+                self._check_reponse(temp_response)
 
                 ## Pass Check -> update variables
                 response = temp_response
                 temp_df = clean_response(response)
                 df = pd.concat([df, temp_df], ignore_index = True)
                 _has_more = response.json()['has_more']
-                _params["cursor"]  = response.json()['cursor']; print(_params["cursor"])
+                _params["cursor"]  = response.json()['cursor'] #; print(_params["cursor"])
                 
 
             except KeyError as e:
@@ -187,5 +176,16 @@ class FLA_SeatGeek(BaseModel):
         secret_block.save(name = name, overwrite = True)
 
         print(f"Saved to Secret -> {name} 🔒")
+
+        return None 
+    
+    def _check_reponse(r: requests.Response) -> None:
+        
+        if r.status_code != 200:
+            raise ConnectionError(f"""
+                Uh-Oh! 😩 
+                Status Code: {r.status_code}
+                Response: {r.json()['message']}
+            """)
 
         return None 
