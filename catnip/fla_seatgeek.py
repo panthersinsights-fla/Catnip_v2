@@ -85,8 +85,8 @@ class FLA_SeatGeek(BaseModel):
         ## Initial request - Headers
         self._headers['Authorization'] = f"Bearer {self.bearer_token.get_secret_value()}"
 
-        ## Initial request - Paramaters
-        _params = {"limit": 1000}
+        ## Initial request - Parameters
+        _params = {"limit": 10000}
         if _cursor is not None:
             _params["cursor"] = _cursor
 
@@ -144,10 +144,10 @@ class FLA_SeatGeek(BaseModel):
                 print(f"Error: {e}"); print(f"Error Args: {e.args}")
                 break
 
-            if i % 10 == 0:
+            if i % 5 == 0:
                 print(i)
 
-            if i > 100:
+            if i > 50:
                 break
 
             i += 1
