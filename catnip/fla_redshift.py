@@ -51,7 +51,7 @@ class FLA_Redshift(BaseModel):
             table_name: str,
             to_append: bool = False,
             column_data_types: List[str] | None = None,
-            is_varchar_max: bool = False,
+            varchar_max_list: List = [],
             index: bool = False,
             save_local: bool = False,
             delimiter: str = ",",
@@ -99,7 +99,7 @@ class FLA_Redshift(BaseModel):
                 df = df,
                 redshift_table_name = redshift_table_name,
                 column_data_types = column_data_types,
-                is_varchar_max = is_varchar_max,
+                varchar_max_list = varchar_max_list,
                 index = index,
                 diststyle = diststyle,
                 distkey = distkey,
@@ -322,7 +322,7 @@ class FLA_Redshift(BaseModel):
     def _get_column_data_types(
             self, 
             df: pd.DataFrame, 
-            is_varchar_max: bool, 
+            varchar_max_list: List, 
             index: bool
     ) -> List[str]:
         
@@ -339,12 +339,12 @@ class FLA_Redshift(BaseModel):
             elif dtype == "bool":
                 return "BOOLEAN"
             else:
-                return "VARCHAR(MAX)"
+                return "VARCHAR(256)"
         
         column_data_types = [_pd_dtype_to_redshift_dtype(str(dtype.name).lower()) for dtype in df.dtypes.values]
-
-        if not is_varchar_max:
-            column_data_types = ["VARCHAR(256)" if x == "VARCHAR(MAX)" else x for x in column_data_types]
+        
+        max_indexes = [idx for idx, val in enumerate(list(df.columns)) if val in varchar_max_list]
+        column_data_types = ["VARCHAR(MAX)" if idx in max_indexes else val for idx, val in enumerate(column_data_types)]
         
         if index:
             column_data_types.insert(0, _pd_dtype_to_redshift_dtype(df.index.dtype.name))
@@ -358,7 +358,7 @@ class FLA_Redshift(BaseModel):
             df: pd.DataFrame,
             redshift_table_name: str,
             column_data_types: List[str] | None,
-            is_varchar_max: bool,
+            varchar_max_list: List,
             index: bool,
             diststyle: str,
             distkey: str,
@@ -376,7 +376,7 @@ class FLA_Redshift(BaseModel):
 
         ## Get column data types
         if column_data_types is None:
-            column_data_types = self._get_column_data_types(df = df, is_varchar_max = is_varchar_max, index = index)
+            column_data_types = self._get_column_data_types(df = df, varchar_max_list = varchar_max_list, index = index)
 
         ## Create table query
         create_table_query = f""" 
