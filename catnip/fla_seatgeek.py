@@ -63,100 +63,31 @@ class FLA_SeatGeek(BaseModel):
 
         return None 
 
+    def get_attendance(self, cursor: str | None) -> pd.DataFrame | None:
 
-    def get_sales(self, _cursor: str | None) -> pd.DataFrame | None:
+        return self._request_loop(endpoint = "attendance", _cursor = cursor)
 
-        def clean_response(r: requests.Response) -> pd.DataFrame | None:
-            
-            response = r.json()     
+    def get_clients(self, cursor: str | None) -> pd.DataFrame | None:
 
-            if response['data']:   
+        return self._request_loop(endpoint = "clients", _cursor = cursor)
 
-                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
+    def get_manifests(self, cursor: str | None) -> pd.DataFrame | None:
 
-                return DataFrame[self.input_schema](response['data'])
-            
-            else:
+        return self._request_loop(endpoint = "manifests", _cursor = cursor)
 
-                return None
+    def get_payments(self, cursor: str | None) -> pd.DataFrame | None:
 
+        return self._request_loop(endpoint = "payments", _cursor = cursor)
 
-        ## Initial request - Headers
-        self._headers['Authorization'] = f"Bearer {self.bearer_token.get_secret_value()}"
+    def get_products(self, cursor: str | None) -> pd.DataFrame | None:
 
-        ## Initial request - Parameters
-        _params = {"limit": 1500}
-        if _cursor is not None:
-            _params["cursor"] = _cursor
+        return self._request_loop(endpoint = "products", _cursor = cursor)
 
-        ## Try Initial request
-        response = self._create_session().get(
-            url = f"{self._base_url}/sales",
-            headers = self._headers,
-            params = _params
-        )
+    def get_sales(self, cursor: str | None) -> pd.DataFrame | None:
 
-        ## Check Response
-        self._check_reponse(response); print(f"Intial Request: {response}") #; print(response.text)
-
-        ## Pass Check -> update variables
-        df = clean_response(response)
-        if df is None:
-            return None
-        
-        _has_more = response.json()['has_more']
-        _params["cursor"] = response.json()['cursor'] #; print(_params["cursor"])
-
-        i = 0
-        ## Request rest of data
-        while _has_more:
-
-            try:
-
-                ## Try Additional Request
-                temp_response = self._create_session().get(
-                    url = f"{self._base_url}/sales",
-                    headers = self._headers,
-                    params = _params
-                )
-
-                ## Check Reponse
-                self._check_reponse(temp_response)
-
-                ## Pass Check -> update variables
-                response = temp_response
-                temp_df = clean_response(response)
-                df = pd.concat([df, temp_df], ignore_index = True)
-                _has_more = response.json()['has_more']
-                _params["cursor"]  = response.json()['cursor'] #; print(_params["cursor"])
-                
-
-            except KeyError as e:
-
-                print(f"Response: {temp_response} -- Status Code: {temp_response.status_code}")
-                print(f"KeyError: {e}"); print(f"KeyError Args: {e.args}")
-                break
-
-            except BaseException as e:
-
-                print(f"Response: {temp_response} -- Status Code: {temp_response.status_code}")
-                print(f"Error: {e}"); print(f"Error Args: {e.args}")
-                break
-
-            if i % 5 == 0:
-                print(i)
-
-            if i > 75:
-                break
-
-            i += 1
-
-        ## Update Cursor in Block
-        self._create_secret_block(name = "seatgeek-fla-last-cursor-sales", value = response.json()['cursor'])
-
-        return df 
+        return self._request_loop(endpoint = "sales", _cursor = cursor)
     
+
     ########################
     ### HELPER FUNCTIONS ###
     ########################
@@ -189,3 +120,111 @@ class FLA_SeatGeek(BaseModel):
             """)
 
         return None 
+    
+    def _request_loop(
+            self,
+            endpoint: str, # attendance, clients, manifests, payments, products, sales 
+            _cursor: str | None
+        ) -> pd.DataFrame | None:
+
+        ### Initial Request ###########################################################
+        self._headers['Authorization'] = f"Bearer {self.bearer_token.get_secret_value()}"
+
+        _params = {"limit": 1500}
+        if _cursor is not None:
+            _params["cursor"] = _cursor
+
+        response = self._create_session().get(
+            url = f"{self._base_url}/{endpoint}",
+            headers = self._headers,
+            params = _params
+        )
+
+        # Check Response
+        self._check_reponse(response); print(f"Intial Request: {response}")
+
+        # Pass Check -> update variables
+        df = self._clean_response(endpoint = endpoint, r = response)
+        if df is None:
+            print(response.json())
+            return None
+
+        _has_more = response.json()['has_more']
+        _params["cursor"] = response.json()['cursor']
+
+        ### Request rest of data #####################################################
+        i = 0
+        while _has_more:
+
+            try:
+                # Try Additional Request
+                temp_response = self._create_session().get(
+                    url = f"{self._base_url}/{endpoint}",
+                    headers = self._headers,
+                    params = _params
+                )
+
+                # Check Reponse
+                self._check_reponse(temp_response)
+
+                # Pass Check -> update variables
+                response = temp_response
+                temp_df = self._clean_response(endpoint = endpoint, r = response)
+                df = pd.concat([df, temp_df], ignore_index = True)
+                _has_more = response.json()['has_more']
+                _params["cursor"]  = response.json()['cursor']
+                
+            except BaseException as e:
+
+                print(f"Response: {temp_response} -- Status Code: {temp_response.status_code}")
+                print(f"Error: {e}"); print(f"Error Args: {e.args}")
+                break
+
+            if i % 5 == 0:
+                print(i)
+
+            if i > 75:
+                break
+
+            i += 1
+
+        ## Update Cursor in Block
+        self._create_secret_block(name = f"seatgeek-fla-last-cursor-{endpoint}", value = response.json()['cursor'])
+
+        return df 
+    
+    def _clean_response(
+            self, 
+            endpoint: str, # attendance, clients, manifests, payments, products, sales 
+            r: requests.Response
+        ) -> pd.DataFrame | None:
+
+        response = r.json()
+
+        if endpoint == "attendance":
+            return None
+
+        elif endpoint == "clients":
+            return None 
+
+        elif endpoint == "manifests":
+            return None 
+
+        elif endpoint == "payments":
+            return None 
+
+        elif endpoint == "products":
+            return None 
+
+        elif endpoint == "sales":
+
+            if response['data']:   
+                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+                response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
+                return DataFrame[self.input_schema](response['data'])
+            
+            else:
+                return None
+
+        else:
+            raise ValueError(f"Bruh.. Put an endpoint in here 😑")
