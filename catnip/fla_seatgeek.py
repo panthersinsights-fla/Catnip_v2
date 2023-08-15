@@ -214,8 +214,7 @@ class FLA_SeatGeek(BaseModel):
 
             if response['data']:   
                 response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                #response['data'] = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response['data']]
-                [print(v) for d in response['data'] for k,v in d.items() if k =="creation_datetime"]
+                response['data'] = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response['data']]
                 return DataFrame[self.input_schema](response['data'])
             
             else:
