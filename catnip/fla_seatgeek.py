@@ -224,7 +224,15 @@ class FLA_SeatGeek(BaseModel):
             return None 
 
         elif endpoint == "payments":
-            return None 
+
+            if response['data']:   
+                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+                response['data'] = [{k: v[:19] if k in ["event_datetime_utc", "datetime_utc"] else v for k, v in d.items()} for d in response['data']]
+                response['data'] = [{k: v.replace("$","") if k in ["debit_amt", "credit_amt", "credit_applied_amnt", "debit_commissions_amount"] else v for k, v in d.items()} for d in response['data']]
+                return DataFrame[self.input_schema](response['data'])
+            
+            else:
+                return None 
 
         elif endpoint == "products":
             return None 
