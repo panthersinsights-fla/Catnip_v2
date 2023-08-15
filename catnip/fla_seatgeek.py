@@ -202,17 +202,22 @@ class FLA_SeatGeek(BaseModel):
         response = r.json()
 
         if endpoint == "attendance":
-            
+
             if response['data']:   
                 response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
                 return DataFrame[self.input_schema](response['data'])
             
             else:
                 return None
 
         elif endpoint == "clients":
-            return None 
+            
+            if response['data']:   
+                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+                return DataFrame[self.input_schema](response['data'])
+            
+            else:
+                return None
 
         elif endpoint == "manifests":
             return None 
