@@ -81,7 +81,7 @@ class FLA_Big_Commerce(BaseModel):
         # break into batches
         urls = self._chunk_list(urls, 25)
 
-        # request loop v2 for each batch
+        # request loop v3 for each batch
         df_list = [asyncio.run(self._async_gather_urls_v3(url_list=url_list)) for url_list in urls]
         df_list = [item for sublist in df_list for item in sublist]
 
@@ -195,7 +195,7 @@ class FLA_Big_Commerce(BaseModel):
                 )
             ]
 
-
+        ### Create dataframe ###############################################
         responses = [_create_dataframe(r) for r in responses]
         df = pd.concat(responses, ignore_index = True)
 
