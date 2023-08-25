@@ -132,7 +132,7 @@ class FLA_Big_Commerce(BaseModel):
     
     async def _get_async_request(self, url: str, page: int = None) -> httpx.Response:
 
-        print(f"Running {url}: {page}")
+        # print(f"Running {url}: {page}")
         async with self._create_async_session() as session:
             response = await session.get(
                 url = url,
@@ -153,13 +153,13 @@ class FLA_Big_Commerce(BaseModel):
 
     async def _async_gather_urls_v2(self, url_list: List[str]) -> List[pd.DataFrame]:
 
-        responses = [self._request_loop_v2(endpoint=url, batch_size=3) for url in url_list]
+        responses = [self._request_loop_v2(endpoint=url, batch_size=2) for url in url_list]
 
         return await asyncio.gather(*responses)
     
     async def _async_gather_urls_v3(self, url_list: List[str]) -> List[pd.DataFrame]:
 
-        responses = [self._request_loop_v3(endpoint=url, batch_size=3) for url in url_list]
+        responses = [self._request_loop_v3(endpoint=url, batch_size=2) for url in url_list]
 
         return await asyncio.gather(*responses)
     
