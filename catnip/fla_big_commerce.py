@@ -122,7 +122,7 @@ class FLA_Big_Commerce(BaseModel):
     
     async def _get_async_request(self, url: str, page: int = None) -> httpx.Response:
 
-        # print(f"Running Page: {page}")
+        print(f"Running {url}: {page}")
         async with self._create_async_session() as session:
             response = await session.get(
                 url = url,
