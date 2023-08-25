@@ -9,6 +9,8 @@ import httpx
 import asyncio
 from urllib3.util.retry import Retry
 
+from datetime import datetime
+
 
 class FLA_Big_Commerce(BaseModel):
 
@@ -61,7 +63,15 @@ class FLA_Big_Commerce(BaseModel):
         urls = self._chunk_list(urls, 25)
 
         # request loop v2 for each batch
-        df_list = [asyncio.run(self._async_gather_urls_v2(url_list=url_list)) for url_list in urls]
+        df_list = []
+        start_time = datetime.now()
+        for index, url_list in enumerate(urls):
+            print(index)
+            print(f"{datetime.now() - start_time}")
+            df_list.append(asyncio.run(self._async_gather_urls_v2(url_list=url_list)))
+            print(f"{datetime.now() - start_time}")
+
+        # df_list = [asyncio.run(self._async_gather_urls_v2(url_list=url_list)) for url_list in urls]
         df_list = [item for sublist in df_list for item in sublist]
 
         # concat everything together
