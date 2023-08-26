@@ -247,6 +247,9 @@ class FLA_Big_Commerce(BaseModel):
                 )
             ]
 
+            if count > 100:
+                break
+
             count += batch_size
 
         ### Create dataframe ###############################################
