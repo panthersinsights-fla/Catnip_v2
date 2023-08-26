@@ -247,7 +247,7 @@ class FLA_Big_Commerce(BaseModel):
                 )
             ]
 
-            if count > 100:
+            if count > 25:
                 break
 
             count += batch_size
