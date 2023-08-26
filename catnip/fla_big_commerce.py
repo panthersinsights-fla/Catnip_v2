@@ -81,7 +81,7 @@ class FLA_Big_Commerce(BaseModel):
     
     def get_orders(self) -> pd.DataFrame:
 
-        return asyncio.run(self._request_loop_v2(endpoint = "orders", batch_size = 25))
+        return asyncio.run(self._request_loop_v2(endpoint = "orders", batch_size = 35))
 
     def get_transactions(self, order_ids: List[int]) -> pd.DataFrame:
 
