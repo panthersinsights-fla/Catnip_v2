@@ -175,8 +175,7 @@ class FLA_Big_Commerce(BaseModel):
                 return DataFrame[self.input_schema](response.json()['data'])
             else:
                 return pd.DataFrame(response.json()['data'])
-            
-        print(endpoint)    
+              
         ### Initial Request ##############################################
         with self._create_session() as session:
             response = session.get(
@@ -190,7 +189,7 @@ class FLA_Big_Commerce(BaseModel):
 
         ### Request Rest ##################################################
         batches = [min(start + batch_size, num_pages+1) for start in range(2, num_pages+1, batch_size)]
-        batches = [2] + batches if num_pages > 1 else batches; print(f"Batches: {batches}")
+        batches = [2] + batches if num_pages > 1 else batches
 
         for i in range(1, len(batches)):
 
@@ -210,6 +209,7 @@ class FLA_Big_Commerce(BaseModel):
         try: 
             responses = [_create_dataframe(r) for r in responses]
         except Exception as e:
+            print(endpoint)
             print([r.json() for r in responses])
             raise TypeError(f"WHY NO DATA 😭")
         
