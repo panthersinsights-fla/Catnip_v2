@@ -4,6 +4,7 @@ from typing import List, Any
 import pandas as pd
 from pandera import DataFrameModel
 from pandera.typing import DataFrame
+from pandera.errors import SchemaError
 
 import httpx
 import asyncio
@@ -171,11 +172,17 @@ class FLA_Big_Commerce(BaseModel):
 
         def _create_dataframe(response: httpx.Response) -> pd.DataFrame:
 
-            if self.input_schema:
-                return DataFrame[self.input_schema](response.json()['data'])
-            else:
-                return pd.DataFrame(response.json()['data'])
-              
+            try:
+                if self.input_schema:
+                    return DataFrame[self.input_schema](response.json()['data'])
+                else:
+                    return pd.DataFrame(response.json()['data'])
+            
+            except:
+                print(endpoint)
+                print(response.json())
+                raise SchemaError(f"WHY NO DATA 😭")
+                
         ### Initial Request ##############################################
         with self._create_session() as session:
             response = session.get(
@@ -206,13 +213,7 @@ class FLA_Big_Commerce(BaseModel):
             ]
 
         ### Create dataframe ###############################################
-        try: 
-            responses = [_create_dataframe(r) for r in responses]
-        except Exception as e:
-            print(endpoint)
-            print([r.json() for r in responses])
-            raise TypeError(f"WHY NO DATA 😭")
-        
+        responses = [_create_dataframe(r) for r in responses]
         df = pd.concat(responses, ignore_index = True)
 
         return df 
