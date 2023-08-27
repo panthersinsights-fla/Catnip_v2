@@ -207,7 +207,12 @@ class FLA_Big_Commerce(BaseModel):
             ]
 
         ### Create dataframe ###############################################
-        responses = [_create_dataframe(r) for r in responses]
+        try: 
+            responses = [_create_dataframe(r) for r in responses]
+        except Exception as e:
+            print([r.json() for r in responses])
+            raise TypeError(f"WHY NO DATA 😭")
+        
         df = pd.concat(responses, ignore_index = True)
 
         return df 
