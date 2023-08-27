@@ -4,7 +4,6 @@ from typing import List, Any
 import pandas as pd
 from pandera import DataFrameModel
 from pandera.typing import DataFrame
-from pandera.errors import SchemaError
 
 import httpx
 import asyncio
@@ -180,8 +179,7 @@ class FLA_Big_Commerce(BaseModel):
             
             except:
                 print(endpoint)
-                print(response.json())
-                raise SchemaError(f"WHY NO DATA 😭")
+                print(pd.DataFrame(response.json()['data']))
                 
         ### Initial Request ##############################################
         with self._create_session() as session:
