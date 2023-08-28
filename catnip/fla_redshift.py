@@ -336,7 +336,7 @@ class FLA_Redshift(BaseModel):
                 return "FLOAT"
             elif dtype.startswith("datetime"):
                 return "TIMESTAMP"
-            elif dtype == "bool":
+            elif dtype in ["bool", "boolean"]:
                 return "BOOLEAN"
             else:
                 return "VARCHAR(256)"
