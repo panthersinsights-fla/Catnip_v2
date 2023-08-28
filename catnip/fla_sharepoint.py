@@ -108,7 +108,8 @@ class FLA_Sharepoint(BaseModel):
         is_excel: bool = False,
         is_text: bool = False,
         sheet_name: str | None = None,
-        skiprows: int | None = None
+        skiprows: int | None = None, # pd.read_csv option
+        quotechar: str | None = None # pd.read_csv option
     ) -> pd.DataFrame | str | None:
         
         ## Determine File Type
@@ -135,9 +136,9 @@ class FLA_Sharepoint(BaseModel):
         if is_csv:
 
             if self.input_schema:
-                file = DataFrame[self.input_schema](pd.read_csv(download_path, skiprows = skiprows))
+                file = DataFrame[self.input_schema](pd.read_csv(download_path, skiprows = skiprows, quotechar = quotechar))
             else:
-                file = pd.read_csv(download_path, skiprows = skiprows)
+                file = pd.read_csv(download_path, skiprows = skiprows, quotechar = quotechar)
 
         elif is_xml:
 
