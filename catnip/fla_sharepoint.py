@@ -110,7 +110,7 @@ class FLA_Sharepoint(BaseModel):
         sheet_name: str | None = None,
         skiprows: int | None = None, # pd.read_csv option
         thousands: str = ",", # pd.read_csv option
-        quotechar: str | None = None # pd.read_csv option
+        quotechar: str | None = '"' # pd.read_csv option
     ) -> pd.DataFrame | str | None:
         
         ## Determine File Type
