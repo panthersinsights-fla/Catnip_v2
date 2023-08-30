@@ -118,7 +118,15 @@ class FLA_Tradable_Bits(BaseModel):
 
     def _get_response(self, url: str, params: Dict = {}) -> requests.Response:
 
-        return self._create_session().get(url, headers=self._headers, params=params)
+        with self._create_session() as session:
+
+            response = session.get(
+                url=url,
+                headers = self._headers,
+                params=params
+            )
+
+        return response
     
     def _get_dataframe(self, response: requests.Response) -> pd.DataFrame:
 
