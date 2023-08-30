@@ -10,7 +10,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
-class FLA_Tradeable_Bits(BaseModel):
+class FLA_Tradable_Bits(BaseModel):
 
     api_key: str
     api_secret: str 
