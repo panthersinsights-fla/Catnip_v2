@@ -177,7 +177,8 @@ class FLA_Big_Commerce(BaseModel):
                 else:
                     return pd.DataFrame(response.json()['data'])
             
-            except:
+            except Exception as e:
+                print(e)
                 print(endpoint)
                 print(pd.DataFrame(response.json()['data']))
                 
