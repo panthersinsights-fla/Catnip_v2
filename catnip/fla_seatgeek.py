@@ -134,11 +134,12 @@ class FLA_SeatGeek(BaseModel):
         if _cursor is not None:
             _params["cursor"] = _cursor
 
-        response = self._create_session().get(
-            url = f"{self._base_url}/{endpoint}",
-            headers = self._headers,
-            params = _params
-        )
+        with self._create_session() as session:
+            response = session.get(
+                url = f"{self._base_url}/{endpoint}",
+                headers = self._headers,
+                params = _params
+            )
 
         # Check Response
         self._check_reponse(response); print(f"Intial Request: {response}")
@@ -158,11 +159,12 @@ class FLA_SeatGeek(BaseModel):
 
             try:
                 # Try Additional Request
-                temp_response = self._create_session().get(
-                    url = f"{self._base_url}/{endpoint}",
-                    headers = self._headers,
-                    params = _params
-                )
+                with self._create_session() as session:
+                    temp_response = session.get(
+                        url = f"{self._base_url}/{endpoint}",
+                        headers = self._headers,
+                        params = _params
+                    )
 
                 # Check Reponse
                 self._check_reponse(temp_response)
