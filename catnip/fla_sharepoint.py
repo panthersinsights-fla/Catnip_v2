@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from typing import List
 
 from office365.sharepoint.client_context import ClientContext
@@ -18,7 +18,7 @@ class FLA_Sharepoint(BaseModel):
 
     ## Windows Login Credentials
     username: str 
-    password: str 
+    password: SecretStr 
 
     ## Import Pandera Schema
     input_schema: DataFrameModel = None
@@ -30,7 +30,7 @@ class FLA_Sharepoint(BaseModel):
     
     @property
     def _my_credentials(self) -> UserCredential:
-        return UserCredential(self.username, self.password)
+        return UserCredential(self.username, self.password.get_secret_value())
     
     @property
     def _my_ctx(self) -> ClientContext:

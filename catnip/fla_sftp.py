@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from typing import Optional, List
 
 from paramiko import Transport, SFTPClient, SFTPError
@@ -14,7 +14,7 @@ class FLA_Sftp(BaseModel):
 
     host: str
     username: str
-    password: str
+    password: SecretStr
     remote_path: str
 
     port: int = 22
@@ -128,7 +128,7 @@ class FLA_Sftp(BaseModel):
 
         ## Establish transport object
         transport = Transport((self.host, self.port))
-        transport.connect(username = self.username, password = self.password)
+        transport.connect(username = self.username, password = self.password.get_secret_value())
 
         ## Create SFTP connection object
         connection = SFTPClient.from_transport(transport)        

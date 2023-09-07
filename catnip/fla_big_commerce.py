@@ -83,6 +83,10 @@ class FLA_Big_Commerce(BaseModel):
 
         return asyncio.run(self._request_loop_v2(endpoint = "orders", batch_size = 35))
 
+    def get_subscribers(self) -> pd.DataFrame:
+
+        return asyncio.run(self._request_loop_v3(endpoint= "customers/subscribers"))
+    
     def get_transactions(self, order_ids: List[int]) -> pd.DataFrame:
 
         # create urls

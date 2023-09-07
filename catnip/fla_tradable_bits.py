@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from typing import Dict
 
 import pandas as pd
@@ -12,8 +12,8 @@ from urllib3.util.retry import Retry
 
 class FLA_Tradable_Bits(BaseModel):
 
-    api_key: str
-    api_secret: str 
+    api_key: SecretStr
+    api_secret: SecretStr 
 
     ## Import Pandera Schema
     input_schema: DataFrameModel = None
@@ -21,8 +21,8 @@ class FLA_Tradable_Bits(BaseModel):
     @property
     def _headers(self) -> Dict:
         return {
-            'Api-Key': self.api_key, 
-            'Api-Secret': self.api_secret
+            'Api-Key': self.api_key.get_secret_value(), 
+            'Api-Secret': self.api_secret.get_secret_value()
         }
     
     @property
@@ -41,64 +41,60 @@ class FLA_Tradable_Bits(BaseModel):
 
     def get_fans(self) -> pd.DataFrame:
 
-        ## Initial Request
-        response = self._get_response(url=f"{self._base_url}/fans")
-        search_uid = response.json()['meta']['search_uid']
+        ### Initial Request #####################################
+        response = self._get_response(
+            url=f"{self._base_url}/fans", 
+            params={"limit": 200}
+        )
 
+        search_uid = response.json()['meta']['search_uid']
         df = self._get_dataframe(response=response)
 
-        ## Retrieve all
+        ### Request rest #######################################
         while response.json()['data']:
 
             response = self._get_response(
                 url=f"{self._base_url}/fans", 
-                params={'search_uid': search_uid}
+                params={
+                    "limit": 200,
+                    "search_uid": search_uid
+                }
             )
 
-            new_df = self._get_dataframe(response=response)
-            df = pd.concat([df, new_df], ignore_index = True)
+            temp_df = self._get_dataframe(response=response)
+            df = pd.concat([df, temp_df], ignore_index = True)
 
         return df 
 
 
     def get_activities(self, max_activity_id: int = None) -> pd.DataFrame:
 
-        if max_activity_id:
+        ### Initial request ######################################
+        response = self._get_response(
+            url=f"{self._base_url}/activities",
+            params={
+                "limit": 200,
+                "min_activity_id": max_activity_id if max_activity_id is not None else 1
+            }
+        )
 
-            ## Initial Request
-            response = self._get_response(url=f"{self._base_url}/activities")
-            df = self._get_dataframe(response=response)
+        df = self._get_dataframe(response=response)
+        min_activity_id = response['max_activity_id']
 
-            ## Retrieve all
-            while response.json()['data']:
-
-                response = self._get_response(
-                    url=f"{self._base_url}/activities", 
-                    params={'max_activity_id': response.json()['meta']['min_activity_id']}
-                )
-
-                new_df = self._get_dataframe(response=response)
-                df = pd.concat([df, new_df], ignore_index = True)
-
-        else:
+        ### Request rest #########################################
+        while response.json()['data']:
 
             response = self._get_response(
-                url = f"{self._base_url}/activities", 
-                params={'min_activity_id': str(max_activity_id)}
+                url=f"{self._base_url}/activities",
+                params={
+                    "limit": 200,
+                    "min_activity_id": min_activity_id
+                }
             )
 
-            df = self._get_dataframe(response=response)
-
-            ## Retrieve all
-            while response.json()['data']:
-
-                response = self._get_response(
-                    url=f"{self._base_url}/activities", 
-                    params={'min_activity_id': response.json()['meta']['max_activity_id']}
-                )
-
-                new_df = self._get_dataframe(response=response)
-                df = pd.concat([df, new_df], ignore_index = True)
+            min_activity_id = response['max_activity_id']
+            temp_df = self._get_dataframe(response=response)
+            df = pd.concat([df, temp_df], ignore_index = True)
 
 
         return df 
@@ -121,9 +117,9 @@ class FLA_Tradable_Bits(BaseModel):
         with self._create_session() as session:
 
             response = session.get(
-                url=url,
+                url = url,
                 headers = self._headers,
-                params=params
+                params = params
             )
 
         return response

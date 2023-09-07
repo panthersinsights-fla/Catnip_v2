@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from typing import List
 
 import pandas as pd
@@ -12,7 +12,7 @@ from email.mime.application import MIMEApplication
 class FLA_Email(BaseModel):
 
     sender_email: str
-    sender_email_pw: str
+    sender_email_pw: SecretStr
 
     receiver_email: str 
 
@@ -67,7 +67,7 @@ class FLA_Email(BaseModel):
         ## And finally, send
         with smtplib.SMTP("smtp-mail.outlook.com", 587) as server:
             server.starttls()
-            server.login(self.sender_email, self.sender_email_pw)
+            server.login(self.sender_email, self.sender_email_pw.get_secret_value())
             server.sendmail(self.sender_email, to_addrs, message.as_string())
             server.quit()
 
