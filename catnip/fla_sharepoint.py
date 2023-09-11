@@ -99,7 +99,7 @@ class FLA_Sharepoint(BaseModel):
         return target_file.serverRelativeUrl 
     
 
-    async def download_file(
+    def download_file(
         self,
         folder_path: str,
         file_name: str,
@@ -131,7 +131,7 @@ class FLA_Sharepoint(BaseModel):
 
         ## Download to temp file location
         with open(download_path, "wb") as local_file:
-            await self._my_ctx.web.get_file_by_server_relative_url(file_url).download(local_file).execute_query()
+            self._my_ctx.web.get_file_by_server_relative_url(file_url).download(local_file).execute_query()
 
         ## Read in based on file type
         if is_csv:
