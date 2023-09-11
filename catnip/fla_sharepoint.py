@@ -99,7 +99,7 @@ class FLA_Sharepoint(BaseModel):
         return target_file.serverRelativeUrl 
     
 
-    def download_file(
+    async def download_file(
         self,
         folder_path: str,
         file_name: str,
@@ -172,4 +172,4 @@ class FLA_Sharepoint(BaseModel):
         else:
             raise SyntaxError("I'm Lazy! 🥱 Please select a file type to download file as!")
 
-        return file 
+        return await file 

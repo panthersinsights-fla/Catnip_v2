@@ -1,4 +1,4 @@
-from pydantic import BaseModel, SecretStrW
+from pydantic import BaseModel
 
 import pandas as pd
 from pandera import DataFrameModel
