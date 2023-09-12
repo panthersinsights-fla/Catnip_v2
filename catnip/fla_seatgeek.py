@@ -131,7 +131,7 @@ class FLA_SeatGeek(BaseModel):
         start_time = datetime.now()
         self._headers['Authorization'] = f"Bearer {self.bearer_token.get_secret_value()}"
 
-        _params = {"limit": 1250}
+        _params = {"limit": 1000}
         if _cursor is not None:
             _params["cursor"] = _cursor
 
