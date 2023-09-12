@@ -1,5 +1,5 @@
 from pydantic import BaseModel, SecretStr
-from typing import Dict
+from typing import Dict, List
 
 import pandas as pd
 from pandera import DataFrameModel
@@ -10,7 +10,7 @@ from prefect.blocks.system import Secret
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-
+from datetime import datetime, timedelta
 
 class FLA_SeatGeek(BaseModel):
 
@@ -128,6 +128,7 @@ class FLA_SeatGeek(BaseModel):
         ) -> pd.DataFrame | None:
 
         ### Initial Request ###########################################################
+        start_time = datetime.now()
         self._headers['Authorization'] = f"Bearer {self.bearer_token.get_secret_value()}"
 
         _params = {"limit": 1500}
@@ -145,9 +146,13 @@ class FLA_SeatGeek(BaseModel):
         self._check_reponse(response); print(f"Intial Request: {response}")
 
         # Pass Check -> update variables
-        df = self._clean_response(endpoint = endpoint, r = response)
-        if df is None:
-            print(response.json())
+        responses = response.json()['data']; print(type(responses)); print(len(responses))
+        # df = self._clean_response(endpoint = endpoint, r = response)
+        # if df is None:
+        #     print(response.json())
+        #     return None
+        if len(responses) == 0:
+            print(responses)
             return None
 
         _has_more = response.json()['has_more']
@@ -166,13 +171,16 @@ class FLA_SeatGeek(BaseModel):
                         params = _params
                     )
 
-                # Check Reponse
+                # Check Response
                 self._check_reponse(temp_response)
 
                 # Pass Check -> update variables
                 response = temp_response
-                temp_df = self._clean_response(endpoint = endpoint, r = response)
-                df = pd.concat([df, temp_df], ignore_index = True)
+                # temp_df = self._clean_response(endpoint = endpoint, r = response)
+                # df = pd.concat([df, temp_df], ignore_index = True)
+
+                responses = [*responses, *response.json()['data']]
+
                 _has_more = response.json()['has_more']
                 _params["cursor"]  = response.json()['cursor']
                 
@@ -185,10 +193,13 @@ class FLA_SeatGeek(BaseModel):
             if i % 5 == 0:
                 print(i)
 
-            if i > 60:
+            if (datetime.now() - start_time) > timedelta(minutes=5):
                 break
 
             i += 1
+
+        ### Create dataframe ###########################################################
+        df = self._clean_response(endpoint, responses)
 
         ### Update Cursor in Block #####################################################
         self._create_secret_block(name = f"seatgeek-fla-last-cursor-{endpoint}", value = response.json()['cursor'])
@@ -198,70 +209,95 @@ class FLA_SeatGeek(BaseModel):
     def _clean_response(
             self, 
             endpoint: str, # attendance, clients, manifests, payments, products, sales 
-            r: requests.Response
+            # r: requests.Response
+            response: List[Dict]
         ) -> pd.DataFrame | None:
 
-        response = r.json()
+        # response = r.json()
 
         if endpoint == "attendance":
 
-            if response['data']:   
-                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                return DataFrame[self.input_schema](response['data'])
+            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
+            return DataFrame[self.input_schema](response)
+
+            # if response['data']:   
+            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+            #     return DataFrame[self.input_schema](response['data'])
             
-            else:
-                return None
+            # else:
+            #     return None
 
         elif endpoint == "clients":
 
-            if response['data']:   
-                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                response['data'] = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response['data']]
-                return DataFrame[self.input_schema](response['data'])
+            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
+            response = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response]
+            return DataFrame[self.input_schema](response)
+        
+            # if response['data']:   
+            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+            #     response['data'] = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response['data']]
+            #     return DataFrame[self.input_schema](response['data'])
             
-            else:
-                return None
+            # else:
+            #     return None
 
         elif endpoint == "manifests":
 
-            if response['data']:   
-                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                return DataFrame[self.input_schema](response['data'])
+            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
+            response = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response]
+            return DataFrame[self.input_schema](response)
+
+            # if response['data']:   
+            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+            #     return DataFrame[self.input_schema](response['data'])
             
-            else:
-                return None
+            # else:
+            #     return None
 
         elif endpoint == "payments":
 
-            if response['data']:   
-                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                response['data'] = [{k: v[:19] if k in ["event_datetime_utc", "datetime_utc"] else v for k, v in d.items()} for d in response['data']]
-                response['data'] = [{k: v.replace("$","").replace(",", "") if k in ["debit_amt", "credit_amt", "credit_applied_amnt", "debit_commissions_amount"] and v is not None else v for k, v in d.items()} for d in response['data']]
-                return DataFrame[self.input_schema](response['data'])
+            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
+            response = [{k: v[:19] if k in ["event_datetime_utc", "datetime_utc"] else v for k, v in d.items()} for d in response]
+            response = [{k: v.replace("$","").replace(",", "") if k in ["debit_amt", "credit_amt", "credit_applied_amnt", "debit_commissions_amount"] and v is not None else v for k, v in d.items()} for d in response]
+            return DataFrame[self.input_schema](response)
+
+            # if response['data']:   
+            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+            #     response['data'] = [{k: v[:19] if k in ["event_datetime_utc", "datetime_utc"] else v for k, v in d.items()} for d in response['data']]
+            #     response['data'] = [{k: v.replace("$","").replace(",", "") if k in ["debit_amt", "credit_amt", "credit_applied_amnt", "debit_commissions_amount"] and v is not None else v for k, v in d.items()} for d in response['data']]
+            #     return DataFrame[self.input_schema](response['data'])
             
-            else:
-                return None 
+            # else:
+            #     return None 
 
         elif endpoint == "products":
 
-            if response['data']:   
-                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                # response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
-                return DataFrame[self.input_schema](response['data'])
+            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
+            return DataFrame[self.input_schema](response)
+        
+            # if response['data']:   
+            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+            #     # response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
+            #     return DataFrame[self.input_schema](response['data'])
             
-            else:
-                return None
+            # else:
+            #     return None
 
         elif endpoint == "sales":
 
-            if response['data']:   
-                response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-                response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
-                response['data'] = [{k: v.replace("$","").replace(",", "") if k in ["list_price", "total_price"] and v is not None else v for k, v in d.items()} for d in response['data']]
-                return DataFrame[self.input_schema](response['data'])
+            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
+            response = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response]
+            response = [{k: v.replace("$","").replace(",", "") if k in ["list_price", "total_price"] and v is not None else v for k, v in d.items()} for d in response]
+            return DataFrame[self.input_schema](response)
+
+            # if response['data']:   
+            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
+            #     response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
+            #     response['data'] = [{k: v.replace("$","").replace(",", "") if k in ["list_price", "total_price"] and v is not None else v for k, v in d.items()} for d in response['data']]
+            #     return DataFrame[self.input_schema](response['data'])
             
-            else:
-                return None
+            # else:
+            #     return None
 
         else:
             raise ValueError(f"Bruh.. Put an endpoint in here 😑")
