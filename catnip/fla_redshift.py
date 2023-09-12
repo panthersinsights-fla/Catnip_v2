@@ -144,15 +144,18 @@ class FLA_Redshift(BaseModel):
     
     def execute_and_commit(self, sql_string: str) -> None:
         
-        with self._connect_to_redshift() as conn:
-            conn.autocommit = True
-            with conn.cursor() as cursor:
-                cursor.execute(sql_string)
-                #conn.commit()
+        # connect
+        conn = self._connect_to_redshift()
+        
+        # set cursor
+        cursor = conn.cursor()
+        conn.autocommit = True
+        
+        # execute and commit
+        cursor.execute(sql_string)
 
-        ## close up shop
+        # close up shop
         cursor.close()
-        #conn.commit()
         conn.close()
 
         return None
