@@ -145,7 +145,7 @@ class FLA_Redshift(BaseModel):
     def execute_and_commit(self, sql_string: str) -> None:
         
         with self._connect_to_redshift() as conn:
-            #conn.set_session(autocommit=True)
+            conn.autocommit = True
             with conn.cursor() as cursor:
                 cursor.execute(sql_string)
                 #conn.commit()
@@ -169,8 +169,7 @@ class FLA_Redshift(BaseModel):
             host = self.host.get_secret_value(),
             port = self.port,
             user = self.user.get_secret_value(),
-            password = self.password.get_secret_value(),
-            autocommit=True
+            password = self.password.get_secret_value()
         )
 
         return conn 
