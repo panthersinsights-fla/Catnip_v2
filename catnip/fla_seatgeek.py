@@ -131,7 +131,7 @@ class FLA_SeatGeek(BaseModel):
         start_time = datetime.now()
         self._headers['Authorization'] = f"Bearer {self.bearer_token.get_secret_value()}"
 
-        _params = {"limit": 1500}
+        _params = {"limit": 1250}
         if _cursor is not None:
             _params["cursor"] = _cursor
 
@@ -146,11 +146,7 @@ class FLA_SeatGeek(BaseModel):
         self._check_reponse(response); print(f"Intial Request: {response}")
 
         # Pass Check -> update variables
-        responses = response.json()['data']; print(type(responses)); print(len(responses))
-        # df = self._clean_response(endpoint = endpoint, r = response)
-        # if df is None:
-        #     print(response.json())
-        #     return None
+        responses = response.json()['data']
         if len(responses) == 0:
             print(responses)
             return None
@@ -176,9 +172,6 @@ class FLA_SeatGeek(BaseModel):
 
                 # Pass Check -> update variables
                 response = temp_response
-                # temp_df = self._clean_response(endpoint = endpoint, r = response)
-                # df = pd.concat([df, temp_df], ignore_index = True)
-
                 responses = [*responses, *response.json()['data']]
 
                 _has_more = response.json()['has_more']
@@ -193,7 +186,7 @@ class FLA_SeatGeek(BaseModel):
             if i % 5 == 0:
                 print(i)
 
-            if (datetime.now() - start_time) > timedelta(minutes=5):
+            if (datetime.now() - start_time) > timedelta(minutes=7, seconds=30):
                 break
 
             i += 1
@@ -209,50 +202,25 @@ class FLA_SeatGeek(BaseModel):
     def _clean_response(
             self, 
             endpoint: str, # attendance, clients, manifests, payments, products, sales 
-            # r: requests.Response
             response: List[Dict]
         ) -> pd.DataFrame | None:
-
-        # response = r.json()
 
         if endpoint == "attendance":
 
             response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
 
-            # if response['data']:   
-            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-            #     return DataFrame[self.input_schema](response['data'])
-            
-            # else:
-            #     return None
-
         elif endpoint == "clients":
 
             response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
             response = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
-        
-            # if response['data']:   
-            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-            #     response['data'] = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response['data']]
-            #     return DataFrame[self.input_schema](response['data'])
-            
-            # else:
-            #     return None
 
         elif endpoint == "manifests":
 
             response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
             response = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
-
-            # if response['data']:   
-            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-            #     return DataFrame[self.input_schema](response['data'])
-            
-            # else:
-            #     return None
 
         elif endpoint == "payments":
 
@@ -261,27 +229,10 @@ class FLA_SeatGeek(BaseModel):
             response = [{k: v.replace("$","").replace(",", "") if k in ["debit_amt", "credit_amt", "credit_applied_amnt", "debit_commissions_amount"] and v is not None else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
 
-            # if response['data']:   
-            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-            #     response['data'] = [{k: v[:19] if k in ["event_datetime_utc", "datetime_utc"] else v for k, v in d.items()} for d in response['data']]
-            #     response['data'] = [{k: v.replace("$","").replace(",", "") if k in ["debit_amt", "credit_amt", "credit_applied_amnt", "debit_commissions_amount"] and v is not None else v for k, v in d.items()} for d in response['data']]
-            #     return DataFrame[self.input_schema](response['data'])
-            
-            # else:
-            #     return None 
-
         elif endpoint == "products":
 
             response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
-        
-            # if response['data']:   
-            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-            #     # response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
-            #     return DataFrame[self.input_schema](response['data'])
-            
-            # else:
-            #     return None
 
         elif endpoint == "sales":
 
@@ -289,15 +240,6 @@ class FLA_SeatGeek(BaseModel):
             response = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response]
             response = [{k: v.replace("$","").replace(",", "") if k in ["list_price", "total_price"] and v is not None else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
-
-            # if response['data']:   
-            #     response['data'] = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response['data']]
-            #     response['data'] = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response['data']]
-            #     response['data'] = [{k: v.replace("$","").replace(",", "") if k in ["list_price", "total_price"] and v is not None else v for k, v in d.items()} for d in response['data']]
-            #     return DataFrame[self.input_schema](response['data'])
-            
-            # else:
-            #     return None
 
         else:
             raise ValueError(f"Bruh.. Put an endpoint in here 😑")
