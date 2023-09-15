@@ -186,7 +186,7 @@ class FLA_SeatGeek(BaseModel):
             if i % 5 == 0:
                 print(i)
 
-            if (datetime.now() - start_time) > timedelta(minutes=6, seconds=30):
+            if (datetime.now() - start_time) > timedelta(minutes=5):
                 break
 
             i += 1
@@ -205,38 +205,28 @@ class FLA_SeatGeek(BaseModel):
             response: List[Dict]
         ) -> pd.DataFrame | None:
 
-        if endpoint == "attendance":
+        response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
 
-            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
+        if endpoint == "attendance":
             return DataFrame[self.input_schema](response)
 
         elif endpoint == "clients":
-
-            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
             response = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
 
         elif endpoint == "manifests":
-
-            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
             response = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
 
         elif endpoint == "payments":
-
-            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
             response = [{k: v[:19] if k in ["event_datetime_utc", "datetime_utc"] else v for k, v in d.items()} for d in response]
             response = [{k: v.replace("$","").replace(",", "") if k in ["debit_amt", "credit_amt", "credit_applied_amnt", "debit_commissions_amount"] and v is not None else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
 
         elif endpoint == "products":
-
-            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
 
         elif endpoint == "sales":
-
-            response = [{k[1:] if k.startswith('_') else k.replace('"',''): v for k, v in d.items()} for d in response]
             response = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response]
             response = [{k: v.replace("$","").replace(",", "") if k in ["list_price", "total_price"] and v is not None else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
