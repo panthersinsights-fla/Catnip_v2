@@ -49,6 +49,10 @@ class FLA_Big_Commerce(BaseModel):
     def get_customer_groups(self) -> pd.DataFrame:
 
         return asyncio.run(self._request_loop_v2(endpoint = "customer_groups", batch_size=5))
+    
+    def get_customers_addresses(self) -> pd.DataFrame:
+
+        return asyncio.run(self._request_loop_v3(endpoint = "customers/addresses"))
 
     def get_product_categories(self) -> pd.DataFrame:
 
