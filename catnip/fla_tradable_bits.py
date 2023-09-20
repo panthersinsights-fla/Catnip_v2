@@ -66,7 +66,7 @@ class FLA_Tradable_Bits(BaseModel):
             if response.json()['data']:
                 responses = [*responses, *response.json()['data']]    
             
-        print(responses)
+        print(f"# responses: {len(responses)}")
         if self.input_schema:
             df = DataFrame[self.input_schema](pd.json_normalize(responses))
         else:
