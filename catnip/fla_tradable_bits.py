@@ -48,7 +48,8 @@ class FLA_Tradable_Bits(BaseModel):
         )
 
         search_uid = response.json()['meta']['search_uid']
-        df = self._get_dataframe(response=response)
+        #df = self._get_dataframe(response=response)
+        responses = response.json()['data']
 
         ### Request rest #######################################
         while response.json()['data']:
@@ -61,9 +62,16 @@ class FLA_Tradable_Bits(BaseModel):
                 }
             )
 
-            temp_df = self._get_dataframe(response=response)
-            df = pd.concat([df, temp_df], ignore_index = True)
-
+            #temp_df = self._get_dataframe(response=response)
+            if response.json()['data']:
+                responses = [*responses, *response.json()['data']]    
+            
+        print(responses)
+        if self.input_schema:
+            df = DataFrame[self.input_schema](pd.json_normalize(responses))
+        else:
+            df = pd.json_normalize(responses)
+        
         return df 
 
 

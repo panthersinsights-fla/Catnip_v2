@@ -107,8 +107,8 @@ class FLA_Sharepoint(BaseModel):
         is_xml: bool = False,
         is_excel: bool = False,
         is_text: bool = False,
-        sheet_name: str | None = None,
-        skiprows: int | None = None, # pd.read_csv option
+        sheet_name: str | None = None, # pd.read_excel option
+        skiprows: int | None = None, # pd.read_csv/excel option
         thousands: str = ",", # pd.read_csv option
         quotechar: str | None = '"' # pd.read_csv option
     ) -> pd.DataFrame | str | None:
