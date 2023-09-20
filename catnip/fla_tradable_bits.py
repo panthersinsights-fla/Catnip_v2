@@ -48,7 +48,6 @@ class FLA_Tradable_Bits(BaseModel):
         )
 
         search_uid = response.json()['meta']['search_uid']
-        #df = self._get_dataframe(response=response)
         responses = response.json()['data']
 
         ### Request rest #######################################
@@ -62,11 +61,12 @@ class FLA_Tradable_Bits(BaseModel):
                 }
             )
 
-            #temp_df = self._get_dataframe(response=response)
             if response.json()['data']:
                 responses = [*responses, *response.json()['data']]    
             
         print(f"# responses: {len(responses)}")
+
+        ### Create dataframe ####################################
         if self.input_schema:
             df = DataFrame[self.input_schema](pd.json_normalize(responses))
         else:
@@ -86,7 +86,8 @@ class FLA_Tradable_Bits(BaseModel):
             }
         )
 
-        df = self._get_dataframe(response=response)
+        #df = self._get_dataframe(response=response)
+        responses = response.json()['data']
         min_activity_id = response['max_activity_id']
 
         ### Request rest #########################################
@@ -101,10 +102,18 @@ class FLA_Tradable_Bits(BaseModel):
             )
 
             min_activity_id = response['max_activity_id']
-            temp_df = self._get_dataframe(response=response)
-            df = pd.concat([df, temp_df], ignore_index = True)
 
+            if response.json()['data']:
+                responses = [*responses, *response.json()['data']] 
 
+        print(f"# responses: {len(responses)}")
+
+        ### Create dataframe ####################################
+        if self.input_schema:
+            df = DataFrame[self.input_schema](pd.json_normalize(responses))
+        else:
+            df = pd.json_normalize(responses)
+        
         return df 
     
     ########################
