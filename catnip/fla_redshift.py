@@ -50,7 +50,6 @@ class FLA_Redshift(BaseModel):
             df: pd.DataFrame,
             table_name: str,
             to_append: bool = False,
-            is_staging: bool = False,
             column_data_types: List[str] | None = None,
             varchar_max_list: List = [],
             index: bool = False,
@@ -99,7 +98,6 @@ class FLA_Redshift(BaseModel):
             self._create_redshift_table(
                 df = df,
                 redshift_table_name = redshift_table_name,
-                is_staging = is_staging,
                 column_data_types = column_data_types,
                 varchar_max_list = varchar_max_list,
                 index = index,
@@ -342,7 +340,10 @@ class FLA_Redshift(BaseModel):
             elif dtype.startswith("float"):
                 return "FLOAT"
             elif dtype.startswith("datetime"):
-                return "TIMESTAMP"
+                if len(dtype.split(",")) > 1:
+                    return "TIMESTAMPTZ"
+                else:
+                    return "TIMESTAMP"
             elif dtype in ["bool", "boolean"]:
                 return "BOOLEAN"
             else:
@@ -358,13 +359,27 @@ class FLA_Redshift(BaseModel):
 
         return column_data_types
 
+    def _get_encoded_values(
+            self,
+            column_data_types: List[str]
+    ) -> List[str]:
+        
+        encoding_dict = {
+            "BIGINT": "AZ64", 
+            "INTEGER": "AZ64", 
+            "FLOAT": "RAW", 
+            "TIMESTAMP": "AZ64", 
+            "BOOLEAN": "RAW",
+            "VARCHAR": "LZO"
+        }
+        
+        return [encoding_dict[dt.split("(")[0]] for dt in column_data_types]
     
     ## create redshift table
     def _create_redshift_table(
             self,
             df: pd.DataFrame,
             redshift_table_name: str,
-            is_staging: bool,
             column_data_types: List[str] | None,
             varchar_max_list: List,
             index: bool,
@@ -386,12 +401,15 @@ class FLA_Redshift(BaseModel):
         if column_data_types is None:
             column_data_types = self._get_column_data_types(df = df, varchar_max_list = varchar_max_list, index = index)
 
+        ## Get encoded values
+        encoded_values = self._get_encoded_values(column_data_types)
+
         ## Create table query
         create_table_query = f""" 
             
-            create table {redshift_table_name}{f"_staging (LIKE {redshift_table_name}) " if is_staging else ""}
+            create table {redshift_table_name}
                 ({
-                    ", ".join([f"{x} {y}" for x, y in zip(columns, column_data_types)])
+                    ", ".join([f"{c} {dt} ENCODE {e}" for c, dt, e in zip(columns, column_data_types, encoded_values)])
                 })
 
         """
