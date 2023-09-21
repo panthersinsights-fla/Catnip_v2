@@ -50,6 +50,7 @@ class FLA_Redshift(BaseModel):
             df: pd.DataFrame,
             table_name: str,
             to_append: bool = False,
+            is_staging: bool = False,
             column_data_types: List[str] | None = None,
             varchar_max_list: List = [],
             index: bool = False,
@@ -98,6 +99,7 @@ class FLA_Redshift(BaseModel):
             self._create_redshift_table(
                 df = df,
                 redshift_table_name = redshift_table_name,
+                is_staging = is_staging,
                 column_data_types = column_data_types,
                 varchar_max_list = varchar_max_list,
                 index = index,
@@ -362,6 +364,7 @@ class FLA_Redshift(BaseModel):
             self,
             df: pd.DataFrame,
             redshift_table_name: str,
+            is_staging: bool,
             column_data_types: List[str] | None,
             varchar_max_list: List,
             index: bool,
@@ -386,7 +389,7 @@ class FLA_Redshift(BaseModel):
         ## Create table query
         create_table_query = f""" 
             
-            create table {redshift_table_name}
+            create table {redshift_table_name}{f"_staging (LIKE {redshift_table_name}) " if is_staging else ""}
                 ({
                     ", ".join([f"{x} {y}" for x, y in zip(columns, column_data_types)])
                 })

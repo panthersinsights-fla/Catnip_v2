@@ -126,7 +126,7 @@ class FLA_Big_Commerce(BaseModel):
 
         retry = Retry(total = 5, backoff_factor = 0.5)
         transport = httpx.AsyncHTTPTransport(retries = retry)
-        client = httpx.AsyncClient(transport = transport)
+        client = httpx.AsyncClient(transport = transport, timeout=10)
 
         return client
 
@@ -263,7 +263,7 @@ class FLA_Big_Commerce(BaseModel):
 
             count += batch_size
 
-        print(f"# Calls: {count}")
+        # print(f"# Calls: {count}")
         ### Create dataframe ###############################################
         responses = [_create_dataframe(response = r) for r in responses if r.status_code == 200]
         df = pd.concat(responses, ignore_index = True)
