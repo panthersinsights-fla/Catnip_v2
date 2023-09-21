@@ -186,7 +186,7 @@ class FLA_SeatGeek(BaseModel):
             if i % 5 == 0:
                 print(i)
 
-            if (datetime.now() - start_time) > timedelta(minutes=1):
+            if (datetime.now() - start_time) > timedelta(minutes=5):
                 break
 
             i += 1
