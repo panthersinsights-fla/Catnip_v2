@@ -284,7 +284,6 @@ class FLA_Redshift(BaseModel):
             CSV QUOTE AS '{quotechar}'
             DATEFORMAT '{dateformat}'
             TIMEFORMAT '{timeformat}'
-            COMPUPDATE ON
             {authorization_string}
             {parameters}
             {f" REGION '{region}'" if region else ""}
