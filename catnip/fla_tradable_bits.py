@@ -88,7 +88,7 @@ class FLA_Tradable_Bits(BaseModel):
 
         #df = self._get_dataframe(response=response)
         responses = response.json()['data']
-        min_activity_id = response.json()['max_activity_id']
+        min_activity_id = response.json()['meta']['max_activity_id']
 
         ### Request rest #########################################
         while response.json()['data']:
@@ -101,7 +101,7 @@ class FLA_Tradable_Bits(BaseModel):
                 }
             )
 
-            min_activity_id = response.json()['max_activity_id']
+            min_activity_id = response.json()['meta']['max_activity_id']
 
             if response.json()['data']:
                 responses = [*responses, *response.json()['data']] 
