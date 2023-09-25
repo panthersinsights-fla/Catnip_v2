@@ -160,7 +160,137 @@ class FLA_Redshift(BaseModel):
 
         return None
 
+    def upsert_to_warehouse(
+        self,
+        target_table: str,
+        select_query: str,
+        first_fill: bool = False,
+        primary_key: str = None,
+        base_table: str = None, # if first_fill = True, need value
+        sortkey: str = None,
+        post_delete_staging_where_clause: str = None
+    ) -> None:
+        
+        def _drop_table(is_staging: bool) -> None:
 
+            q = f"""
+                DROP TABLE IF EXISTS custom.{target_table}{f"_staging" if is_staging else ""}
+            """
+            cursor.execute(q)
+            conn.commit()
+
+            return None 
+        
+        def _create_table_from_information_schema(is_staging: bool) -> None:
+
+            info_schema_column_encodings = {
+                "bigint": "AZ64",
+                "boolean": "RAW",
+                "character varying": "LZO",
+                "double precision": "RAW",
+                "integer": "AZ64",
+                "real": "RAW",
+                "timestamp without time zone": "AZ64",
+                "timestamp with time zone": "AZ64"
+            }
+
+            if base_table is None and not is_staging:
+                raise SyntaxError(f"Need a base table in here bruh, if this is a first fill")
+            
+            # get columns and data types
+            q = f"""
+                SELECT 
+                    column_name, data_type
+                FROM 
+                    information_schema.columns
+                WHERE 
+                    table_name = '{target_table if is_staging else base_table}';
+            """
+            cursor.execute(q)
+            column_info = cursor.fetchall()
+            
+            # Step 2: Manually create the staging table with specified encodings
+            q = f"""
+                CREATE TABLE custom.{target_table}{f"_staging" if is_staging else ""} (
+                    {', '.join([f'{col[0]} {col[1]} ENCODE {info_schema_column_encodings[col[1].lower()]}' for col in column_info])}
+                )
+                {f" SORTKEY ({sortkey})" if sortkey else ""};
+            """
+            cursor.execute(q)
+            conn.commit()
+
+            return None
+        
+        def _insert_into_table(is_staging: bool) -> None:
+
+            q = f"""
+                INSERT INTO custom.{target_table}{f"_staging" if is_staging else ""} (
+                    {select_query}
+                );
+            """
+            cursor.execute(q)
+            conn.commit()
+
+            return None
+
+
+
+        # connect
+        conn = self._connect_to_redshift()
+        
+        # set cursor
+        cursor = conn.cursor()
+        conn.autocommit = True
+
+        # drop table
+        _drop_table(is_staging = not first_fill)
+
+        # create table from base/target
+        _create_table_from_information_schema(is_staging = not first_fill)
+
+        # insert into table with select query
+        _insert_into_table(is_staging = not first_fill)
+
+        if not first_fill:
+
+            # delete rows from the production table where primary key matches with staging
+            q = f"""
+                DELETE FROM
+                    custom.{target_table}
+                USING
+                    custom.{target_table}_staging
+                WHERE
+                    custom.{target_table}.{primary_key} = custom.{target_table}_staging.{primary_key};
+            """
+            cursor.execute(q)
+            conn.commit()
+            
+            # update staging table (if necessary)
+            if post_delete_staging_where_clause:
+                q = f"""
+                    DELETE FROM 
+                        custom.{target_table}_staging
+                    {post_delete_staging_where_clause};
+                """
+                cursor.execute(q)
+                conn.commit()
+
+            # append data from staging table back to the production table
+            q = f"""
+                ALTER TABLE custom.{target_table} APPEND FROM custom.{target_table}_staging;
+            """
+            cursor.execute(q)
+            conn.commit()
+            
+            # drop the staging table
+            q = f"""
+                DROP TABLE custom.{target_table}_staging;
+            """
+            cursor.execute(q)
+            conn.commit()
+
+        return None 
+    
     ##########################
     ### CONNECTION HELPERS ###
     ##########################
