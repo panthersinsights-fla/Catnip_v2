@@ -183,26 +183,30 @@ class FLA_Redshift(BaseModel):
         
         def _create_table_from_information_schema(is_staging: bool) -> None:
 
-            info_schema_column_encodings = {
-                "bigint": "AZ64",
-                "boolean": "RAW",
-                "character varying": "LZO",
-                "double precision": "RAW",
-                "integer": "AZ64",
-                "real": "RAW",
-                "timestamp without time zone": "AZ64",
-                "timestamp with time zone": "AZ64"
-            }
+            # info_schema_column_encodings = {
+            #     "bigint": "AZ64",
+            #     "boolean": "RAW",
+            #     "character varying": "LZO",
+            #     "double precision": "RAW",
+            #     "integer": "AZ64",
+            #     "real": "RAW",
+            #     "timestamp without time zone": "AZ64",
+            #     "timestamp with time zone": "AZ64"
+            # }
 
             if base_table is None and not is_staging:
                 raise SyntaxError(f"Need a base table in here bruh, if this is a first fill")
             
             # get columns and data types
             q = f"""
-                SELECT 
-                    column_name, data_type
-                FROM 
-                    information_schema.columns
+                SELECT
+                    column_name,
+                    CASE
+                        WHEN udt_name = 'varchar' THEN upper(udt_name) || '(' || character_maximum_length || ')'
+                        ELSE upper(udt_name)
+                    END AS "data_type"
+                FROM
+                    information_schema.columns 
                 WHERE 
                     table_name = '{target_table if is_staging else base_table}'
                 ORDER BY 
@@ -212,10 +216,15 @@ class FLA_Redshift(BaseModel):
             column_info = cursor.fetchall()
             
             # Step 2: Manually create the staging table with specified encodings
+            columns = [x[0] for x in column_info]
+            column_data_types = [x[1] for x in column_info]
+            encoded_values = self._get_encoded_values(column_data_types)
+
             q = f"""
-                CREATE TABLE custom.{target_table}{f"_staging" if is_staging else ""} (
-                    {', '.join([f'{col[0]} {col[1]} ENCODE {info_schema_column_encodings[col[1].lower()]}' for col in column_info])}
-                )
+                CREATE TABLE custom.{target_table}{f"_staging" if is_staging else ""} 
+                    ({
+                        ', '.join([f'{c} {dt} ENCODE {e}' for c, dt, e in zip(columns, column_data_types, encoded_values)])
+                    })
                 {f" SORTKEY ({sortkey})" if sortkey else ""};
             """
             cursor.execute(q)
@@ -465,18 +474,18 @@ class FLA_Redshift(BaseModel):
         def _pd_dtype_to_redshift_dtype(dtype: str) -> str:
 
             if dtype.startswith("int64"):
-                return "BIGINT"
+                return "INT8"
             elif dtype.startswith("int"):
-                return "INTEGER"
+                return "INT"
             elif dtype.startswith("float"):
-                return "FLOAT"
+                return "FLOAT8"
             elif dtype.startswith("datetime"):
                 if len(dtype.split(",")) > 1:
                     return "TIMESTAMPTZ"
                 else:
                     return "TIMESTAMP"
             elif dtype in ["bool", "boolean"]:
-                return "BOOLEAN"
+                return "BOOL"
             else:
                 return "VARCHAR(256)"
         
@@ -496,11 +505,12 @@ class FLA_Redshift(BaseModel):
     ) -> List[str]:
         
         encoding_dict = {
-            "BIGINT": "AZ64", 
-            "INTEGER": "AZ64", 
-            "FLOAT": "RAW", 
+            "INT8": "AZ64", 
+            "INT": "AZ64", 
+            "FLOAT8": "RAW", 
             "TIMESTAMP": "AZ64", 
-            "BOOLEAN": "RAW",
+            "TIMESTAMPTZ": "AZ64", 
+            "BOOL": "RAW",
             "VARCHAR": "LZO"
         }
         
