@@ -204,7 +204,9 @@ class FLA_Redshift(BaseModel):
                 FROM 
                     information_schema.columns
                 WHERE 
-                    table_name = '{target_table if is_staging else base_table}';
+                    table_name = '{target_table if is_staging else base_table}'
+                ORDER BY 
+                    ordinal_position;
             """
             cursor.execute(q)
             column_info = cursor.fetchall()
