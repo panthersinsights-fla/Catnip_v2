@@ -75,7 +75,7 @@ class FLA_Parkhub(BaseModel):
             return pd.DataFrame(response.json()['lots'])
 
     
-    def get_reporting(self, date_from: str) -> pd.DataFrame:
+    def get_reporting(self, date_from: str = "2021-07-01") -> pd.DataFrame:
 
         file_identifier = self._get_response(
             url = f"{self._base_url}/report/{self.organization_id.get_secret_value()}",

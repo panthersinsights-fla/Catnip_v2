@@ -5,7 +5,7 @@ from pandera.typing import DataFrame
 from pydantic import BaseModel, SecretStr
 from typing import List
 
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 from io import StringIO
 from uuid import uuid4
@@ -79,7 +79,7 @@ class FLA_Redshift(BaseModel):
             df = df.reindex(columns = [x for x in [*self.output_schema.to_schema().columns] if x in df.columns.to_list()])
 
         ## Create processed date field
-        df['processed_date'] = datetime.utcnow()
+        df['processed_date'] = datetime.now(timezone.utc)
 
         ## Write to S3
         redshift_table_name = f"custom.{table_name}"
