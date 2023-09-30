@@ -35,11 +35,11 @@ class FLA_Odbc(BaseModel):
                 df = DataFrame[self.input_schema](pd.read_sql(sql_string, connection))
             except Exception as e:
                 print(list(pd.read_sql(sql_string, connection).columns))
-                print(f"e")
+                print(f"{e}")
         else:
             try:
                 df = pd.read_sql(sql_string, connection)
             except Exception as e:
-                print(f"e")
+                print(f"{e}")
 
         return df
