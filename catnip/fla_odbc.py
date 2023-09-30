@@ -4,6 +4,9 @@ from pandera.typing import DataFrame
 import pandas as pd
 import pyodbc
 
+# set default variable
+pyodbc.lowercase = True
+
 class FLA_Odbc(BaseModel):
 
     host: SecretStr
