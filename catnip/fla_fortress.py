@@ -27,7 +27,7 @@ class FLA_Fortress(BaseModel):
 
     @property
     def _headers(self) -> Dict:
-        credentials = f"{self.username}:{self.password}"
+        credentials = f"{self.username.get_secret_value()}:{self.password.get_secret_value()}"
         return {
             "Authorization": f"Basic {base64.b64encode(credentials.encode()).decode()}",
             "Content-Type": "application/json"
@@ -37,7 +37,7 @@ class FLA_Fortress(BaseModel):
         return {
             "Header": {
                 "Client_AppID": "com.panthers",
-                "Client_APIKey": self.api_key,
+                "Client_APIKey": self.api_key.get_secret_value(),
                 "Client_AgencyCode": "Panthers",
                 "UniqID": 1
             },
@@ -51,7 +51,7 @@ class FLA_Fortress(BaseModel):
     def get_attendance(self, from_datetime: datetime, to_datetime: datetime) -> pd.DataFrame:
 
         return self._request_loop(
-            endpoint = f"{self._base_url}/TimeAttendanceInformation_Paging/", 
+            endpoint = "TimeAttendanceInformation_Paging/", 
             base_payload = {
                 **self._get_base_payload(),
                 "FromDateTime": from_datetime.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -62,7 +62,7 @@ class FLA_Fortress(BaseModel):
     def get_events(self, from_datetime: datetime, to_datetime: datetime) -> pd.DataFrame:
 
         return self._request_loop(
-            endpoint = f"{self._base_url}/EventInformation_PagingStatistics/", 
+            endpoint = "EventInformation_PagingStatistics/", 
             base_payload = {
                 **self._get_base_payload(),
                 "FromDateTime": from_datetime.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -73,7 +73,7 @@ class FLA_Fortress(BaseModel):
     def get_members(self, from_datetime: datetime, to_datetime: datetime) -> pd.DataFrame:
 
         return self._request_loop(
-            endpoint = f"{self._base_url}/MemberInformation_PagingStatistics/", 
+            endpoint = "MemberInformation_PagingStatistics/", 
             base_payload = {
                 **self._get_base_payload(),
                 "FromDateTime": from_datetime.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -84,7 +84,7 @@ class FLA_Fortress(BaseModel):
     def get_tickets(self, from_datetime: datetime, to_datetime: datetime) -> pd.DataFrame:
 
         return self._request_loop(
-            endpoint = f"{self._base_url}/TicketInformation_PagingStatistics/", 
+            endpoint = "TicketInformation_PagingStatistics/", 
             base_payload = {
                 **self._get_base_payload(),
                 "FromDateTime": from_datetime.strftime("%Y-%m-%dT%H:%M:%S"),
