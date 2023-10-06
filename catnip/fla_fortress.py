@@ -96,33 +96,6 @@ class FLA_Fortress(BaseModel):
     ### HELPER FUNCTIONS ###
     ########################
 
-    '''
-        ETL
-            - full refresh
-                - events everytime
-
-            - incremental
-                - get last updated on
-                    - attendance datetime
-                    - warehouse processed date for tickets
-                - call api for new records
-                    - to datetime = last updated on w/format
-                    - from datetime = now
-                - stage
-                - delete primary keys from prod
-                - append
-                - drop staging
-    '''
-
-    '''
-        REQUEST LOOP
-            - intial request
-            - get numberOfPages
-            - create async requests for all pages
-            - combine requests into single list
-            - create concat dataframe w/schema from requests
-    '''
-
     def _create_async_session(self) -> httpx.AsyncClient:
 
         retry = Retry(total = 5, backoff_factor = 0.5)
@@ -162,7 +135,7 @@ class FLA_Fortress(BaseModel):
         self, 
         endpoint: str,
         base_payload: Dict, 
-        batch_size: int = 25
+        batch_size: int = 5
     ) -> pd.DataFrame:
 
         def _create_dataframe(response: httpx.Response) -> pd.DataFrame:
@@ -207,6 +180,9 @@ class FLA_Fortress(BaseModel):
                     end_page = batches[i]
                 )
             ]
+
+            if i > 1:
+                break
 
         ### Create dataframe ###############################################
         responses = [_create_dataframe(r) for r in responses]
