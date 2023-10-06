@@ -115,6 +115,8 @@ class FLA_Fortress(BaseModel):
     async def _get_async_request(self, url: str, payload: Dict) -> httpx.Response:
 
         print(f"Running {url}: {payload['PageNumber']}")
+        print(self._headers)
+        print(payload)
         async with self._create_async_session() as session:
             response = await session.post(
                 url = url,
