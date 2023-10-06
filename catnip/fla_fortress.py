@@ -23,7 +23,7 @@ class FLA_Fortress(BaseModel):
 
     @property
     def _base_url(self) -> str:
-        return "https://panthers.fortressus.com/FGB_WebApplication/FGB/Production/api/CRM/"
+        return "https://panthers.fortressus.com/FGB_WebApplication/FGB/Production/api/CRM"
 
     @property
     def _headers(self) -> Dict:
