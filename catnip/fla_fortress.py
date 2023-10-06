@@ -123,6 +123,7 @@ class FLA_Fortress(BaseModel):
                 # data = payload
             )
 
+        print(response.status_code); print(len(response.json()['data']))
         return response
 
     async def _async_gather_pages(self, url: str, base_payload: Dict, start_page: int, end_page: int) -> List[httpx.Response]:
@@ -181,10 +182,11 @@ class FLA_Fortress(BaseModel):
                 )
             ]
 
-            if i > 1:
+            if i > 5:
                 break
 
         ### Create dataframe ###############################################
+        print(len(responses))
         responses = [_create_dataframe(r) for r in responses]
         df = pd.concat(responses, ignore_index = True)
 
