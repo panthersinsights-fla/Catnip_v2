@@ -98,9 +98,9 @@ class FLA_Fortress(BaseModel):
 
     def _create_async_session(self) -> httpx.AsyncClient:
 
-        retry = Retry(total = 5, backoff_factor = 0.5)
+        retry = Retry(total=10, backoff_factor=1, status=10, status_forcelist=[406])
         transport = httpx.AsyncHTTPTransport(retries = retry)
-        client = httpx.AsyncClient(transport = transport, timeout=10)
+        client = httpx.AsyncClient(transport = transport, timeout=90)
 
         return client
 
@@ -124,6 +124,22 @@ class FLA_Fortress(BaseModel):
                 json = payload
                 # data = payload
             )
+    # retries = 0
+    # async with httpx.AsyncClient() as client:
+    #     while retries < max_retries:
+    #         try:
+    #             response = await client.get(url)
+    #             response.raise_for_status()
+    #             return response
+    #         except httpx.HTTPError as e:
+    #             # Handle specific HTTP errors if needed
+    #             print(f"Request failed with status code {e.response.status_code}")
+    #             retries += 1
+    #             await asyncio.sleep(2 ** retries)  # Exponential backoff (2^n seconds)
+    #             continue
+    #     else:
+    #         # Max retries exceeded, raise an exception or return an error response
+    #         raise Exception("Max retries exceeded")
 
         print(response.status_code); print(len(response.json()['data']))
         return response
