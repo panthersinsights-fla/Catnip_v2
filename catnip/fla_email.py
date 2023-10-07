@@ -32,7 +32,7 @@ class FLA_Email(BaseModel):
         receiver_email: str,
         subject: str,
         body: str,
-        cc_list: List[str] = None,
+        cc_list: List[str] = [],
         df_attachments: List[pd.DataFrame] = None 
     ) -> None:
 
@@ -42,7 +42,7 @@ class FLA_Email(BaseModel):
         message['From'] = self.sender_email
         message['To'] = receiver_email
         message['Subject'] = subject
-        if cc_list is not None:
+        if cc_list:
             message['Cc'] = ", ".join(cc_list)
         to_addrs = [receiver_email, *cc_list]
 
