@@ -14,54 +14,55 @@ class FLA_Email(BaseModel):
     sender_email: str
     sender_email_pw: SecretStr
 
-    receiver_email: str 
+    # receiver_email: str 
 
-    subject: str
-    body: str
+    # subject: str
+    # body: str
     
-    cc_list: List[str] | None
-    df_attachments: List[pd.DataFrame] | None 
+    # cc_list: List[str] | None
+    # df_attachments: List[pd.DataFrame] | None 
 
 
     ######################
     ### USER FUNCTIONS ###
     ######################
 
-    def send_email(self) -> None:
+    def send_email(
+        self,
+        receiver_email: str,
+        subject: str,
+        body: str,
+        cc_list: List[str] = None,
+        df_attachments: List[pd.DataFrame] = None 
+    ) -> None:
 
         ## Create email structure
         message = MIMEMultipart()
 
-        message['From'] = self.sender
-        message['To'] = self.receiver
-        message['Subject'] = self.subject
-        message['Cc'] = cc_stringlist
+        message['From'] = self.sender_email
+        message['To'] = receiver_email
+        message['Subject'] = subject
+        message['Cc'] = ", ".join(cc_list)
+        to_addrs = [receiver_email, *cc_list]
 
-        message.attach(MIMEText(self.body, "html"))
-
-
-        ## Add cc's
-        to_addrs = [self.receiver_email]
-        if self.cc_list:
-            cc_stringlist = ", ".join(self.cc)
-            to_addrs += cc_stringlist
+        message.attach(MIMEText(body, "html"))
 
 
-        ## Add attachements, if necessary 
-        if self.df_attachments:
+        # ## Add attachements, if necessary 
+        # if self.df_attachments:
             
-            csv_file_objects = self._convert_df_attachments_to_file_objects()
+        #     csv_file_objects = self._convert_df_attachments_to_file_objects()
 
-            for index, csv_data in enumerate(csv_file_objects):
+        #     for index, csv_data in enumerate(csv_file_objects):
 
-                csv_part = MIMEApplication(csv_data)
-                csv_part.add_header(
-                    "Content-Disposition", 
-                    "attachment", 
-                    filename = f"data_{index}.csv"
-                )
+        #         csv_part = MIMEApplication(csv_data)
+        #         csv_part.add_header(
+        #             "Content-Disposition", 
+        #             "attachment", 
+        #             filename = f"data_{index}.csv"
+        #         )
 
-                message.attach(csv_part)
+        #         message.attach(csv_part)
 
 
         ## And finally, send

@@ -83,7 +83,7 @@ class FLA_Fortress(BaseModel):
     
     def get_tickets(self, from_datetime: datetime, to_datetime: datetime) -> pd.DataFrame:
 
-        return self._request_loop(
+        return self._request_loop_poke(
             endpoint = "TicketInformation_PagingStatistics/", 
             base_payload = {
                 **self._get_base_payload(),
