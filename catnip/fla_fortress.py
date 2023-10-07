@@ -272,9 +272,9 @@ class FLA_Fortress(BaseModel):
                 print(f"Requesting: Page #{i}")
                 responses = [*responses, _get_response(session, i)]
 
-                time.sleep(15)
+                time.sleep(14)
 
-                if i > 5:
+                if i > 30:
                     break
 
         ### Create dataframe ###############################################
