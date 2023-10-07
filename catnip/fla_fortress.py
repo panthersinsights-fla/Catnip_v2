@@ -262,6 +262,7 @@ class FLA_Fortress(BaseModel):
             )
 
         num_pages = response.json()['statistics']['numberOfPages']; print(f"# Pages: {num_pages}")
+        response_datetime = pd.Timestamp(response.headers['Date']).astimezone("America/New_York").tz_localize(None).to_datetime64()
         responses = [response]
 
         ### Request Rest ##################################################
@@ -271,14 +272,24 @@ class FLA_Fortress(BaseModel):
                 print(f"Requesting: Page #{i}")
                 responses = [*responses, _get_response(session, i)]
 
-                if i > 25:
-                    break
+                time.sleep(10)
 
-                time.sleep(5)
+                if i >5:
+                    break
 
         ### Create dataframe ###############################################
         print(f"# Responses: {len(responses)}")
-        responses = [_create_dataframe(r) for r in responses]
-        df = pd.concat(responses, ignore_index = True)
+        # responses = [_create_dataframe(r) for r in responses]
+        # responses = [item for sublist in responses for item in sublist]
+        responses = [item for response in responses for item in response.json()['data']]
+
+        if self.input_schema:
+            df = DataFrame[self.input_schema](response.json()['data'])
+        else:
+            df = pd.DataFrame(response.json()['data'])
+        
+        #df = pd.concat(responses, ignore_index = True)
+
+        df['response_datetime'] = response_datetime
 
         return df
