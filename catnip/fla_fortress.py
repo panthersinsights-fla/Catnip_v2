@@ -245,7 +245,7 @@ class FLA_Fortress(BaseModel):
                     response.raise_for_status()
                     return response
                 except httpx.HTTPError as e:
-                    (f"Request failed with status code {e.response.status_code}")
+                    print(f"Request failed with status code {e.response.status_code}")
                     time.sleep(2 ** retries)
                     retries += 1
                     continue 
@@ -269,14 +269,13 @@ class FLA_Fortress(BaseModel):
             for i in range(2, num_pages+1):
 
                 print(f"Requesting: Page #{i}")
-                
                 responses = [*responses, _get_response(session, i)]
 
-                if i > 5:
+                if i > 15:
                     break
 
         ### Create dataframe ###############################################
-        print(len(responses))
+        print(f"# Responses: {len(responses)}")
         responses = [_create_dataframe(r) for r in responses]
         df = pd.concat(responses, ignore_index = True)
 
