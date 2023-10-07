@@ -11,7 +11,7 @@ from urllib3.util.retry import Retry
 
 from datetime import datetime
 import base64
-
+import time
 
 class FLA_Fortress(BaseModel):
 
@@ -211,3 +211,73 @@ class FLA_Fortress(BaseModel):
         df = pd.concat(responses, ignore_index = True)
 
         return df 
+    
+    def _request_loop_poke(
+        self, 
+        endpoint: str,
+        base_payload: Dict,
+        max_retries: int = 5
+    ) -> pd.DataFrame:
+        
+        def _create_dataframe(response: httpx.Response) -> pd.DataFrame:
+
+            try:
+                if self.input_schema:
+                    return DataFrame[self.input_schema](response.json()['data'])
+                else:
+                    return pd.DataFrame(response.json()['data'])
+            
+            except Exception as e:
+                print(e)
+                print(endpoint)
+                print(pd.DataFrame(response.json()['data']))
+
+        def _get_response(session: httpx.Client, page_num: int) -> httpx.Response:
+                
+            retries = 0
+            while retries < max_retries:
+                try:
+                    response = session.post(
+                        url = f"{self._base_url}/{endpoint}",
+                        headers = self._headers,
+                        json = {**base_payload, "PageNumber": page_num}
+                    )
+                    response.raise_for_status()
+                    return response
+                except httpx.HTTPError as e:
+                    (f"Request failed with status code {e.response.status_code}")
+                    time.sleep(2 ** retries)
+                    retries += 1
+                    continue 
+            
+            else:
+                raise Exception("Max retries exceeded")
+
+        ### Initial Request ##############################################
+        with self._create_session() as session:
+            response = session.post(
+                url = f"{self._base_url}/{endpoint}",
+                headers = self._headers,
+                json = {**base_payload, "PageNumber": 1}
+            )
+
+        num_pages = response.json()['statistics']['numberOfPages']; print(f"# Pages: {num_pages}")
+        responses = [response]
+
+        ### Request Rest ##################################################
+        with self._create_session() as session:
+            for i in range(2, num_pages+1):
+
+                print(f"Requesting: Page #{i}")
+                
+                responses = [*responses, _get_response(session, i)]
+
+                if i > 5:
+                    break
+
+        ### Create dataframe ###############################################
+        print(len(responses))
+        responses = [_create_dataframe(r) for r in responses]
+        df = pd.concat(responses, ignore_index = True)
+
+        return df
