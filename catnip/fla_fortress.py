@@ -98,7 +98,7 @@ class FLA_Fortress(BaseModel):
 
     def _create_async_session(self) -> httpx.AsyncClient:
 
-        retry = Retry(total=10, backoff_factor=1, status=10, status_forcelist=[406])
+        retry = Retry(total=10, backoff_factor=1, status=10, status_forcelist=[406], allowed_methods=["POST"])
         transport = httpx.AsyncHTTPTransport(retries = retry)
         client = httpx.AsyncClient(transport = transport, timeout=90)
 
