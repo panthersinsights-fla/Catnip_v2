@@ -98,7 +98,14 @@ class FLA_Fortress(BaseModel):
 
     def _create_async_session(self) -> httpx.AsyncClient:
 
-        retry = Retry(total=10, backoff_factor=1, status=10, status_forcelist=[406], allowed_methods=["POST"])
+        retry = Retry(
+            total=10, 
+            backoff_factor=1, 
+            status=10, 
+            status_forcelist=[406], 
+            allowed_methods = ("POST")
+        )
+
         transport = httpx.AsyncHTTPTransport(retries = retry)
         client = httpx.AsyncClient(transport = transport, timeout=90)
 
@@ -112,37 +119,32 @@ class FLA_Fortress(BaseModel):
 
         return client
     
-    async def _get_async_request(self, url: str, payload: Dict) -> httpx.Response:
+    async def _get_async_request(self, url: str, payload: Dict, max_retries = 5) -> httpx.Response:
 
         print(f"Running {url}: {payload['PageNumber']}")
         print(self._headers)
         print(payload)
+        retries = 0
         async with self._create_async_session() as session:
-            response = await session.post(
-                url = url,
-                headers = self._headers,
-                json = payload
-                # data = payload
-            )
-    # retries = 0
-    # async with httpx.AsyncClient() as client:
-    #     while retries < max_retries:
-    #         try:
-    #             response = await client.get(url)
-    #             response.raise_for_status()
-    #             return response
-    #         except httpx.HTTPError as e:
-    #             # Handle specific HTTP errors if needed
-    #             print(f"Request failed with status code {e.response.status_code}")
-    #             retries += 1
-    #             await asyncio.sleep(2 ** retries)  # Exponential backoff (2^n seconds)
-    #             continue
-    #     else:
-    #         # Max retries exceeded, raise an exception or return an error response
-    #         raise Exception("Max retries exceeded")
-
-        print(response.status_code); print(len(response.json()['data']))
-        return response
+            while retries < max_retries:
+                try:
+                    response = await session.post(
+                        url = url,
+                        headers = self._headers,
+                        json = payload
+                        # data = payload
+                    )
+                    response.raise_for_status()
+                    return response
+                
+                except httpx.HTTPError as e:
+                    print(f"Request failed with status code {e.response.status_code}")
+                    retries += 1
+                    await asyncio.sleep(2 ** retries)
+                    continue
+            
+            else:
+                raise Exception("Max retries exceeded")
 
     async def _async_gather_pages(self, url: str, base_payload: Dict, start_page: int, end_page: int) -> List[httpx.Response]:
 
