@@ -115,7 +115,7 @@ class FLA_Fortress(BaseModel):
 
         retry = Retry(total = 5, backoff_factor = 0.5)
         transport = httpx.HTTPTransport(retries = retry)
-        client = httpx.Client(transport = transport)
+        client = httpx.Client(transport = transport, timeout=90)
 
         return client
     
@@ -234,8 +234,8 @@ class FLA_Fortress(BaseModel):
 
         def _get_response(session: httpx.Client, page_num: int) -> httpx.Response:
                 
-            retries = 0
-            while retries < max_retries:
+            retries = 1
+            while retries < max_retries+1:
                 try:
                     response = session.post(
                         url = f"{self._base_url}/{endpoint}",
