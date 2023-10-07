@@ -114,7 +114,7 @@ class FLA_Fortress(BaseModel):
     def _create_session(self) -> httpx.Client:
 
         retry = Retry(total = 5, backoff_factor = 0.5)
-        transport = httpx.HTTPTransport(retries = retry)
+        transport = httpx.HTTPTransport(retries = 5)
         client = httpx.Client(transport = transport, timeout=90)
 
         return client

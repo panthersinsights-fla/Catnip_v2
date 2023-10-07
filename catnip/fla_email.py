@@ -42,7 +42,8 @@ class FLA_Email(BaseModel):
         message['From'] = self.sender_email
         message['To'] = receiver_email
         message['Subject'] = subject
-        message['Cc'] = ", ".join(cc_list)
+        if cc_list is not None:
+            message['Cc'] = ", ".join(cc_list)
         to_addrs = [receiver_email, *cc_list]
 
         message.attach(MIMEText(body, "html"))
