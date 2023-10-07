@@ -50,7 +50,7 @@ class FLA_Fortress(BaseModel):
 
     def get_attendance(self, from_datetime: datetime, to_datetime: datetime) -> pd.DataFrame:
 
-        return self._request_loop(
+        return self._request_loop_poke(
             endpoint = "TimeAttendanceInformation_Paging/", 
             base_payload = {
                 **self._get_base_payload(),
