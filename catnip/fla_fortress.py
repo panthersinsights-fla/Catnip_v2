@@ -274,7 +274,7 @@ class FLA_Fortress(BaseModel):
 
                 time.sleep(15)
 
-                if i > 25:
+                if i > 5:
                     break
 
         ### Create dataframe ###############################################
@@ -282,11 +282,12 @@ class FLA_Fortress(BaseModel):
         # responses = [_create_dataframe(r) for r in responses]
         # responses = [item for sublist in responses for item in sublist]
         responses = [item for response in responses for item in response.json()['data']]
+        print(f"# Dictionaries: {len(responses)}")
 
         if self.input_schema:
-            df = DataFrame[self.input_schema](response.json()['data'])
+            df = DataFrame[self.input_schema](responses)
         else:
-            df = pd.DataFrame(response.json()['data'])
+            df = pd.DataFrame(responses)
         
         #df = pd.concat(responses, ignore_index = True)
 
