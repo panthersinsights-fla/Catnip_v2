@@ -258,7 +258,7 @@ class FLA_Fortress(BaseModel):
             response = session.post(
                 url = f"{self._base_url}/{endpoint}",
                 headers = self._headers,
-                json = {**base_payload, "PageNumber": 25}
+                json = {**base_payload, "PageNumber": 1}
             )
 
         num_pages = response.json()['statistics']['numberOfPages']; print(f"# Pages: {num_pages}")
@@ -267,14 +267,14 @@ class FLA_Fortress(BaseModel):
 
         ### Request Rest ##################################################
         with self._create_session() as session:
-            for i in range(26, num_pages+1):
+            for i in range(2, num_pages+1):
 
                 print(f"Requesting: Page #{i}")
                 responses = [*responses, _get_response(session, i)]
 
                 time.sleep(14)
 
-                if i > 30:
+                if i > 50:
                     break
 
         ### Create dataframe ###############################################
