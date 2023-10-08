@@ -274,8 +274,8 @@ class FLA_Fortress(BaseModel):
 
                 time.sleep(14)
 
-                if i > 50:
-                    break
+                # if i > 50:
+                #     break
 
         ### Create dataframe ###############################################
         print(f"# Responses: {len(responses)}")
