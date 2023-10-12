@@ -38,7 +38,7 @@ class FLA_Formstack(BaseModel):
                 - create table formstack_folders for all forms in relevant folders
                 - refresh daily
             - SUBMISSIONS
-                - add form id's to raw data
+                - add form id as field to raw data
                 - daily etl
                     - get last submission timestamp for every form
                     - query every form for submissions greater than
@@ -62,10 +62,10 @@ class FLA_Formstack(BaseModel):
     ) -> pd.DataFrame:
 
         ## initialize
-        url = f"{self._base_url}/forms/{form_id}/submission.json"
+        url = f"{self._base_url}/form/{form_id}/submission.json"
         params = {
-            "data": True,
-            "expand_data": True,
+            "data": "true",
+            "expand_data": "true",
             **({"min_time": min_time} if min_time is not None else {}),
             "per_page": 100
         }
@@ -79,30 +79,30 @@ class FLA_Formstack(BaseModel):
             )
         )
 
-        ## create response columns
-        if len(df.index) != 0:
-            df = self._create_response_columns(df)
+        # ## create response columns
+        # if len(df.index) != 0:
+        #     df = self._create_response_columns(df)
 
         return df 
 
 
-    def get_forms_in_folder(self, folder_id: int) -> pd.DataFrame:
+    # def get_forms_in_folder(self, folder_id: int) -> pd.DataFrame:
 
-        ## initialize
-        url = f"{self._base_url}/form.json"
-        params = {
-            "folder": folder_id,
-            "per_page": 100
-        }
+    #     ## initialize
+    #     url = f"{self._base_url}/form.json"
+    #     params = {
+    #         "folder": folder_id,
+    #         "per_page": 100
+    #     }
 
-        ## run async requests
-        return asyncio.run(
-            self._request_loop(
-                url = url,
-                params = params,
-                response_key = "forms"
-            )
-        )
+    #     ## run async requests
+    #     return asyncio.run(
+    #         self._request_loop(
+    #             url = url,
+    #             params = params,
+    #             response_key = "forms"
+    #         )
+    #     )
 
     def get_forms(self) -> pd.DataFrame:
 
