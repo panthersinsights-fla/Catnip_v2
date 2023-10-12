@@ -256,6 +256,9 @@ class FLA_Formstack(BaseModel):
                 params = params
             )
 
+        if response.json()["total"] == 0:
+            return pd.DataFrame()
+        
         # create response list
         responses = [response]
 
