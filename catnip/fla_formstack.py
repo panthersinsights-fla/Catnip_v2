@@ -29,6 +29,26 @@ class FLA_Formstack(BaseModel):
 
     '''
         - remove spaces in column names in response
+
+        - INGESTION
+            - FORMS 
+                - create table formstack_forms for all forms in relevant folders
+                - refresh daily
+            - FOLDERS 
+                - create table formstack_folders for all forms in relevant folders
+                - refresh daily
+            - SUBMISSIONS
+                - add form id's to raw data
+                - daily etl
+                    - get last submission timestamp for every form
+                    - query every form for submissions greater than
+                    - concat and append to raw formstack_submissions
+            - custom submission tables
+                - query for raw data by folder/form id
+                - transform
+                    - create response columns
+                    - etc etc
+                - load/append to v table
     '''
 
     #######################
@@ -69,7 +89,7 @@ class FLA_Formstack(BaseModel):
     def get_forms_in_folder(self, folder_id: int) -> pd.DataFrame:
 
         ## initialize
-        url = f"{self._base_url}/forms.json"
+        url = f"{self._base_url}/form.json"
         params = {
             "folder": folder_id,
             "per_page": 100
@@ -81,6 +101,39 @@ class FLA_Formstack(BaseModel):
                 url = url,
                 params = params,
                 response_key = "forms"
+            )
+        )
+
+    def get_forms(self) -> pd.DataFrame:
+
+        ## initialize
+        url = f"{self._base_url}/form.json"
+        params = {
+            "folders": True,
+            "per_page": 1000
+        }
+
+        ## run async requests
+        return asyncio.run(
+            self._request_loop(
+                url = url,
+                params = params,
+                response_key = "forms"
+            )
+        )
+
+    def get_folders(self) -> pd.DataFrame:
+
+        ## initialize
+        url = f"{self._base_url}/folder.json"
+        params = {"per_page": 100}
+
+        ## run async requests
+        return asyncio.run(
+            self._request_loop(
+                url = url,
+                params = params,
+                response_key = "folders"
             )
         )
     
@@ -98,7 +151,7 @@ class FLA_Formstack(BaseModel):
         urls = [f"{self._base_url}/forms/{x}/submission.json" for x in form_ids]
         urls = self._chunk_list(urls)
 
-        # request loop v3 for each batch
+        # request loop for each batch
         df_list = [asyncio.run(self._async_gather_urls(url_list=url_list)) for url_list in urls]
         df_list = [item for sublist in df_list for item in sublist]
 
@@ -185,8 +238,8 @@ class FLA_Formstack(BaseModel):
         def _create_dataframe(response: httpx.Response) -> pd.DataFrame:
 
             try:
-                data = response.json()[response_key]
-                data = [{key.replace(' ', '_').strip().lower(): value for key, value in d.items()} for d in data]
+                data = response.json()[response_key] # get data
+                data = [{key.replace(' ', '_').strip().lower(): value for key, value in d.items()} for d in data] # clean column names
 
                 if self.input_schema:
                     return DataFrame[self.input_schema](data)
@@ -206,30 +259,41 @@ class FLA_Formstack(BaseModel):
                 params = params
             )
 
-        df = _create_dataframe(response=response)
-        num_pages = response.json()['pages']; print(f"# Pages: {num_pages}")
+        # create response list
         responses = [response]
 
-        ### Request Rest ##################################################
-        batches = [min(start + batch_size, num_pages+1) for start in range(2, num_pages+1, batch_size)]
-        batches = [2] + batches if num_pages > 1 else batches
+        # check for additional pages
+        if "pages" in response.json():
+            # get num pages
+            num_pages = response.json()['pages']; print(f"# Pages: {num_pages}")
+            # batch future requests
+            batches = [min(start + batch_size, num_pages+1) for start in range(2, num_pages+1, batch_size)]
+            batches = [2] + batches if num_pages > 1 else batches
 
-        for i in range(1, len(batches)):
-            
-            responses = [
-                *responses,
-                *await self._async_gather_pages(
-                    url = url, 
-                    params = params,
-                    start_page = batches[i-1], 
-                    end_page = batches[i]
-                )
-            ]
+            ### Request Rest ##################################################
+            for i in range(1, len(batches)):
+                
+                responses = [
+                    *responses,
+                    *await self._async_gather_pages(
+                        url = url, 
+                        params = params,
+                        start_page = batches[i-1], 
+                        end_page = batches[i]
+                    )
+                ]
 
         ### Create dataframe ###############################################
-        responses = [_create_dataframe(r) for r in responses]
-        df = pd.concat(responses, ignore_index = True)
-        df['request_url'] = url
+        # responses = [_create_dataframe(r) for r in responses]
+        # df = pd.concat(responses, ignore_index = True)
+        # df['request_url'] = url
+        responses = [item for response in responses for item in response.json()[response_key]]
+        print(responses); print(type(responses))
+        
+        if self.input_schema:
+            df = DataFrame[self.input_schema](responses)
+        else:
+            df = pd.DataFrame(responses)
 
         return df 
     
