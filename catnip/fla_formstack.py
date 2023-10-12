@@ -108,10 +108,7 @@ class FLA_Formstack(BaseModel):
 
         ## initialize
         url = f"{self._base_url}/form.json"
-        params = {
-            "folders": True,
-            "per_page": 1000
-        }
+        params = {"per_page": 100}
 
         ## run async requests
         return asyncio.run(
@@ -289,7 +286,7 @@ class FLA_Formstack(BaseModel):
         # df['request_url'] = url
         responses = [item for response in responses for item in response.json()[response_key]]
         print(responses); print(type(responses))
-        
+
         if self.input_schema:
             df = DataFrame[self.input_schema](responses)
         else:
