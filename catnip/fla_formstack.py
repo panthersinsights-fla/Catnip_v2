@@ -286,7 +286,7 @@ class FLA_Formstack(BaseModel):
         # df = pd.concat(responses, ignore_index = True)
         # df['request_url'] = url
         responses = [item for response in responses for item in response.json()[response_key]]
-        print(responses); print(type(responses))
+        print(f"# Reponses: {len(responses)}"); print(type(responses))
 
         if self.input_schema:
             df = DataFrame[self.input_schema](responses)
