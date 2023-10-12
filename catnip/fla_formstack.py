@@ -79,9 +79,7 @@ class FLA_Formstack(BaseModel):
             )
         )
 
-        # ## create response columns
-        # if len(df.index) != 0:
-        #     df = self._create_response_columns(df)
+        df['form_id'] = form_id
 
         return df 
 
