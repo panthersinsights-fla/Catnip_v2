@@ -83,25 +83,6 @@ class FLA_Formstack(BaseModel):
 
         return df 
 
-
-    # def get_forms_in_folder(self, folder_id: int) -> pd.DataFrame:
-
-    #     ## initialize
-    #     url = f"{self._base_url}/form.json"
-    #     params = {
-    #         "folder": folder_id,
-    #         "per_page": 100
-    #     }
-
-    #     ## run async requests
-    #     return asyncio.run(
-    #         self._request_loop(
-    #             url = url,
-    #             params = params,
-    #             response_key = "forms"
-    #         )
-    #     )
-
     def get_forms(self) -> pd.DataFrame:
 
         ## initialize
@@ -170,17 +151,15 @@ class FLA_Formstack(BaseModel):
 
     def _create_async_session(self) -> httpx.AsyncClient:
 
-        retry = Retry(total = 5, backoff_factor = 0.5)
-        transport = httpx.AsyncHTTPTransport(retries = retry)
-        client = httpx.AsyncClient(transport = transport)
+        transport = httpx.AsyncHTTPTransport(retries = 5)
+        client = httpx.AsyncClient(transport = transport, timeout=20)
 
         return client
 
     def _create_session(self) -> httpx.Client:
 
-        retry = Retry(total = 5, backoff_factor = 0.5)
-        transport = httpx.HTTPTransport(retries = retry)
-        client = httpx.Client(transport = transport)
+        transport = httpx.HTTPTransport(retries = 5)
+        client = httpx.Client(transport = transport, timeout=20)
 
         return client
     
@@ -229,22 +208,6 @@ class FLA_Formstack(BaseModel):
         response_key: str, 
         batch_size: int = 25
     ) -> pd.DataFrame:
-
-        def _create_dataframe(response: httpx.Response) -> pd.DataFrame:
-
-            try:
-                data = response.json()[response_key] # get data
-                data = [{key.replace(' ', '_').strip().lower(): value for key, value in d.items()} for d in data] # clean column names
-
-                if self.input_schema:
-                    return DataFrame[self.input_schema](data)
-                else:
-                    return pd.DataFrame(data)
-            
-            except Exception as e:
-                print(e)
-                print(url)
-                # print(pd.DataFrame(data))
                 
         ### Initial Request ##############################################
         with self._create_session() as session:
@@ -282,9 +245,6 @@ class FLA_Formstack(BaseModel):
                 ]
 
         ### Create dataframe ###############################################
-        # responses = [_create_dataframe(r) for r in responses]
-        # df = pd.concat(responses, ignore_index = True)
-        # df['request_url'] = url
         responses = [item for response in responses for item in response.json()[response_key]]
         print(f"# Reponses: {len(responses)}"); print(type(responses))
 
