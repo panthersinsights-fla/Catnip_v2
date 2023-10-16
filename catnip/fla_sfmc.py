@@ -86,7 +86,7 @@ class FLA_Sfmc(BaseModel):
             response = session.post(
                 url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
                 headers=headers,
-                data = df.to_json(orient="records")
+                data = {"items": df.to_json(orient="records")}
             )
 
         # status id
