@@ -21,14 +21,9 @@
 '''
 
     - TO-DO
-
-        - authenticate w/ rest api
-        - create test data extensions
         
         - finalize schema
         - write queries and deploy (sfmc_de_)
-
-        - test small payload (post/put)
 
 
         - create events descriptions table w/ product id
@@ -36,7 +31,7 @@
 '''
 
 from pydantic import BaseModel, SecretStr
-from typing import List, Dict
+from typing import List, Dict, Literal
 
 import pandas as pd
 from pandera import DataFrameModel
@@ -44,6 +39,8 @@ from pandera.typing import DataFrame
 
 import httpx
 import asyncio
+import json
+
 
 from datetime import datetime
 
@@ -70,8 +67,9 @@ class FLA_Sfmc(BaseModel):
     ### CLASS FUNCTIONS ###
     #######################
 
-    def insert_into_data_extension(
+    def update_data_extension(
         self,
+        method: Literal["insert", "upsert"],
         external_key: str,
         df: pd.DataFrame
     ) -> httpx.Response:
@@ -83,13 +81,27 @@ class FLA_Sfmc(BaseModel):
         # post request
         with self._create_session() as session:
 
-            response = session.post(
-                url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
-                headers=headers,
-                data = {"items": df.to_json(orient="records")}
-            )
+            if method == "insert":
+
+                response = session.post(
+                    url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
+                    headers = headers,
+                    data = json.dumps({"items": json.loads(df.to_json(orient="records"))})
+                )
+
+            elif method == "upsert":
+
+                response = session.put(
+                    url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
+                    headers = headers,
+                    data = json.dumps({"items": json.loads(df.to_json(orient="records"))})
+                )
+            
+            else:
+                raise ValueError(f"Literally an incorrect method. Like, really?! {method} was never going to work.")
 
         # status id
+        print("ASYNC REQUEST:"); print(response.json()); print(response)
         request_id = response.json()['requestId']
 
         # check status
@@ -102,11 +114,24 @@ class FLA_Sfmc(BaseModel):
                     url = f"{self._base_rest_uri}/data/v1/async/{request_id}/status",
                     headers = headers
                 )
-                request_status = response.json()['requestStatus']
+                print("STATUS REQUEST:"); print(response.json()); print(response)
+                
+                try:
+                    request_status = response.json()['requestStatus']
+                except:
+                    break
 
-        # return request status response
+            # get results
+            response = session.get(
+                url = f"{self._base_rest_uri}/data/v1/async/{request_id}/results",
+                headers = headers
+            )
+            print("RESULTS REQUEST:"); print(response.json()); print(response)
+
+        # return request results
         return response 
 
+        
     ########################
     ### HELPER FUNCTIONS ###
     ########################
@@ -131,7 +156,7 @@ class FLA_Sfmc(BaseModel):
             response = session.post(
                 url = f"{self._base_authentication_uri}/v2/token",
                 headers = self._base_headers,
-                data = payload
+                json = payload
             )
         
         return response.json()['access_token']
