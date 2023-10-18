@@ -82,7 +82,8 @@ class FLA_Sfmc(BaseModel):
         with self._create_session() as session:
 
             if method == "insert":
-
+                
+                print("inserting..")
                 response = session.post(
                     url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
                     headers = headers,
@@ -91,6 +92,7 @@ class FLA_Sfmc(BaseModel):
 
             elif method == "upsert":
 
+                print("upserting..")
                 response = session.put(
                     url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
                     headers = headers,
