@@ -5,6 +5,7 @@ import pandas as pd
 from prefect.blocks.system import Secret
 
 from datetime import datetime, timedelta
+import pytz
 
 class MyHockeyGame(BaseModel):
 
@@ -16,6 +17,10 @@ class MyHockeyGame(BaseModel):
     @property
     def event_opponent(self) -> str:
         return self.game_descriptions['full_opponent']
+
+    @property
+    def event_datetime(self) -> str:
+        return self.game_descriptions['event_datetime']
 
     @property
     def event_time_formatted(self) -> str:
@@ -36,3 +41,7 @@ class MyHockeyGame(BaseModel):
     @property
     def final_turnstile_timestamp(self) -> str:
         return datetime.strftime((self.game_descriptions['event_datetime'] + timedelta(hours = 1, minutes = 45)), '%#I:%M %p')
+    
+    @property
+    def current_datetime(self) -> str:
+        return datetime.now(pytz.timezone("America/New_York"))
