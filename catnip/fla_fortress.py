@@ -61,7 +61,7 @@ class FLA_Fortress(BaseModel):
     
     def get_events(self, from_datetime: datetime, to_datetime: datetime) -> pd.DataFrame:
 
-        return self._request_loop(
+        return self._request_loop_poke(
             endpoint = "EventInformation_PagingStatistics/", 
             base_payload = {
                 **self._get_base_payload(),
@@ -272,7 +272,7 @@ class FLA_Fortress(BaseModel):
                 print(f"Requesting: Page #{i}")
                 responses = [*responses, _get_response(session, i)]
 
-                time.sleep(14)
+                time.sleep(4)
 
                 # if i > 50:
                 #     break
