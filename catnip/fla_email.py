@@ -14,22 +14,13 @@ class FLA_Email(BaseModel):
     sender_email: str
     sender_email_pw: SecretStr
 
-    # receiver_email: str 
-
-    # subject: str
-    # body: str
-    
-    # cc_list: List[str] | None
-    # df_attachments: List[pd.DataFrame] | None 
-
-
     ######################
     ### USER FUNCTIONS ###
     ######################
 
     def send_email(
         self,
-        receiver_email: str,
+        receiver_email: str | List[str],
         subject: str,
         body: str,
         cc_list: List[str] = [],
@@ -39,13 +30,26 @@ class FLA_Email(BaseModel):
         ## Create email structure
         message = MIMEMultipart()
 
+        # sender
         message['From'] = self.sender_email
-        message['To'] = receiver_email
+
+        # receiver
+        if isinstance(receiver_email, List):
+            message['To'] = ", ".join(receiver_email)
+        else:
+            message['To'] = receiver_email
+        
+        # subject
         message['Subject'] = subject
+
+        # cc
         if cc_list:
             message['Cc'] = ", ".join(cc_list)
-        to_addrs = [receiver_email, *cc_list]
+        
+        # all senders
+        to_addrs = [*receiver_email, *cc_list]
 
+        # body
         message.attach(MIMEText(body, "html"))
 
 
