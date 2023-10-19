@@ -44,10 +44,11 @@ class FLA_Email(BaseModel):
 
         # cc
         if cc_list:
+            print('adding cc..')
             message['Cc'] = ", ".join(cc_list)
         
         # all senders
-        to_addrs = [*receiver_email, *cc_list]
+        to_addrs = [*receiver_email, *cc_list]; print(f"to_addrs:{to_addrs}")
 
         # body
         message.attach(MIMEText(body, "html"))
