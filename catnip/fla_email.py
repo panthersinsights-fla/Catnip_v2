@@ -20,7 +20,7 @@ class FLA_Email(BaseModel):
 
     def send_email(
         self,
-        receiver_email: str | List[str],
+        receiver_emails: List[str],
         subject: str,
         body: str,
         cc_list: List[str] = [],
@@ -34,21 +34,17 @@ class FLA_Email(BaseModel):
         message['From'] = self.sender_email
 
         # receiver
-        if isinstance(receiver_email, List):
-            message['To'] = ", ".join(receiver_email)
-        else:
-            message['To'] = receiver_email
+        message['To'] = ", ".join(receiver_emails)
         
         # subject
         message['Subject'] = subject
 
         # cc
         if cc_list:
-            print('adding cc..')
             message['Cc'] = ", ".join(cc_list)
         
         # all senders
-        to_addrs = [*receiver_email, *cc_list]; print(f"to_addrs:{to_addrs}")
+        to_addrs = [*receiver_emails, *cc_list]
 
         # body
         message.attach(MIMEText(body, "html"))
