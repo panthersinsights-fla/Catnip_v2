@@ -45,3 +45,7 @@ class MyHockeyGame(BaseModel):
     @property
     def current_datetime(self) -> str:
         return datetime.now(pytz.timezone("America/New_York"))
+
+    @property
+    def fortress_event_code(self) -> str:
+        return self.game_descriptions['productcode']
