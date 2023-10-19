@@ -284,13 +284,18 @@ class FLA_Fortress(BaseModel):
         responses = [item for response in responses for item in response.json()['data']]
         print(f"# Dictionaries: {len(responses)}")
 
-        if self.input_schema:
-            df = DataFrame[self.input_schema](responses)
-        else:
-            df = pd.DataFrame(responses)
+        if len(responses) > 0:
+
+            if self.input_schema:
+                df = DataFrame[self.input_schema](responses)
+            else:
+                df = pd.DataFrame(responses)
+            
+            #df = pd.concat(responses, ignore_index = True)
+
+            df['response_datetime'] = response_datetime
+
+            return df
         
-        #df = pd.concat(responses, ignore_index = True)
-
-        df['response_datetime'] = response_datetime
-
-        return df
+        else:
+            return None
