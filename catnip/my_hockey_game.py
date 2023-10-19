@@ -49,3 +49,7 @@ class MyHockeyGame(BaseModel):
     @property
     def fortress_event_code(self) -> str:
         return self.game_descriptions['productcode']
+    
+    @property
+    def seatgeek_product_id(self) -> str:
+        return self.game_descriptions['product_id']
