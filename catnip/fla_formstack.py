@@ -152,14 +152,14 @@ class FLA_Formstack(BaseModel):
     def _create_async_session(self) -> httpx.AsyncClient:
 
         transport = httpx.AsyncHTTPTransport(retries = 5)
-        client = httpx.AsyncClient(transport = transport, timeout=20)
+        client = httpx.AsyncClient(transport = transport, timeout=45)
 
         return client
 
     def _create_session(self) -> httpx.Client:
 
         transport = httpx.HTTPTransport(retries = 5)
-        client = httpx.Client(transport = transport, timeout=20)
+        client = httpx.Client(transport = transport, timeout=45)
 
         return client
     

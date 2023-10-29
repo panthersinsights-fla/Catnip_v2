@@ -1,35 +1,3 @@
-'''
-    - FUNCTIONALITY
-
-        - w/ pandas
-            - data_json = data.to_json(orient="records")
-
-        - create data extension
-        - retrieve records in data extension
-        - update records in data extension
-        - delete records in data extension
-
-        - retrieve sent/open/click/bounce/unsub events?
-            - would need campaigns/emails
-        
-        - what is a list?
-            - groups of subscribers?
-        - what is a subscriber?
-            - another name for contact?
-'''
-
-'''
-
-    - TO-DO
-        
-        - finalize schema
-        - write queries and deploy (sfmc_de_)
-
-
-        - create events descriptions table w/ product id
-
-'''
-
 from pydantic import BaseModel, SecretStr
 from typing import List, Dict, Literal
 
@@ -71,12 +39,13 @@ class FLA_Sfmc(BaseModel):
         self,
         method: Literal["insert", "upsert"],
         external_key: str,
-        df: pd.DataFrame
+        df: pd.DataFrame,
+        bearer_token: str
     ) -> httpx.Response:
         
         # headers
         headers = self._base_headers
-        headers['Authorization'] = f"Bearer {self._get_bearer_token()}"
+        headers['Authorization'] = f"Bearer {bearer_token}"
 
         # post request
         with self._create_session() as session:
@@ -141,7 +110,7 @@ class FLA_Sfmc(BaseModel):
     def _create_session(self) -> httpx.Client:
 
         transport = httpx.HTTPTransport(retries = 5)
-        client = httpx.Client(transport = transport, timeout=20)
+        client = httpx.Client(transport = transport, timeout=45)
 
         return client
     
