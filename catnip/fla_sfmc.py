@@ -47,6 +47,9 @@ class FLA_Sfmc(BaseModel):
         headers = self._base_headers
         headers['Authorization'] = f"Bearer {bearer_token}"
 
+        # prepare df
+        df = self._convert_datetime_columns(df)
+
         # post request
         with self._create_session() as session:
 
@@ -135,3 +138,15 @@ class FLA_Sfmc(BaseModel):
             )
         
         return response.json()['access_token']
+    
+    def _convert_datetime_columns(
+        self, 
+        df: pd.DataFrame, 
+        format_str: str = "%m/%d/%Y, %I:%M %p"
+    ) -> pd.DataFrame:
+        
+        for col in df.columns:
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                df[col] = df[col].dt.strftime(format_str)
+        
+        return df
