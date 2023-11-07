@@ -110,7 +110,7 @@ class FLA_Sfmc(BaseModel):
     def _create_session(self) -> httpx.Client:
 
         transport = httpx.HTTPTransport(retries = 5)
-        timeout = httpx.Timeout(30, write=90)
+        timeout = httpx.Timeout(30, write=None)
         client = httpx.Client(
             transport = transport, 
             timeout = timeout
