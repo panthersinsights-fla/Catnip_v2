@@ -18,9 +18,6 @@ from prefect.blocks.system import Secret
     - bulk api v 2.0
     https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/walkthrough_upsert.htm
 
-
-
-
 '''
 class FLA_Salesforce(BaseModel):
 
