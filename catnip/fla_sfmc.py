@@ -41,7 +41,7 @@ class FLA_Sfmc(BaseModel):
         external_key: str,
         df: pd.DataFrame,
         bearer_token: str
-    ) -> httpx.Response:
+    ) -> List[httpx.Response]:
         
         # headers
         headers = self._base_headers
@@ -50,60 +50,69 @@ class FLA_Sfmc(BaseModel):
         # prepare df
         df = self._convert_datetime_columns(df)
 
-        # post request
-        with self._create_session() as session:
+        max_records_per_chunk = 20000
+        num_chunks = len(df) // max_records_per_chunk + 1; print(num_chunks)
+        smaller_dfs = [df.iloc[i * max_records_per_chunk:(i + 1) * max_records_per_chunk] for i in range(num_chunks)]
+        
+        results_responses = []
 
-            if method == "insert":
+        for i in smaller_dfs:
+
+            # post request
+            with self._create_session() as session:
+
+                if method == "insert":
+                    
+                    print("inserting..")
+                    response = session.post(
+                        url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
+                        headers = headers,
+                        data = json.dumps({"items": json.loads(i.to_json(orient="records"))})
+                    )
+
+                elif method == "upsert":
+
+                    print("upserting..")
+                    response = session.put(
+                        url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
+                        headers = headers,
+                        data = json.dumps({"items": json.loads(i.to_json(orient="records"))})
+                    )
                 
-                print("inserting..")
-                response = session.post(
-                    url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
-                    headers = headers,
-                    data = json.dumps({"items": json.loads(df.to_json(orient="records"))})
+                else:
+                    raise ValueError(f"Literally an incorrect method. Like, really?! {method} was never going to work.")
+
+            # status id
+            print("ASYNC REQUEST:"); print(response); print(response.content); print(response.json())
+            request_id = response.json()['requestId']
+
+            # check status
+            with self._create_session() as session:
+
+                request_status = "Pending"
+                while request_status == "Pending":
+
+                    response = session.get(
+                        url = f"{self._base_rest_uri}/data/v1/async/{request_id}/status",
+                        headers = headers
+                    )
+                    print("STATUS REQUEST:"); print(response.json()); print(response)
+                    
+                    try:
+                        request_status = response.json()['requestStatus']
+                    except:
+                        break
+
+                # get results
+                results_responses.append(session.get(
+                        url = f"{self._base_rest_uri}/data/v1/async/{request_id}/results",
+                        headers = headers
+                    )
                 )
-
-            elif method == "upsert":
-
-                print("upserting..")
-                response = session.put(
-                    url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
-                    headers = headers,
-                    data = json.dumps({"items": json.loads(df.to_json(orient="records"))})
-                )
-            
-            else:
-                raise ValueError(f"Literally an incorrect method. Like, really?! {method} was never going to work.")
-
-        # status id
-        print("ASYNC REQUEST:"); print(response); print(response.content); print(response.json())
-        request_id = response.json()['requestId']
-
-        # check status
-        with self._create_session() as session:
-
-            request_status = "Pending"
-            while request_status == "Pending":
-
-                response = session.get(
-                    url = f"{self._base_rest_uri}/data/v1/async/{request_id}/status",
-                    headers = headers
-                )
-                print("STATUS REQUEST:"); print(response.json()); print(response)
-                
-                try:
-                    request_status = response.json()['requestStatus']
-                except:
-                    break
-
-            # get results
-            response = session.get(
-                url = f"{self._base_rest_uri}/data/v1/async/{request_id}/results",
-                headers = headers
-            )
-            print("RESULTS REQUEST:"); print(response.json()); print(response)
+                print("RESULTS REQUEST:"); print(response.json()); print(response)
 
         # return request results
-        return response 
+        return results_responses 
 
         
     ########################
