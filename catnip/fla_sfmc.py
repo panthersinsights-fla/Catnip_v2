@@ -107,7 +107,7 @@ class FLA_Sfmc(BaseModel):
                 results_responses.append(session.get(
                         url = f"{self._base_rest_uri}/data/v1/async/{request_id}/results",
                         headers = headers
-                    )
+                    ).content
                 )
                 print("RESULTS REQUEST:"); print(response.json()); print(response)
 
