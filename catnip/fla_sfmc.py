@@ -75,7 +75,7 @@ class FLA_Sfmc(BaseModel):
                 raise ValueError(f"Literally an incorrect method. Like, really?! {method} was never going to work.")
 
         # status id
-        print("ASYNC REQUEST:"); print(response.json()); print(response)
+        print("ASYNC REQUEST:"); print(response); print(response.content); print(response.json())
         request_id = response.json()['requestId']
 
         # check status
