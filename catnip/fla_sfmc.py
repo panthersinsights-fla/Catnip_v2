@@ -57,6 +57,7 @@ class FLA_Sfmc(BaseModel):
         results_responses = []
 
         for i in smaller_dfs:
+            print(f"smaller df: {i}"); print(i)
 
             # post request
             with self._create_session() as session:
