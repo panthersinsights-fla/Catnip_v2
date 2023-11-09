@@ -9,8 +9,8 @@ import httpx
 import asyncio
 import json
 
-
 from datetime import datetime
+import time
 
 class FLA_Sfmc(BaseModel):
 
@@ -85,6 +85,7 @@ class FLA_Sfmc(BaseModel):
             # status id
             print("ASYNC REQUEST:"); print(response); print(response.content); print(response.json())
             request_id = response.json()['requestId']
+            time.sleep(1)
 
             # check status
             with self._create_session() as session:
