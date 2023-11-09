@@ -21,11 +21,11 @@ class FLA_Sfmc(BaseModel):
 
     @property
     def _base_authentication_uri(self) -> str:
-        return f"https://{self.subdomain.get_secret_value()}.auth.marketingcloudapis.com/"
+        return f"https://{self.subdomain.get_secret_value()}.auth.marketingcloudapis.com"
     
     @property
     def _base_rest_uri(self) -> str:
-        return f"https://{self.subdomain.get_secret_value()}.rest.marketingcloudapis.com/"
+        return f"https://{self.subdomain.get_secret_value()}.rest.marketingcloudapis.com"
     
     @property
     def _base_headers(self) -> Dict:
@@ -86,7 +86,7 @@ class FLA_Sfmc(BaseModel):
             # status id
             print("ASYNC REQUEST:"); print(response); print(response.content); print(response.json())
             request_id = response.json()['requestId']
-            time.sleep(1)
+            time.sleep(5)
 
             # check status
             with self._create_session() as session:
