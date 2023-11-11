@@ -7,17 +7,12 @@ from datetime import datetime
 import httpx
 
 import xml.etree.ElementTree as ET
-
-from prefect.blocks.system import Secret
-
-# from simple_salesforce import Salesforce
-
-
+from urllib.parse import urlparse
+from io import StringIO, BytesIO
+import time 
 
 '''
-    - bulk api v 2.0
-    https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/walkthrough_upsert.htm
-
+    - authorization token good for 120 minutes
 '''
 class FLA_Salesforce(BaseModel):
 
@@ -41,28 +36,211 @@ class FLA_Salesforce(BaseModel):
     ### CLASS FUNCTIONS ###
     #######################
 
-    # def bulk_insert_records(
-    #     self,
-    #     df: pd.DataFrame,
-    #     object_name: str,
-    #     operation: str
-    # ) -> None:
+    def bulk_two_ingest(
+        self,
+        df: pd.DataFrame,
+        object_name: str,
+        operation: Literal["insert", "upsert", "delete", "hardDelete", "update"],
+        external_id_field_name: str = None,
+        connection_dict: Dict = None 
+    ) -> None:
 
-    #     self._create_connection().__dict__[f"{object_name}"].__dict__[f"{operation}"](df.to_dict(orient="records"))
+        # get connection parameters
+        if not connection_dict:
+            connection_dict = self._create_connection()
 
-    #     return None
+        # prepare csv and create number of jobs
+        df = self._convert_datetime_columns(df)
+        csv_data = self._convert_df_to_list_of_csvs(df); print(f"# CSV parts: {len(csv_data)}")
+
+        for i, data_part in enumerate(csv_data):
+
+            # create job
+            create_job_response = self._create_job(
+                connection_dict=connection_dict,
+                object_name=object_name,
+                operation=operation,
+                external_id_field_name=external_id_field_name
+            )
+
+            # upload csv
+            content_url = create_job_response['contentUrl']
+            self._upload_csv(
+                connection_dict=connection_dict,
+                content_url=content_url,
+                csv_data=data_part
+            )
+
+            # set job state to complete
+            set_job_state_response = self._set_job_state(
+                connection_dict=connection_dict,
+                content_url=content_url
+            )
+
+            # check job status
+            state = "UploadComplete"
+            while state not in ["JobComplete", "Failed"]:
+
+                job_status_response = self._check_job_status(
+                    connection_dict=connection_dict,
+                    content_url=content_url
+                )
+
+                state = job_status_response['state']
+                time.sleep(1)
+
+            # get failed results
+            failed_results_response = self._get_failed_results(
+                connection_dict=connection_dict,
+                content_url=content_url
+            )
+
+            failed_df = pd.DataFrame()
+            if failed_results_response:
+                failed_df = pd.read_csv(BytesIO(failed_results_response))
+                print(failed_df.to_markdown())
+
+        return failed_df
+
+
+    #########################
+    ### PROCESS FUNCTIONS ###
+    #########################
+
+    def _create_job(
+        self,
+        connection_dict: Dict,
+        object_name: str,
+        operation: str,
+        external_id_field_name: str = None
+    ) -> Dict:
+
+        with self._create_session() as session:
+
+            response = session.post(
+                url = f"https://{urlparse(connection_dict['server_url']).hostname}/services/data/v59.0/jobs/ingest",
+                headers = {
+                    "Authorization": f"Bearer {connection_dict['session_id']}",
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "X-PrettyPrint": "1"
+                },
+                data = json.dumps({
+                    "object": object_name,
+                    "contentType": "CSV",
+                    "operation": operation,
+                    "lineEnding": "LF",
+                    **({"externalIdFieldName": external_id_field_name} if external_id_field_name is not None else {}),
+                })
+            )
+
+            print(f"Create Job Status: {response.status_code}") 
+
+        return response.json()
+
+    def _upload_csv(
+        self,
+        connection_dict: Dict,
+        content_url: str,
+        csv_data: str
+    ) -> None:
+
+        # make request
+        with self._create_session() as session:
+
+            response = session.put(
+                url = f"https://{urlparse(connection_dict['server_url']).hostname}/{content_url}",
+                headers = {
+                    "Authorization": f"Bearer {connection_dict['session_id']}",
+                    "Content-Type": "text/csv",
+                    "Accept": "application/json",
+                    "X-PrettyPrint": "1"
+                },
+                data = csv_data
+            )
+
+            print(f"Upload CSV Status: {response.status_code}") 
+
+        return None 
+    
+    def _set_job_state(
+        self,
+        connection_dict: Dict,
+        content_url: str
+    ) -> Dict:
+        
+        content_url = content_url.replace("/batches", "")
+
+        with self._create_session() as session:
+
+            response = session.patch(
+                url = f"https://{urlparse(connection_dict['server_url']).hostname}/{content_url}",
+                headers = {
+                    "Authorization": f"Bearer {connection_dict['session_id']}",
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "charset": "UTF-8",
+                    "X-PrettyPrint": "1"
+                },
+                data = json.dumps({
+                    "state": "UploadComplete"
+                })
+            )
+
+            print(f"Set Job Status Status: {response.status_code}") 
+
+        return response.json()
+    
+    def _check_job_status(
+        self,
+        connection_dict: Dict,
+        content_url: str
+    ) -> Dict:
+        
+        content_url = content_url.replace("/batches", "")
+
+        with self._create_session() as session:
+
+            response = session.get(
+                url = f"https://{urlparse(connection_dict['server_url']).hostname}/{content_url}",
+                headers = {
+                    "Authorization": f"Bearer {connection_dict['session_id']}",
+                    "Accept": "application/json",
+                    "X-PrettyPrint": "1"
+                }
+            )
+
+            print(f"Check Job Status Status: {response.status_code}") 
+
+        return response.json()
+    
+    def _get_failed_results(
+        self,
+        connection_dict: Dict,
+        content_url: str
+    ) -> str:
+        
+        content_url = content_url.replace("/batches", "/failedResults/")
+
+        with self._create_session() as session:
+
+            response = session.get(
+                url = f"https://{urlparse(connection_dict['server_url']).hostname}/{content_url}",
+                headers = {
+                    "Authorization": f"Bearer {connection_dict['session_id']}",
+                    "Content-Type": "application/json",
+                    "Accept": "text/csv",
+                    "X-PrettyPrint": "1"
+                }
+            )
+
+            print(f"Get Failed Results Status: {response.status_code}") 
+
+        return response.content
 
     ########################
     ### HELPER FUNCTIONS ###
     ########################
-
-    # def _create_connection(self) -> Salesforce:
-
-    #     return Salesforce(
-    #         username = self.username.get_secret_value(), 
-    #         password = self.password.get_secret_value(), 
-    #         security_token = self.security_token.get_secret_value()
-    #     )
     
     def _create_connection(self):
 
@@ -120,3 +298,44 @@ class FLA_Salesforce(BaseModel):
         print("Session ID:", session_id)
 
         return {"server_url": server_url, "session_id": session_id}
+
+    def _create_session(self) -> httpx.Client:
+
+        transport = httpx.HTTPTransport(retries = 5)
+        client = httpx.Client(transport = transport, timeout=45)
+
+        return client
+
+    def _convert_datetime_columns(
+        self, 
+        df: pd.DataFrame, 
+        format_str: str = "%Y-%m-%dT%H:%M:%S.%f%z"
+    ) -> pd.DataFrame:
+        
+        for col in df.columns:
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                df[col] = df[col].dt.strftime(format_str)
+        
+        return df
+    
+    def _convert_df_to_list_of_csvs(
+        self,
+        df: pd.DataFrame,
+        max_size_bytes: int = 100 * 1024 * 1024
+    ) -> List[StringIO]:
+        
+        # Create an in-memory file-like object to hold the CSV data
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer, index=False, lineterminator="\n", escapechar="\"")
+        csv_data = csv_buffer.getvalue()
+        
+        # Check if the data size exceeds the specified limit
+        if len(csv_data.encode("utf-8")) > max_size_bytes:
+            num_parts = (len(csv_data) + max_size_bytes - 1) // max_size_bytes  # Calculate the number of parts
+            
+            # Split the data into parts
+            data_parts = [csv_data[i * max_size_bytes:(i + 1) * max_size_bytes] for i in range(num_parts)]
+        else:
+            data_parts = [csv_data]
+        
+        return data_parts
