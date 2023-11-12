@@ -98,7 +98,20 @@ class FLA_Salesforce(BaseModel):
             failed_df = pd.DataFrame()
             if failed_results_response:
                 failed_df = pd.read_csv(BytesIO(failed_results_response))
+                print("Failed Results:")
                 print(failed_df.to_markdown())
+
+            # get unprocessed results
+            unprocessed_results_response = self._get_unprocessed_results(
+                connection_dict=connection_dict,
+                content_url=content_url
+            )
+
+            unprocessed_df = pd.DataFrame()
+            if unprocessed_results_response:
+                unprocessed_df = pd.read_csv(BytesIO(unprocessed_df))
+                print("Unprocessed Results:")
+                print(unprocessed_df.to_markdown())
 
         return failed_df
 
@@ -211,6 +224,7 @@ class FLA_Salesforce(BaseModel):
             )
 
             print(f"Check Job Status Status: {response.status_code}") 
+            print(f"Check Job Status Response: {json.dumps(response.json())}") 
 
         return response.json()
     
@@ -238,6 +252,30 @@ class FLA_Salesforce(BaseModel):
 
         return response.content
 
+    def _get_unprocessed_results(
+        self,
+        connection_dict: Dict,
+        content_url: str
+    ) -> str:
+        
+        content_url = content_url.replace("/batches", "/unprocessedRecords/")
+
+        with self._create_session() as session:
+
+            response = session.get(
+                url = f"https://{urlparse(connection_dict['server_url']).hostname}/{content_url}",
+                headers = {
+                    "Authorization": f"Bearer {connection_dict['session_id']}",
+                    "Content-Type": "application/json",
+                    "Accept": "text/csv",
+                    "X-PrettyPrint": "1"
+                }
+            )
+
+            print(f"Get Unprocessed Results Status: {response.status_code}") 
+
+        return response.content
+    
     ########################
     ### HELPER FUNCTIONS ###
     ########################
