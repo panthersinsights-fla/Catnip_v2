@@ -109,7 +109,7 @@ class FLA_Salesforce(BaseModel):
 
             unprocessed_df = pd.DataFrame()
             if unprocessed_results_response:
-                unprocessed_df = pd.read_csv(BytesIO(unprocessed_df))
+                unprocessed_df = pd.read_csv(BytesIO(unprocessed_results_response))
                 print("Unprocessed Results:")
                 print(unprocessed_df.to_markdown())
 
