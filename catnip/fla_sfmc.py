@@ -62,26 +62,43 @@ class FLA_Sfmc(BaseModel):
             # post request
             with self._create_session() as session:
 
-                if method == "insert":
-                    
-                    print("inserting..")
-                    response = session.post(
-                        url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
-                        headers = headers,
-                        data = json.dumps({"items": json.loads(i.to_json(orient="records"))})
-                    )
+                retries = 0
+                while retries < 5:
 
-                elif method == "upsert":
+                    if method == "insert":
+                        
+                        print("inserting..")
+                        try:
+                            response = session.post(
+                                url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
+                                headers = headers,
+                                data = json.dumps({"items": json.loads(i.to_json(orient="records"))})
+                            )
+                            break
+                        except:
+                            backoff_factor = (retries + 1) * 2
+                            print(f"Retrying.. Waiting {backoff_factor} seconds.")
+                            time.sleep(backoff_factor)
+                            retries += 1
+                            
+                    elif method == "upsert":
 
-                    print("upserting..")
-                    response = session.put(
-                        url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
-                        headers = headers,
-                        data = json.dumps({"items": json.loads(i.to_json(orient="records"))})
-                    )
-                
-                else:
-                    raise ValueError(f"Literally an incorrect method. Like, really?! {method} was never going to work.")
+                        print("upserting..")
+                        try:
+                            response = session.put(
+                                url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
+                                headers = headers,
+                                data = json.dumps({"items": json.loads(i.to_json(orient="records"))})
+                            )
+                            break
+                        except:
+                            backoff_factor = (retries + 1) * 2
+                            print(f"Retrying.. Waiting {backoff_factor} seconds.")
+                            time.sleep(backoff_factor)
+                            retries += 1
+
+                    else:
+                        raise ValueError(f"Literally an incorrect method. Like, really?! {method} was never going to work.")
 
             # status id
             print("ASYNC REQUEST:"); print(response); print(response.content); print(response.json())
