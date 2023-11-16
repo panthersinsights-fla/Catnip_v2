@@ -12,6 +12,10 @@ import json
 from datetime import datetime
 import time
 
+'''
+    - bearer authorization good for 18 (really 20) minutes
+'''
+
 class FLA_Sfmc(BaseModel):
 
     subdomain: SecretStr
@@ -54,14 +58,24 @@ class FLA_Sfmc(BaseModel):
         num_chunks = len(df) // max_records_per_chunk + 1; print(num_chunks)
         smaller_dfs = [df.iloc[i * max_records_per_chunk:(i + 1) * max_records_per_chunk] for i in range(num_chunks)]
         
+        # initialize results list
         results_responses = []
 
+        # initialize time check
+        start_time = datetime.now()
+
+        # iterate through smaller dataframes
         for i in smaller_dfs:
             print(f"smaller df: {i}"); print(i)
+
+            if (datetime.now() - start_time).seconds > 1080:
+                print("Obtaining new bearer token..")
+                headers['Authorization'] = f"Bearer {self._get_bearer_token()}"
 
             # post request
             with self._create_session() as session:
 
+                # set retry mechanism
                 retries = 0
                 while retries < 5:
 
