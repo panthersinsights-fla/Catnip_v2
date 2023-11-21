@@ -46,8 +46,8 @@ class FLA_Cheq(BaseModel):
         end = False 
         page = 1
         data = {
-            "start_range": start_date.strftime('%Y-%m-%dT00:00:00Z'),
-            "end_range": end_date.strftime('%Y-%m-%dT00:00:00Z'),
+            "start_range": start_date.strftime('%Y-%m-%dT%H:%M:%SZ'),
+            "end_range": end_date.strftime('%Y-%m-%dT%H:%M:%SZ'),
             "payment_status": payment_status
         }
 
@@ -70,6 +70,9 @@ class FLA_Cheq(BaseModel):
                 end = response.json()['end']
                 page += 1
                 responses.append(response)
+            
+            if page > 250:
+                break
 
         return responses
 
