@@ -1,16 +1,12 @@
 from pydantic import BaseModel, SecretStr
-from typing import List, Dict, Literal
+from typing import List, Dict
 
 import pandas as pd
 from pandera import DataFrameModel
-from pandera.typing import DataFrame
 
 import httpx
-import asyncio
-import json
-
-from datetime import datetime
-import time
+from catnip.fla_requests import FLA_Requests
+from datetime import datetime, timedelta
 
 class FLA_Cheq(BaseModel):
 
@@ -42,6 +38,7 @@ class FLA_Cheq(BaseModel):
     ) -> List[httpx.Response]:
         
         # initialize
+        start_time = datetime.now()
         responses = []
         end = False 
         page = 1
@@ -53,7 +50,7 @@ class FLA_Cheq(BaseModel):
 
         # iterate
         while not end:
-            with self._create_session() as session:
+            with FLA_Requests().create_session() as session:
                 
                 # request
                 print(f"Loading Page #{page}")
@@ -71,7 +68,10 @@ class FLA_Cheq(BaseModel):
                 page += 1
                 responses.append(response)
             
-            if page > 250:
+            if page % 5 == 0:
+                print(f"Loading Page #{page}")
+
+            if (datetime.now() - start_time) > timedelta(minutes=7):
                 break
 
         return responses
@@ -84,7 +84,7 @@ class FLA_Cheq(BaseModel):
         page = 1
 
         while not end:
-            with self._create_session() as session:
+            with FLA_Requests().create_session() as session:
                 
                 # request
                 print(f"Loading Page #{page}")
@@ -105,18 +105,3 @@ class FLA_Cheq(BaseModel):
         print(df)
         
         return df
-    
-    ########################
-    ### HELPER FUNCTIONS ###
-    ########################
-
-    def _create_session(self) -> httpx.Client:
-
-        transport = httpx.HTTPTransport(retries = 5)
-        timeout = httpx.Timeout(30)
-        client = httpx.Client(
-            transport = transport, 
-            timeout = timeout
-        )
-
-        return client
