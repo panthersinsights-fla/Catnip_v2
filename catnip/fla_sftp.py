@@ -54,7 +54,11 @@ class FLA_Sftp(BaseModel):
             return False
 
 
-    def download_csv(self, separator: str = ",") -> pd.DataFrame:
+    def download_csv(
+        self, 
+        separator: str = ",", 
+        encoding: str = "utf-8"
+    ) -> pd.DataFrame:
 
         ## Create connection
         conn = self._create_connection()
@@ -68,9 +72,9 @@ class FLA_Sftp(BaseModel):
                 file.prefetch()
 
                 if self.input_schema:
-                    df = DataFrame[self.input_schema](pd.read_csv(file, sep = separator))
+                    df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator, encoding=encoding))
                 else:
-                    df = pd.read_csv(file, sep = separator)
+                    df = pd.read_csv(file, sep=separator, encoding=encoding)
 
         ## Close connection
         conn.close()
