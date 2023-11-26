@@ -38,8 +38,7 @@ class FLA_Cheq(BaseModel):
     ) -> List[httpx.Response]:
         
         # initialize
-        start_time = datetime.now()
-        responses = []
+        responses: List[httpx.Response] = []
         end = False 
         page = 1
         data = {
@@ -71,8 +70,9 @@ class FLA_Cheq(BaseModel):
             if page % 5 == 0:
                 print(f"Loading Page #{page}")
 
-            if (datetime.now() - start_time) > timedelta(minutes=7):
-                break
+        if len(responses) == 1:
+            print(responses[0])
+            print(responses[0].json())
 
         return responses
 
