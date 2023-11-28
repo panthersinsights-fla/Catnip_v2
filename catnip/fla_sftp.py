@@ -3,6 +3,7 @@ from typing import Optional, List
 
 from paramiko import Transport, SFTPClient, SFTPError
 from os import getcwd
+from io import StringIO
 
 import pandas as pd
 from pandera import DataFrameModel
@@ -74,10 +75,16 @@ class FLA_Sftp(BaseModel):
                 lines=file.read().decode(encoding="Windows-1252")
                 print("WE GOT LINES")
 
-                if self.input_schema:
-                    df = DataFrame[self.input_schema](pd.read_csv(lines, sep=separator, encoding=encoding))
-                else:
-                    df = pd.read_csv(lines, sep=separator, encoding=encoding)
+                try: 
+                    if self.input_schema:
+                        df = DataFrame[self.input_schema](pd.read_csv(lines, sep=separator, encoding=encoding))
+                    else:
+                        df = pd.read_csv(StringIO(lines), sep=separator, encoding=encoding)
+
+                except Exception as e:
+
+                    print(f"ERROR: {e}")
+                    print(f"Lines type: {type(lines)}")
 
         ## Close connection
         conn.close()
