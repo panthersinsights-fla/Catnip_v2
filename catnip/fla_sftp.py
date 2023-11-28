@@ -70,7 +70,7 @@ class FLA_Sftp(BaseModel):
         if self.file_exists(conn):
             with conn.open(self.remote_path) as file:
                 print("NO LINES")
-                # file.prefetch()
+                file.prefetch()
                 lines=file.read().decode(encoding="Windows-1252")
                 print("WE GOT LINES")
 
