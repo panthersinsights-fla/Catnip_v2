@@ -69,8 +69,10 @@ class FLA_Sftp(BaseModel):
         ## Download csv as dataframe
         if self.file_exists(conn):
             with conn.open(self.remote_path) as file:
-                file.prefetch()
+                print("NO LINES")
+                # file.prefetch()
                 lines=file.read().decode(encoding="Windows-1252")
+                print("WE GOT LINES")
 
                 if self.input_schema:
                     df = DataFrame[self.input_schema](pd.read_csv(lines, sep=separator, encoding=encoding))
