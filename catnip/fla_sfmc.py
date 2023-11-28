@@ -54,7 +54,7 @@ class FLA_Sfmc(BaseModel):
         # prepare df
         df = self._convert_datetime_columns(df)
 
-        max_records_per_chunk = 10000
+        max_records_per_chunk = 9500
         num_chunks = len(df) // max_records_per_chunk + 1; print(num_chunks)
         smaller_dfs = [df.iloc[i * max_records_per_chunk:(i + 1) * max_records_per_chunk] for i in range(num_chunks)]
         
