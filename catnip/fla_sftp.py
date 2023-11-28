@@ -64,7 +64,7 @@ class FLA_Sftp(BaseModel):
         conn = self._create_connection()
 
         ## Initialize dataframe
-        df = pd.DataFrame()
+        # df = pd.DataFrame()
 
         ## Download csv as dataframe
         if self.file_exists(conn):
