@@ -64,27 +64,24 @@ class FLA_Sftp(BaseModel):
         ## Create connection
         conn = self._create_connection()
 
-        ## Initialize dataframe
-        # df = pd.DataFrame()
-
         ## Download csv as dataframe
         if self.file_exists(conn):
             with conn.open(self.remote_path) as file:
-                print("NO LINES")
-                file.prefetch()
-                lines=file.read().decode(encoding="Windows-1252")
-                print("WE GOT LINES")
 
-                try: 
+                file.prefetch()
+
+                if encoding != "utf-8":
+                    file = StringIO(file.read().decode(encoding="Windows-1252"))
+
+                try:
+
                     if self.input_schema:
-                        df = DataFrame[self.input_schema](pd.read_csv(lines, sep=separator, encoding=encoding))
+                        df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator))
                     else:
-                        df = pd.read_csv(StringIO(lines), sep=separator, encoding=encoding)
+                        df = pd.read_csv(file, sep=separator)
 
                 except Exception as e:
-
                     print(f"ERROR: {e}")
-                    print(f"Lines type: {type(lines)}")
 
         ## Close connection
         conn.close()
