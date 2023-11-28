@@ -70,11 +70,12 @@ class FLA_Sftp(BaseModel):
         if self.file_exists(conn):
             with conn.open(self.remote_path) as file:
                 file.prefetch()
+                lines=file.read().decode(encoding="Windows-1252")
 
                 if self.input_schema:
-                    df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator, encoding=encoding))
+                    df = DataFrame[self.input_schema](pd.read_csv(lines, sep=separator, encoding=encoding))
                 else:
-                    df = pd.read_csv(file, sep=separator, encoding=encoding)
+                    df = pd.read_csv(lines, sep=separator, encoding=encoding)
 
         ## Close connection
         conn.close()
