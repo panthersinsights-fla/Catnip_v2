@@ -244,6 +244,7 @@ class FLA_Fortress(BaseModel):
                     )
                     response.raise_for_status()
                     return response
+                
                 except httpx.HTTPError as e:
                     print(f"Request failed with status code {e.response.status_code}")
                     time.sleep(2 ** retries)
@@ -282,6 +283,8 @@ class FLA_Fortress(BaseModel):
         # responses = [_create_dataframe(r) for r in responses]
         # responses = [item for sublist in responses for item in sublist]
         responses = [item for response in responses for item in response.json()['data']]
+        responses = [{k: 999 if k == "fbMemberID" and not str(v).isdigit() else v for k, v in d.items()} for d in responses]
+
         print(f"# Dictionaries: {len(responses)}")
 
         if len(responses) > 0:
