@@ -1,5 +1,5 @@
 from pydantic import BaseModel, SecretStr
-from typing import List
+from typing import List, Dict
 
 import pandas as pd
 from io import BytesIO
@@ -24,7 +24,7 @@ class FLA_Email(BaseModel):
         subject: str,
         body: str,
         cc_list: List[str] = [],
-        df_attachments: List[pd.DataFrame] = None 
+        df_attachments: Dict[str, pd.DataFrame] = None # Dictionary of df's, with key as filename in email send
     ) -> None:
 
         ## Create email structure
@@ -50,21 +50,19 @@ class FLA_Email(BaseModel):
         message.attach(MIMEText(body, "html"))
 
 
-        # ## Add attachements, if necessary 
-        # if self.df_attachments:
-            
-        #     csv_file_objects = self._convert_df_attachments_to_file_objects()
+        # Add attachements, if necessary 
+        if df_attachments:
 
-        #     for index, csv_data in enumerate(csv_file_objects):
+            for key, value in df_attachments.items():
 
-        #         csv_part = MIMEApplication(csv_data)
-        #         csv_part.add_header(
-        #             "Content-Disposition", 
-        #             "attachment", 
-        #             filename = f"data_{index}.csv"
-        #         )
+                csv_part = MIMEApplication(self._convert_df_to_csv_string(value))
+                csv_part.add_header(
+                    "Content-Disposition", 
+                    "attachment", 
+                    filename = f"{key}.csv"
+                )
 
-        #         message.attach(csv_part)
+                message.attach(csv_part)
 
 
         ## And finally, send
@@ -80,17 +78,6 @@ class FLA_Email(BaseModel):
     ### HELPER FUNCTIONS ###
     ########################
 
-    def _convert_df_attachments_to_file_objects(self) -> List[BytesIO]:
+    def _convert_df_to_csv_string(self, df: pd.DataFrame) -> str:
 
-        csv_file_objects = []
-
-        for df in self.df_attachments:
-
-            csv_buffer = BytesIO()
-
-            df.to_csv(csv_buffer)
-            csv_buffer.seek(0)
-
-            csv_file_objects.append(csv_buffer)
-
-        return csv_file_objects
+        return df.to_csv(index = False)
