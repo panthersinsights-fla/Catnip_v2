@@ -40,25 +40,24 @@ class FLA_Purple(BaseModel):
     def get_visitors(self, start_date: datetime, end_date: datetime = datetime.now()) -> pd.DataFrame:
         
         url = f"{self._base_url}/visitors?from={start_date.strftime('%Y%m%d')}&to={end_date.strftime('%Y%m%d')}"
-        # url = f"{self._base_url}/visitors"
 
         headers = self._base_headers
         headers['X-API-Authorization'] = self._get_encrypted_signature(headers, url)
 
         with FLA_Requests().create_session() as session:
-
             response = session.get(
                 url = url,
-                headers = headers,
-                # params = {
-                #     "from": start_date.strftime("%Y%m%d"),
-                #     "to": end_date.strftime("%Y%m%d")
-                # }
+                headers = headers
             )
 
         print(response); print(response.json())
 
-        return None
+        if self.input_schema:
+            df = DataFrame[self.input_schema](response.json()['data']['visitors']) 
+        else:
+            df = pd.DataFrame(response.json()['data']['visitors'])
+
+        return df
 
     ########################
     ### HELPER FUNCTIONS ###
