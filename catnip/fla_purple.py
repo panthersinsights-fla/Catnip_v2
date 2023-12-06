@@ -39,7 +39,7 @@ class FLA_Purple(BaseModel):
 
     def get_visitors(self, start_date: datetime, end_date: datetime = datetime.now()) -> pd.DataFrame:
         
-        url = f"{self._base_url}/visitors"
+        url = f"{self._base_url}/visitors?from={start_date.strftime('%Y%m%d')}&to={end_date.strftime('%Y%m%d')}"
 
         headers = self._base_headers
         headers['X-API-Authorization'] = self._get_encrypted_signature(headers, url)
@@ -49,10 +49,10 @@ class FLA_Purple(BaseModel):
             response = session.get(
                 url = url,
                 headers = headers,
-                params = {
-                    "from": start_date.strftime("%Y%m%d"),
-                    "to": end_date.strftime("%Y%m%d")
-                }
+                # params = {
+                #     "from": start_date.strftime("%Y%m%d"),
+                #     "to": end_date.strftime("%Y%m%d")
+                # }
             )
 
         print(response); print(response.json())
