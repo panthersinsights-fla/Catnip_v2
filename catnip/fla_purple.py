@@ -40,6 +40,7 @@ class FLA_Purple(BaseModel):
     def get_visitors(self, start_date: datetime, end_date: datetime = datetime.now()) -> pd.DataFrame:
         
         url = f"{self._base_url}/visitors?from={start_date.strftime('%Y%m%d')}&to={end_date.strftime('%Y%m%d')}"
+        # url = f"{self._base_url}/visitors"
 
         headers = self._base_headers
         headers['X-API-Authorization'] = self._get_encrypted_signature(headers, url)
@@ -68,7 +69,7 @@ class FLA_Purple(BaseModel):
         signature: str = "\n".join([
             headers['Content-Type'], 
             urlparse(url).hostname, 
-            f"{urlparse(url)}?{urlparse(url)}", 
+            f"{urlparse(url).path}?{urlparse(url).query}", 
             headers['Date'], 
             "", 
             ""
