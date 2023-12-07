@@ -37,7 +37,7 @@ class FLA_Purple(BaseModel):
     ### CLASS FUNCTIONS ###
     #######################
 
-    def get_visitors(self, start_date: datetime, end_date: datetime = datetime.now()) -> pd.DataFrame:
+    def get_visitors(self, start_date: datetime, end_date: datetime = datetime.now()) -> pd.DataFrame | None:
         
         url = f"{self._base_url}/visitors?from={start_date.strftime('%Y%m%d')}&to={end_date.strftime('%Y%m%d')}"
 
@@ -52,12 +52,17 @@ class FLA_Purple(BaseModel):
 
         print(response); print(response.json())
 
-        if self.input_schema:
-            df = DataFrame[self.input_schema](response.json()['data']['visitors']) 
-        else:
-            df = pd.DataFrame(response.json()['data']['visitors'])
+        if response.status_code == 200:
 
-        return df
+            if self.input_schema:
+                df = DataFrame[self.input_schema](response.json()['data']['visitors']) 
+            else:
+                df = pd.DataFrame(response.json()['data']['visitors'])
+
+            return df
+        
+        else:
+            return None
 
     ########################
     ### HELPER FUNCTIONS ###
