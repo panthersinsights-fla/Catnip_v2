@@ -76,7 +76,7 @@ class FLA_Cheq(BaseModel):
 
         return responses
 
-    def get_menu(self) -> pd.DataFrame:
+    def get_menus(self) -> pd.DataFrame:
 
         # initialize
         responses: List[httpx.Response] = []
