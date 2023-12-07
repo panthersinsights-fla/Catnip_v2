@@ -50,7 +50,7 @@ class FLA_Purple(BaseModel):
                 headers = headers
             )
 
-        print(response); print(response.json())
+        # print(response); print(response.json())
 
         if response.status_code == 200:
 
