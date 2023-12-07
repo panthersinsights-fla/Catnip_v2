@@ -95,8 +95,8 @@ class FLA_Cheq(BaseModel):
                     params = {"page": page}
                 )
 
-                print(response); print(response.json())
-                
+                # print(response); print(response.json())
+
                 # update variables
                 end = response.json()['end']
                 page += 1
@@ -104,9 +104,9 @@ class FLA_Cheq(BaseModel):
         
         # create dataframe
         if self.input_schema:
-            df = self.input_schema([response.json()['results'] for response in responses])
+            df = self.input_schema([d for response in responses for d in response.json()['results']])
         else:    
-            df = pd.DataFrame([response.json()['results'] for response in responses])
+            df = pd.DataFrame([d for response in responses for d in response.json()['results']])
         
         print(df)
         
