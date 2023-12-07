@@ -3,10 +3,11 @@ from typing import List, Dict
 
 import pandas as pd
 from pandera import DataFrameModel
+from pandera.typing import DataFrame
 
 import httpx
 from catnip.fla_requests import FLA_Requests
-from datetime import datetime, timedelta
+from datetime import datetime
 
 class FLA_Cheq(BaseModel):
 
@@ -104,7 +105,7 @@ class FLA_Cheq(BaseModel):
         
         # create dataframe
         if self.input_schema:
-            df = self.input_schema([d for response in responses for d in response.json()['results']])
+            df = DataFrame[self.input_schema]([d for response in responses for d in response.json()['results']])
         else:    
             df = pd.DataFrame([d for response in responses for d in response.json()['results']])
         
