@@ -225,6 +225,7 @@ class FLA_Redshift(BaseModel):
                     ({
                         ', '.join([f'{c} {dt} ENCODE {e}' for c, dt, e in zip(columns, column_data_types, encoded_values)])
                     })
+                DISTSTYLE EVEN
                 {f" SORTKEY ({sortkey})" if sortkey else ""};
             """
             cursor.execute(q)
