@@ -108,13 +108,18 @@ class FLA_Tradable_Bits(BaseModel):
 
         print(f"# responses: {len(responses)}")
 
-        ### Create dataframe ####################################
-        if self.input_schema:
-            df = DataFrame[self.input_schema](pd.json_normalize(responses))
-        else:
-            df = pd.json_normalize(responses)
+        if len(responses) == 0:
+            return None
         
-        return df 
+        else:
+
+            ### Create dataframe ####################################
+            if self.input_schema:
+                df = DataFrame[self.input_schema](pd.json_normalize(responses))
+            else:
+                df = pd.json_normalize(responses)
+            
+            return df 
     
     ########################
     ### HELPER FUNCTIONS ###
