@@ -147,7 +147,8 @@ class FLA_Salesforce(BaseModel):
                 })
             )
 
-            print(f"Create Job Status: {response.status_code}") 
+            print(f"Create Job Status: {response.status_code}")
+            print(response.json())
 
         return response.json()
 
