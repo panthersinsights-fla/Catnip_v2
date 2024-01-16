@@ -12,6 +12,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from datetime import datetime, timedelta
 
+from prefect.blocks.notifications import MicrosoftTeamsWebhook
+
 class FLA_SeatGeek(BaseModel):
 
     client_id: SecretStr
@@ -179,8 +181,20 @@ class FLA_SeatGeek(BaseModel):
                 
             except BaseException as e:
 
-                print(f"Response: {temp_response} -- Status Code: {temp_response.status_code}")
-                print(f"Error: {e}"); print(f"Error Args: {e.args}")
+                body = f"""
+                    Request:
+                        url = {self._base_url}/{endpoint}
+                        headers = {self._headers}
+                        params = {_params}
+
+                    Response: {temp_response}
+                    Status Code: {temp_response.status_code}
+
+                    Error: {e}
+                """
+                print(body)
+                MicrosoftTeamsWebhook.load("teams-notification-block").notify(body)
+                
                 break
 
             if i % 5 == 0:
