@@ -193,7 +193,8 @@ class FLA_SeatGeek(BaseModel):
                     Error: {e}
                 """
                 print(body)
-                MicrosoftTeamsWebhook.load("teams-notification-block").notify(body)
+                teams_webhook_block = MicrosoftTeamsWebhook.load("teams-notification-block")
+                teams_webhook_block.notify(body)
                 
                 break
 
