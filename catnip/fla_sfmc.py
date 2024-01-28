@@ -65,8 +65,9 @@ class FLA_Sfmc(BaseModel):
         start_time = datetime.now()
 
         # iterate through smaller dataframes
-        for i in smaller_dfs:
-            print(f"smaller df: {i}"); print(i)
+        for index, dataframe in enumerate(smaller_dfs):
+            print(f"smaller df: {index}"); print(dataframe)
+            print(f"Time Difference: {(datetime.now() - start_time).seconds}")
 
             if (datetime.now() - start_time).seconds > 1080:
                 print("Obtaining new bearer token..")
@@ -86,7 +87,7 @@ class FLA_Sfmc(BaseModel):
                             response = session.post(
                                 url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
                                 headers = headers,
-                                data = json.dumps({"items": json.loads(i.to_json(orient="records"))})
+                                data = json.dumps({"items": json.loads(dataframe.to_json(orient="records"))})
                             )
                             break
                         except:
@@ -102,7 +103,7 @@ class FLA_Sfmc(BaseModel):
                             response = session.put(
                                 url = f"{self._base_rest_uri}/data/v1/async/dataextensions/key:{external_key}/rows",
                                 headers = headers,
-                                data = json.dumps({"items": json.loads(i.to_json(orient="records"))})
+                                data = json.dumps({"items": json.loads(dataframe.to_json(orient="records"))})
                             )
                             break
                         except:
@@ -115,7 +116,7 @@ class FLA_Sfmc(BaseModel):
                         raise ValueError(f"Literally an incorrect method. Like, really?! {method} was never going to work.")
 
             # status id
-            print("ASYNC REQUEST:"); print(response); print(response.content); print(response.json())
+            print("ASYNC REQUEST:"); print(response.json())
             request_id = response.json()['requestId']
             time.sleep(5)
 
@@ -129,7 +130,7 @@ class FLA_Sfmc(BaseModel):
                         url = f"{self._base_rest_uri}/data/v1/async/{request_id}/status",
                         headers = headers
                     )
-                    print("STATUS REQUEST:"); print(response.json()); print(response)
+                    print("STATUS REQUEST:"); print(response.json())
                     
                     try:
                         request_status = response.json()['requestStatus']
@@ -142,7 +143,7 @@ class FLA_Sfmc(BaseModel):
                         headers = headers
                     ).content
                 )
-                print("RESULTS REQUEST:"); print(response.json()); print(response)
+                print("RESULTS REQUEST:"); print(response.json())
 
         # return request results
         return results_responses 
