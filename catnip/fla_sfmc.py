@@ -2,11 +2,8 @@ from pydantic import BaseModel, SecretStr
 from typing import List, Dict, Literal
 
 import pandas as pd
-from pandera import DataFrameModel
-from pandera.typing import DataFrame
 
 import httpx
-import asyncio
 import json
 
 from datetime import datetime
@@ -90,7 +87,7 @@ class FLA_Sfmc(BaseModel):
                                 data = json.dumps({"items": json.loads(dataframe.to_json(orient="records"))})
                             )
                             break
-                        except:
+                        except Exception:
                             backoff_factor = (retries + 1) * 2
                             print(f"Retrying.. Waiting {backoff_factor} seconds.")
                             time.sleep(backoff_factor)
@@ -106,7 +103,7 @@ class FLA_Sfmc(BaseModel):
                                 data = json.dumps({"items": json.loads(dataframe.to_json(orient="records"))})
                             )
                             break
-                        except:
+                        except Exception:
                             backoff_factor = (retries + 1) * 2
                             print(f"Retrying.. Waiting {backoff_factor} seconds.")
                             time.sleep(backoff_factor)
@@ -134,7 +131,7 @@ class FLA_Sfmc(BaseModel):
                     
                     try:
                         request_status = response.json()['requestStatus']
-                    except:
+                    except Exception:
                         break
 
                 # get results
