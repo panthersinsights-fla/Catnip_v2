@@ -30,7 +30,7 @@ class FLA_Google_Analytics(BaseModel):
         property_name: str = None
     ) -> pd.DataFrame:
         
-        semaphore = asyncio.Semaphore(10)
+        semaphore = asyncio.Semaphore(5) # limit to n requests concurrently
 
         async with semaphore:
 
