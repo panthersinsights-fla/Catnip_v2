@@ -13,6 +13,7 @@ from pandera import DataFrameModel
 import pandas as pd
 
 from datetime import datetime
+import asyncio
 
 class FLA_Google_Analytics(BaseModel):
     '''
@@ -29,22 +30,26 @@ class FLA_Google_Analytics(BaseModel):
         property_name: str = None
     ) -> pd.DataFrame:
         
-        ## get response
-        response = await self._get_response(
-            property_id=property_id,
-            request_date=request_date,
-            dimension=dimension, 
-        )
+        semaphore = asyncio.Semaphore(10)
 
-        ## convert to dataframe
-        df = self._convert_response(
-            response=response,
-            property_id=property_id,
-            request_date=request_date,
-            property_name=property_name
-        )
+        async with semaphore:
 
-        return df 
+            ## get response
+            response = await self._get_response(
+                property_id=property_id,
+                request_date=request_date,
+                dimension=dimension, 
+            )
+
+            ## convert to dataframe
+            df = self._convert_response(
+                response=response,
+                property_id=property_id,
+                request_date=request_date,
+                property_name=property_name
+            )
+
+            return df 
     
 
     ### class functions ###
