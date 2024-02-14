@@ -103,7 +103,7 @@ class FLA_Google_Analytics(BaseModel):
                 **{dim_header.name: dim_value.value for dim_value, dim_header in zip(row.dimension_values, response.dimension_headers)},
                 **{met_header.name: met_value.value for met_value, met_header in zip(row.metric_values, response.metric_headers)},
                 **{'property_id': property_id},
-                **{'request_date': request_date},
+                **{'report_date': request_date},
                 **{'property_name': property_name}
             } for row in response.rows]
         )
