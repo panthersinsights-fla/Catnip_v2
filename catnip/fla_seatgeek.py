@@ -244,7 +244,11 @@ class FLA_SeatGeek(BaseModel):
         elif endpoint == "sales":
             response = [{k: v[:19] if k == "transaction_date" else v for k, v in d.items()} for d in response]
             response = [{k: v.replace("$","").replace(",", "") if k in ["list_price", "total_price"] and v is not None else v for k, v in d.items()} for d in response]
+
+            ## 20240214 - fix
+            response = [{k: v for k, v in d.items() if k != "product_item_id"} for d in response]
+            
             return DataFrame[self.input_schema](response)
 
         else:
-            raise ValueError(f"Bruh.. Put an endpoint in here 😑")
+            raise ValueError("Bruh.. Put an endpoint in here 😑")
