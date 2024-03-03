@@ -247,7 +247,7 @@ class FLA_SeatGeek(BaseModel):
 
             ## 20240214 - fix
             response = [{k: v for k, v in d.items() if k != "product_item_id"} for d in response]
-            
+
             return DataFrame[self.input_schema](response)
 
         else:

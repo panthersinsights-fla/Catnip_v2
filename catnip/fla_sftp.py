@@ -50,7 +50,7 @@ class FLA_Sftp(BaseModel):
             return True
 
         ## Else return error message
-        except SFTPError as e:
+        except SFTPError:
             print(f"The specified file on this '{self.remote_path}' remote_path does not exist.")
             return False
 
@@ -89,12 +89,14 @@ class FLA_Sftp(BaseModel):
         return df
 
 
-    def download_file(self, temp_filename: str) -> str:
+    def download_file(self, temp_filename: str = None) -> str:
 
         ## Create connection
         conn = self._create_connection()
 
         ## Create local path string
+        if temp_filename is None:
+            temp_filename = f"{self.remote_path.split('/')[-1]}"
         local_path = f"{getcwd()}/{temp_filename}.{self.remote_path.split('.')[1]}"
 
         ## Download file and write to local path
