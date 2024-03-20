@@ -86,6 +86,7 @@ class FLA_Sftp(BaseModel):
                 else:
 
                     try:
+                        print(encoding)
 
                         if self.input_schema:
                             df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator, encoding=encoding))
