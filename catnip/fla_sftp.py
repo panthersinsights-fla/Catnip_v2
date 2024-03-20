@@ -70,31 +70,18 @@ class FLA_Sftp(BaseModel):
 
                 file.prefetch()
 
-                if encoding == "Windows-1252":
-                    file = StringIO(file.read().decode(encoding="Windows-1252"))
+                if encoding != "utf-8":
+                    file = StringIO(file.read().decode(encoding=encoding))
 
-                    try:
+                try:
 
-                        if self.input_schema:
-                            df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator))
-                        else:
-                            df = pd.read_csv(file, sep=separator)
+                    if self.input_schema:
+                        df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator))
+                    else:
+                        df = pd.read_csv(file, sep=separator)
 
-                    except Exception as e:
-                        print(f"ERROR: {e}")
-                
-                else:
-
-                    try:
-                        print(encoding)
-
-                        if self.input_schema:
-                            df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator, encoding=encoding))
-                        else:
-                            df = pd.read_csv(file, sep=separator, encoding=encoding)
-
-                    except Exception as e:
-                        print(f"ERROR: {e}")
+                except Exception as e:
+                    print(f"ERROR: {e}")
 
         ## Close connection
         conn.close()
