@@ -75,7 +75,7 @@ class FLA_Sftp(BaseModel):
                     file = StringIO(file.read().decode(encoding=encoding))
 
                 if to_replace is not None:
-                    file = StringIO(file.read())
+                    file = StringIO(file.read().decode(encoding=encoding))
                     content = file.getvalue()
                     modified_content = content.replace(list(to_replace.keys())[0], list(to_replace.values())[0])
                     file.seek(0)
