@@ -6,7 +6,7 @@ class FLA_Requests(BaseModel):
     def create_session(self) -> httpx.Client:
 
         transport = httpx.HTTPTransport(retries=5)
-        timeout = httpx.Timeout(45, write=None)
+        timeout = httpx.Timeout(90, write=None)
         client = httpx.Client(
             transport = transport, 
             timeout = timeout

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, SecretStr
-from typing import List, Dict
+from typing import Dict
 
 import pandas as pd
 from pandera import DataFrameModel
