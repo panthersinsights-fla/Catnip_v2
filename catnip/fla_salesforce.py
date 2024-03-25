@@ -3,7 +3,6 @@ from typing import List, Dict, Literal
 
 import pandas as pd
 import json
-from datetime import datetime
 import httpx
 
 import xml.etree.ElementTree as ET
@@ -22,8 +21,8 @@ class FLA_Salesforce(BaseModel):
 
     @property
     def _soap_login_url(self) -> str:
-        return f"https://login.salesforce.com/services/Soap/u/59.0"
-    
+        return "https://login.salesforce.com/services/Soap/u/59.0"
+
     @property
     def _soap_login_headers(self) -> Dict:
         return {
@@ -51,7 +50,9 @@ class FLA_Salesforce(BaseModel):
 
         # prepare csv and create number of jobs
         df = self._convert_datetime_columns(df)
-        csv_data = self._convert_df_to_list_of_csvs(df); print(f"# CSV parts: {len(csv_data)}")
+        df = self._convert_nulls(df)
+        csv_data = self._convert_df_to_list_of_csvs(df)
+        print(f"# CSV parts: {len(csv_data)}")
 
         for i, data_part in enumerate(csv_data):
 
@@ -356,7 +357,16 @@ class FLA_Salesforce(BaseModel):
                 df[col] = df[col].dt.strftime(format_str)
         
         return df
-    
+
+    def _convert_nulls(
+        self, 
+        df: pd.DataFrame
+    ) -> pd.DataFrame:
+        
+        df = df.fillna("#N/A")
+        
+        return df
+
     def _convert_df_to_list_of_csvs(
         self,
         df: pd.DataFrame,
