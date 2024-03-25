@@ -1,5 +1,5 @@
 from pydantic import BaseModel, SecretStr
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from paramiko import Transport, SFTPClient, SFTPError
 from os import getcwd
@@ -58,7 +58,8 @@ class FLA_Sftp(BaseModel):
     def download_csv(
         self, 
         separator: str = ",", 
-        encoding: str = "utf-8"
+        encoding: str = "utf-8",
+        to_replace: Dict[str, str] = None
     ) -> pd.DataFrame:
 
         ## Create connection
@@ -72,6 +73,14 @@ class FLA_Sftp(BaseModel):
 
                 if encoding != "utf-8":
                     file = StringIO(file.read().decode(encoding=encoding))
+
+                if to_replace is not None:
+                    file = StringIO(file.read())
+                    content = file.getvalue()
+                    modified_content = content.replace(list(to_replace.keys())[0], list(to_replace.values())[0])
+                    file.seek(0)
+                    file.write(modified_content)
+                    file.seek(0)
 
                 try:
 
