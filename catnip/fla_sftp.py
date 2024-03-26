@@ -59,7 +59,8 @@ class FLA_Sftp(BaseModel):
         self, 
         separator: str = ",", 
         encoding: str = "utf-8",
-        to_replace: Dict[str, str] = None
+        to_replace: Dict[str, str] = None,
+        quotechar: str = None
     ) -> pd.DataFrame:
 
         ## Create connection
@@ -86,9 +87,9 @@ class FLA_Sftp(BaseModel):
                 try:
 
                     if self.input_schema:
-                        df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator))
+                        df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator, quotechar=quotechar))
                     else:
-                        df = pd.read_csv(file, sep=separator)
+                        df = pd.read_csv(file, sep=separator, quotechar=quotechar)
 
                 except Exception as e:
                     print(f"ERROR: {e}")
