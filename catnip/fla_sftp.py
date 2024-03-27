@@ -87,9 +87,16 @@ class FLA_Sftp(BaseModel):
                 try:
 
                     if self.input_schema:
-                        df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator, quotechar=quotechar))
+                        if quotechar is not None:
+                            df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator, quotechar=quotechar))
+                        else:
+                            df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator))
                     else:
-                        df = pd.read_csv(file, sep=separator, quotechar=quotechar)
+                        if quotechar is not None:
+                            df = pd.read_csv(file, sep=separator, quotechar=quotechar)
+                        else:
+                            df = pd.read_csv(file, sep=separator)
+
 
                 except Exception as e:
                     print(f"ERROR: {e}")
