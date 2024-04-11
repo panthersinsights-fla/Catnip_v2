@@ -1,8 +1,5 @@
-from pydantic import BaseModel, SecretStr
-from typing import List, Dict
+from pydantic import BaseModel
 import pandas as pd
-
-from prefect.blocks.system import Secret
 
 from datetime import datetime, timedelta
 import pytz
