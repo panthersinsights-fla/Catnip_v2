@@ -3,6 +3,7 @@ from pandera import DataFrameModel
 from pandera.typing import DataFrame
 import pandas as pd
 import pyodbc
+from typing import Literal
 
 # set default variable
 pyodbc.lowercase = True
@@ -13,22 +14,36 @@ class FLA_Odbc(BaseModel):
     username: SecretStr
     password: SecretStr
     driver: str
-    database_name: SecretStr
+    database_name: SecretStr = None
+    sid: SecretStr = None
 
     input_schema: DataFrameModel = None
+
+    connection_type: Literal["kore", "retailpro"]
 
     @property
     def _connection_string(self) -> str:
 
-        return repr(f"""
-            DRIVER={self.driver};
-            SERVER={self.host.get_secret_value()};
-            DATABASE={self.database_name.get_secret_value()};
-            UID={self.username.get_secret_value()};
-            PWD={self.password.get_secret_value()}
-        """).strip().replace("\\n", "").replace("  ", "").replace("'", "")
+        if self.connection_type == "kore":
+
+            return repr(f"""
+                DRIVER={self.driver};
+                SERVER={self.host.get_secret_value()};
+                DATABASE={self.database_name.get_secret_value()};
+                UID={self.username.get_secret_value()};
+                PWD={self.password.get_secret_value()}
+            """).strip().replace("\\n", "").replace("  ", "").replace("'", "")
+        
+        elif self.connection_type == "retailpro":
+
+            return repr(f"""
+                DRIVER={self.driver};
+                DBQ=//{self.host}:1521/{self.sid};
+                UID={self.username};
+                PWD={self.password}
+            """).strip().replace("\\n", "").replace("  ", "").replace("'", "")
     
-    
+
     def query_database(self, sql_string: str) -> pd.DataFrame:
 
         connection = pyodbc.connect(self._connection_string, readonly = True)
