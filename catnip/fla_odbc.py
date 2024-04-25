@@ -38,9 +38,9 @@ class FLA_Odbc(BaseModel):
 
             return repr(f"""
                 DRIVER={self.driver};
-                DBQ=//{self.host}:1521/{self.sid};
-                UID={self.username};
-                PWD={self.password}
+                DBQ=//{self.host.get_secret_value()}:1521/{self.sid.get_secret_value()};
+                UID={self.username.get_secret_value()};
+                PWD={self.password.get_secret_value()}
             """).strip().replace("\\n", "").replace("  ", "").replace("'", "")
     
 
