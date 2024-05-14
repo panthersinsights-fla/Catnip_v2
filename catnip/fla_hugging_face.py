@@ -1,7 +1,6 @@
 from pydantic import BaseModel, SecretStr
-from typing import Dict
+from typing import Dict, List
 from catnip.fla_requests import FLA_Requests
-import httpx
 
 class FLA_Hugging_Face(BaseModel):
 
@@ -17,7 +16,7 @@ class FLA_Hugging_Face(BaseModel):
         return f"https://api-inference.huggingface.co/models/{self.model_id}"
 
     
-    def query_model(self, payload: Dict) -> httpx.Response:
+    def query_model(self, payload: Dict) -> Dict | List:
 
         with FLA_Requests().create_session() as session:
 
@@ -27,4 +26,4 @@ class FLA_Hugging_Face(BaseModel):
                 json = payload
             )
 
-        return response
+        return response.json()
