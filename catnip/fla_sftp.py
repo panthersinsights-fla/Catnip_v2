@@ -115,7 +115,7 @@ class FLA_Sftp(BaseModel):
         ## Create local path string
         if temp_filename is None:
             temp_filename = f"{self.remote_path.split('/')[-1]}"
-        local_path = f"{getcwd()}/{temp_filename}.{self.remote_path.split('.')[1]}"
+        local_path = f"{getcwd()}/{temp_filename}.{self.remote_path.split('.')[-1]}"
 
         ## Download file and write to local path
         conn.get(self.remote_path, local_path)
