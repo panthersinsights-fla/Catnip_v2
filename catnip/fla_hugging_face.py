@@ -23,6 +23,7 @@ class FLA_Hugging_Face(BaseModel):
             response = session.post(
                 url = self._base_url,
                 headers = self._headers,
+                params = {"wait_for_model": True},
                 json = payload
             )
 
