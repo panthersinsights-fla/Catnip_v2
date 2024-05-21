@@ -58,6 +58,8 @@ class FLA_SeatGeek(BaseModel):
             json = payload
         )
 
+        print(response.json())
+
         bearer_token = response.json()['access_token']
 
         ## Override Prefect block
@@ -145,7 +147,8 @@ class FLA_SeatGeek(BaseModel):
             )
 
         # Check Response
-        self._check_reponse(response); print(f"Intial Request: {response}")
+        self._check_reponse(response)
+        print(f"Intial Request: {response}")
 
         # Pass Check -> update variables
         responses = response.json()['data']
