@@ -72,7 +72,7 @@ class FLA_Stripe(BaseModel):
 
             # check retries
             attempts += 1
-            if attempts > 3:
+            if attempts > 9:
                 raise RuntimeError("Too many attempts - try again later brohem")
 
             # pause
