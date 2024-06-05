@@ -25,7 +25,7 @@ class FLA_Stripe(BaseModel):
     
     @property
     def _headers(self) -> Dict:
-        return {"Authorization": f"Bearer {self._base_url}"}
+        return {"Authorization": f"Bearer {self.api_key.get_secret_value()}"}
     
 
     def get_report_run(
