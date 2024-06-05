@@ -21,7 +21,7 @@ class FLA_Stripe(BaseModel):
 
     @property
     def _base_url(self) -> str:
-        return "https://api.stripe.com/v1/"
+        return "https://api.stripe.com/v1"
     
     @property
     def _headers(self) -> Dict:
@@ -42,6 +42,7 @@ class FLA_Stripe(BaseModel):
             "parameters[interval_start]": int(start_date.timestamp()),
             "parameters[interval_end]": int(round(end_date.timestamp()))
         }
+        print(parameters)
         
         # post report run
         with FLA_Requests().create_session() as session:
