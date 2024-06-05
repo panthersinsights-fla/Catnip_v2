@@ -51,6 +51,8 @@ class FLA_Stripe(BaseModel):
                 data = parameters
             )
 
+        print(response)
+
         # pause and set attempt count
         time.sleep(1)
         attempts = 0
@@ -63,6 +65,9 @@ class FLA_Stripe(BaseModel):
                     url = f"{self._base_url}/reporting/report_runs/{response.json()['id']}",
                     headers = self._headers
                 )
+            
+            print(f"attempt: {attempts}")
+            print(response)
 
             # check retries
             attempts += 1
@@ -79,6 +84,9 @@ class FLA_Stripe(BaseModel):
                 url = response['result']['url'],
                 headers = self._headers
             )
+        
+        print("data")
+        print(response)
         
         data = response.content.decode('utf-8')
         df = DataFrame[self.input_schema](pd.read_csv(StringIO(data)))
