@@ -32,7 +32,7 @@ class FLA_Stripe(BaseModel):
         self,
         report_type: str,
         start_date: datetime,
-        end_date: datetime = datetime.now()
+        end_date: datetime = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     ) -> pd.DataFrame:
 
         # set parameters
