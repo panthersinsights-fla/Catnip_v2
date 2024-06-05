@@ -174,7 +174,7 @@ class FLA_Redshift(BaseModel):
         def _drop_table(is_staging: bool) -> None:
 
             q = f"""
-                DROP TABLE IF EXISTS custom.{target_table}{f"_staging" if is_staging else ""}
+                DROP TABLE IF EXISTS custom.{target_table}{"_staging" if is_staging else ""}
             """
             cursor.execute(q)
             conn.commit()
@@ -195,7 +195,7 @@ class FLA_Redshift(BaseModel):
             # }
 
             if base_table is None and not is_staging:
-                raise SyntaxError(f"Need a base table in here bruh, if this is a first fill")
+                raise SyntaxError("Need a base table in here bruh, if this is a first fill")
             
             # get columns and data types
             q = f"""
@@ -221,7 +221,7 @@ class FLA_Redshift(BaseModel):
             encoded_values = self._get_encoded_values(column_data_types)
 
             q = f"""
-                CREATE TABLE custom.{target_table}{f"_staging" if is_staging else ""} 
+                CREATE TABLE custom.{target_table}{"_staging" if is_staging else ""} 
                     ({
                         ', '.join([f'{c} {dt} ENCODE {e}' for c, dt, e in zip(columns, column_data_types, encoded_values)])
                     })
@@ -236,7 +236,7 @@ class FLA_Redshift(BaseModel):
         def _insert_into_table(is_staging: bool) -> None:
 
             q = f"""
-                INSERT INTO custom.{target_table}{f"_staging" if is_staging else ""} (
+                INSERT INTO custom.{target_table}{"_staging" if is_staging else ""} (
                     {select_query}
                 );
             """
@@ -442,7 +442,7 @@ class FLA_Redshift(BaseModel):
             
             masked_credential_string = mask_credentials(s3_to_sql)
             print(f"{masked_credential_string}")
-            print(f"Filling the table into Redshift! 🤞")
+            print("Filling the table into Redshift! 🤞")
 
 
         with self._connect_to_redshift() as conn:
