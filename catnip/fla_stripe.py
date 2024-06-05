@@ -53,6 +53,7 @@ class FLA_Stripe(BaseModel):
             )
 
         print(response)
+        print(response.json())
 
         # pause and set attempt count
         time.sleep(1)
@@ -82,7 +83,7 @@ class FLA_Stripe(BaseModel):
         # retrieve data
         with FLA_Requests().create_session() as session:
             response = session.get(
-                url = response['result']['url'],
+                url = response.json()['result']['url'],
                 headers = self._headers
             )
         
