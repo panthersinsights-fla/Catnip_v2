@@ -1,6 +1,6 @@
 from pydantic import BaseModel, SecretStr
 
-from fla_requests import FLA_Requests
+from catnip.fla_requests import FLA_Requests
 
 import pandas as pd
 from pandera import DataFrameModel
@@ -87,7 +87,7 @@ class FLA_Stripe(BaseModel):
         
         print("data")
         print(response)
-        
+
         data = response.content.decode('utf-8')
         df = DataFrame[self.input_schema](pd.read_csv(StringIO(data)))
 
