@@ -63,11 +63,16 @@ class FLA_Cheq(BaseModel):
                     json = data
                 )
 
+            try:
                 # update variables
                 end = response.json()['end']
                 page += 1
                 responses.append(response)
-            
+                
+            except Exception as e:
+                print(f"ERROR: {e}")
+                print(response.json())
+
             if page % 5 == 0:
                 print(f"Loading Page #{page}")
 
