@@ -67,15 +67,15 @@ class FLA_Cheq(BaseModel):
 
                 if not response.json()['results']:
                     break
-            try:
-                # update variables
-                end = response.json()['end']
-                page += 1
-                responses.append(response)
+                try:
+                    # update variables
+                    end = response.json()['end']
+                    page += 1
+                    responses.append(response)
 
-            except Exception as e:
-                print(f"ERROR: {e}")
-                print(response.json())
+                except Exception as e:
+                    print(f"ERROR: {e}")
+                    print(response.json())
 
             # if (datetime.now() - start_time) > timedelta(minutes=2):
             #     break
