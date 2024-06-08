@@ -63,7 +63,7 @@ class FLA_Cheq(BaseModel):
                     params = {"page": page},
                     json = data
                 )
-                print(response.json())
+                # print(response.json())
 
                 if not response.json()['results']:
                     break
