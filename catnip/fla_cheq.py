@@ -65,6 +65,8 @@ class FLA_Cheq(BaseModel):
                 )
                 print(response.json())
 
+                if not response.json()['results']:
+                    break
             try:
                 # update variables
                 end = response.json()['end']
