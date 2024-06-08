@@ -74,8 +74,8 @@ class FLA_Cheq(BaseModel):
                 print(f"ERROR: {e}")
                 print(response.json())
 
-            if (datetime.now() - start_time) > timedelta(minutes=2):
-                break
+            # if (datetime.now() - start_time) > timedelta(minutes=2):
+            #     break
 
             # if page % 5 == 0:
             #     print(f"Loading Page #{page}")
