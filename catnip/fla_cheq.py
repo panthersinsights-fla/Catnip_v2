@@ -52,7 +52,7 @@ class FLA_Cheq(BaseModel):
         # iterate
         with FLA_Requests().create_session() as session:
             while not end:
-                
+
                 # request
                 print(f"Loading Page #{page}")
                 
@@ -63,6 +63,7 @@ class FLA_Cheq(BaseModel):
                     params = {"page": page},
                     json = data
                 )
+                print(response.json())
 
             try:
                 # update variables
