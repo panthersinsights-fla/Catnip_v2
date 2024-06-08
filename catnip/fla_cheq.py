@@ -50,8 +50,8 @@ class FLA_Cheq(BaseModel):
         start_time = datetime.now()
 
         # iterate
-        while not end:
-            with FLA_Requests().create_session() as session:
+        with FLA_Requests().create_session() as session:
+            while not end:
                 
                 # request
                 print(f"Loading Page #{page}")
