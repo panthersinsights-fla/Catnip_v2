@@ -114,6 +114,16 @@ class FLA_Parkhub(BaseModel):
 
         return response.json()
     
+    def get_external_customers(self) -> Dict:
+
+        response = self._get_response(
+            url = f"{self._base_url}//externalCustomers/{self.organization_id.get_secret_value()}"
+        )
+
+        print(response)
+        print(response.json())
+
+        return response.json()
 
     ########################
     ### HELPER FUNCTIONS ###
