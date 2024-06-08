@@ -7,7 +7,7 @@ from pandera.typing import DataFrame
 
 import httpx
 from catnip.fla_requests import FLA_Requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class FLA_Cheq(BaseModel):
 
@@ -47,6 +47,7 @@ class FLA_Cheq(BaseModel):
             "end_range": end_date.strftime('%Y-%m-%dT%H:%M:%SZ'),
             "payment_status": payment_status
         }
+        start_time = datetime.now()
 
         # iterate
         while not end:
@@ -68,17 +69,20 @@ class FLA_Cheq(BaseModel):
                 end = response.json()['end']
                 page += 1
                 responses.append(response)
-                
+
             except Exception as e:
                 print(f"ERROR: {e}")
                 print(response.json())
 
-            if page % 5 == 0:
-                print(f"Loading Page #{page}")
+            if (datetime.now() - start_time) > timedelta(minutes=2):
+                break
 
-        if len(responses) == 1:
-            print(responses[0])
-            print(responses[0].json())
+            # if page % 5 == 0:
+            #     print(f"Loading Page #{page}")
+
+        # if len(responses) == 1:
+        #     print(responses[0])
+        #     print(responses[0].json())
 
         return responses
 
