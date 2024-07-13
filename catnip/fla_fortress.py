@@ -1,5 +1,5 @@
 from pydantic import BaseModel, SecretStr
-from typing import List, Any, Dict
+from typing import List, Dict
 
 import pandas as pd
 from pandera import DataFrameModel
@@ -113,7 +113,7 @@ class FLA_Fortress(BaseModel):
 
     def _create_session(self) -> httpx.Client:
 
-        retry = Retry(total = 5, backoff_factor = 0.5)
+        # retry = Retry(total = 5, backoff_factor = 0.5)
         transport = httpx.HTTPTransport(retries = 5)
         client = httpx.Client(transport = transport, timeout=90)
 
@@ -180,7 +180,8 @@ class FLA_Fortress(BaseModel):
                 json = {**base_payload, "PageNumber": 1}
             )
 
-        num_pages = response.json()['statistics']['numberOfPages']; print(f"# Pages: {num_pages}")
+        num_pages = response.json()['statistics']['numberOfPages']
+        print(f"# Pages: {num_pages}")
         responses = [response]
 
         ### Request Rest ##################################################
@@ -262,7 +263,8 @@ class FLA_Fortress(BaseModel):
                 json = {**base_payload, "PageNumber": 1}
             )
 
-        num_pages = response.json()['statistics']['numberOfPages']; print(f"# Pages: {num_pages}")
+        num_pages = response.json()['statistics']['numberOfPages']
+        print(f"# Pages: {num_pages}")
         response_datetime = pd.Timestamp(response.headers['Date']).astimezone("America/New_York").tz_localize(None).to_datetime64()
         responses = [response]
 
@@ -270,20 +272,27 @@ class FLA_Fortress(BaseModel):
         with self._create_session() as session:
             for i in range(2, num_pages+1):
 
-                print(f"Requesting: Page #{i}")
-                responses = [*responses, _get_response(session, i)]
+                try: 
+                    print(f"Requesting: Page #{i}")
+                    responses = [*responses, _get_response(session, i)]
 
-                time.sleep(4)
+                    time.sleep(4)
 
-                # if i > 50:
-                #     break
+                    # if i > 50:
+                    #     break
+                
+                except Exception as e:
+                    print(e)
+                    break
 
         ### Create dataframe ###############################################
         print(f"# Responses: {len(responses)}")
         # responses = [_create_dataframe(r) for r in responses]
         # responses = [item for sublist in responses for item in sublist]
-        responses = [item for response in responses for item in response.json()['data']]; print(responses)
-        responses = [{k: '999' if k == "fbMemberID" and not str(v).isdigit() else v for k, v in d.items()} for d in responses]; print(responses)
+        responses = [item for response in responses for item in response.json()['data']]
+        print(responses)
+        responses = [{k: '999' if k == "fbMemberID" and not str(v).isdigit() else v for k, v in d.items()} for d in responses]
+        print(responses)
 
         # fbcheck = [v for d in responses for k, v in d.items() if k == "fbMemberID"]
         # fbcheck = list(set(fbcheck)); print(fbcheck); print(type(fbcheck[0]))
