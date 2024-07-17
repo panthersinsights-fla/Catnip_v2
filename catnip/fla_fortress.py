@@ -290,9 +290,9 @@ class FLA_Fortress(BaseModel):
         # responses = [_create_dataframe(r) for r in responses]
         # responses = [item for sublist in responses for item in sublist]
         responses = [item for response in responses for item in response.json()['data']]
-        print(responses)
+        print(responses[0])
         responses = [{k: '999' if k == "fbMemberID" and not str(v).isdigit() else v for k, v in d.items()} for d in responses]
-        print(responses)
+        print(responses[0])
 
         # fbcheck = [v for d in responses for k, v in d.items() if k == "fbMemberID"]
         # fbcheck = list(set(fbcheck)); print(fbcheck); print(type(fbcheck[0]))
