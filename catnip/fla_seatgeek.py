@@ -153,6 +153,7 @@ class FLA_SeatGeek(BaseModel):
         # Pass Check -> update variables
         responses = response.json()['data']
         if len(responses) == 0:
+            print("ENPTY 😩")
             print(responses)
             return None
 
