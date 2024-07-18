@@ -155,6 +155,7 @@ class FLA_SeatGeek(BaseModel):
         if len(responses) == 0:
             print("ENPTY 😩")
             print(responses)
+            print(response.json())
             return None
 
         _has_more = response.json()['has_more']
