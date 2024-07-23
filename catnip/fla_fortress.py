@@ -291,7 +291,12 @@ class FLA_Fortress(BaseModel):
         # responses = [item for sublist in responses for item in sublist]
         if len(responses) == 1:
             print(response.json())
+        
         responses = [item for response in responses for item in response.json()['data']]
+
+        if len(responses) == 0:
+            return None
+        
         print(responses[0])
         responses = [{k: '999' if k == "fbMemberID" and not str(v).isdigit() else v for k, v in d.items()} for d in responses]
         print(responses[0])
