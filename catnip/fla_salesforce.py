@@ -370,7 +370,7 @@ class FLA_Salesforce(BaseModel):
     def _convert_df_to_list_of_csvs(
         self,
         df: pd.DataFrame,
-        max_size_bytes: int = 100 * 1024 * 1024
+        max_size_bytes: int = 1000 * 1024 * 1024
     ) -> List[StringIO]:
         
         # Create an in-memory file-like object to hold the CSV data
