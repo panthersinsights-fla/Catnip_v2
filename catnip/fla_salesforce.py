@@ -88,7 +88,7 @@ class FLA_Salesforce(BaseModel):
                 )
 
                 state = job_status_response['state']
-                time.sleep(1)
+                time.sleep(2)
 
             # get failed results
             failed_results_response = self._get_failed_results(
@@ -100,7 +100,10 @@ class FLA_Salesforce(BaseModel):
             if failed_results_response:
                 failed_df = pd.read_csv(BytesIO(failed_results_response))
                 print("Failed Results:")
-                print(failed_df.to_markdown())
+                print(failed_df.head(5))
+                print(f"Number of Failed Records: {len(failed_df.index)}")
+                if 'sf__Error' in failed_df.columns:
+                    print(f"Reasons for Failure: {df['sf__Error'].unique().tolist()}")
 
             # get unprocessed results
             unprocessed_results_response = self._get_unprocessed_results(
@@ -112,7 +115,8 @@ class FLA_Salesforce(BaseModel):
             if unprocessed_results_response:
                 unprocessed_df = pd.read_csv(BytesIO(unprocessed_results_response))
                 print("Unprocessed Results:")
-                print(unprocessed_df.to_markdown())
+                print(unprocessed_df.head(5))
+                print(f"Number of Unprocessed Records: {len(unprocessed_df.index)}")
 
         return failed_df
 
