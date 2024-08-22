@@ -373,18 +373,17 @@ class FLA_Salesforce(BaseModel):
         max_size_bytes: int = 1000 * 1024 * 1024
     ) -> List[StringIO]:
         
-        # Create an in-memory file-like object to hold the CSV data
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer, index=False, lineterminator="\n", escapechar="\"")
-        csv_data = csv_buffer.getvalue()
-        
-        # Check if the data size exceeds the specified limit
-        if len(csv_data.encode("utf-8")) > max_size_bytes:
-            num_parts = (len(csv_data) + max_size_bytes - 1) // max_size_bytes  # Calculate the number of parts
-            
-            # Split the data into parts
-            data_parts = [csv_data[i * max_size_bytes:(i + 1) * max_size_bytes] for i in range(num_parts)]
+        if len(df.index) > 500000:
+            mid_index = len(df.index) // 2
+            df_list = [df.iloc[:mid_index], df.iloc[mid_index:]]
         else:
-            data_parts = [csv_data]
+            df_list = [df]
+
+        csv_list = []
+        for df_i in df_list:
+            # Create an in-memory file-like object to hold the CSV data
+            csv_buffer = StringIO()
+            df_i.to_csv(csv_buffer, index=False, lineterminator="\n", escapechar="\"")
+            csv_list.append(csv_buffer.getvalue())
         
-        return data_parts
+        return csv_list
