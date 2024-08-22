@@ -373,9 +373,11 @@ class FLA_Salesforce(BaseModel):
         max_size_bytes: int = 1000 * 1024 * 1024
     ) -> List[StringIO]:
         
-        if len(df.index) > 500000:
-            mid_index = len(df.index) // 2
-            df_list = [df.iloc[:mid_index], df.iloc[mid_index:]]
+        if len(df.index) > 300000:
+            quarter_size = len(df.index) // 4
+            df_list = [df.iloc[i*quarter_size:(i+1)*quarter_size] for i in range(4)]
+            if len(df.index) % 4 != 0:
+                df_list[-1] = pd.concat([df_list[-1], df.iloc[4*quarter_size:]])
         else:
             df_list = [df]
 
@@ -385,5 +387,5 @@ class FLA_Salesforce(BaseModel):
             csv_buffer = StringIO()
             df_i.to_csv(csv_buffer, index=False, lineterminator="\n", escapechar="\"")
             csv_list.append(csv_buffer.getvalue())
-        
+
         return csv_list
