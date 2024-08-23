@@ -103,7 +103,7 @@ class FLA_Salesforce(BaseModel):
                 print(failed_df.head(5))
                 print(f"Number of Failed Records: {len(failed_df.index)}")
                 if 'sf__Error' in failed_df.columns:
-                    print(f"Reasons for Failure: {df['sf__Error'].unique().tolist()}")
+                    print(f"Reasons for Failure: {failed_df['sf__Error'].unique().tolist()}")
 
             # get unprocessed results
             unprocessed_results_response = self._get_unprocessed_results(
