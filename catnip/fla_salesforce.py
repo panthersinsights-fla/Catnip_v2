@@ -147,7 +147,7 @@ class FLA_Salesforce(BaseModel):
                     "object": object_name,
                     "contentType": "CSV",
                     "operation": operation,
-                    "lineEnding": "LF",
+                    # "lineEnding": "LF",
                     **({"externalIdFieldName": external_id_field_name} if external_id_field_name is not None else {}),
                 })
             )
