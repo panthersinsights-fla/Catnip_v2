@@ -216,8 +216,12 @@ class FLA_Formstack(BaseModel):
                 params = params
             )
 
-        if response.json()["total"] == 0:
-            return pd.DataFrame()
+        try:
+            if response.json()["total"] == 0:
+                return pd.DataFrame()
+        except Exception as e:
+            print(response.json())
+            raise Exception(f"Error: {e}")
         
         # create response list
         responses = [response]
