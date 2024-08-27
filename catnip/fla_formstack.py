@@ -1,5 +1,5 @@
 from pydantic import BaseModel, SecretStr
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Generator
 from collections import Counter
 
 import pandas as pd
@@ -8,7 +8,6 @@ from pandera.typing import DataFrame
 
 import httpx
 import asyncio
-from urllib3.util.retry import Retry
 
 class FLA_Formstack(BaseModel):
 
@@ -144,10 +143,10 @@ class FLA_Formstack(BaseModel):
     ### HELPER FUNCTIONS ###
     ########################
 
-    def _chunk_list(self, l: List[Any], chunk_size: int) -> List[List[Any]]:
+    def _chunk_list(self, ll: List[Any], chunk_size: int) -> Generator[List[Any]]:
 
-        for i in range(0, len(l), chunk_size):
-            yield l[i:i + chunk_size]
+        for i in range(0, len(ll), chunk_size):
+            yield ll[i:i + chunk_size]
 
     def _create_async_session(self) -> httpx.AsyncClient:
 
@@ -225,8 +224,11 @@ class FLA_Formstack(BaseModel):
 
         # check for additional pages
         if "pages" in response.json():
+
             # get num pages
-            num_pages = response.json()['pages']; print(f"# Pages: {num_pages}")
+            num_pages = response.json()['pages']
+            print(f"# Pages: {num_pages}")
+
             # batch future requests
             batches = [min(start + batch_size, num_pages+1) for start in range(2, num_pages+1, batch_size)]
             batches = [2] + batches if num_pages > 1 else batches
@@ -246,7 +248,8 @@ class FLA_Formstack(BaseModel):
 
         ### Create dataframe ###############################################
         responses = [item for response in responses for item in response.json()[response_key]]
-        print(f"# Reponses: {len(responses)}"); print(type(responses))
+        print(f"# Reponses: {len(responses)}")
+        print(type(responses))
 
         if self.input_schema:
             df = DataFrame[self.input_schema](responses)
