@@ -1,5 +1,5 @@
 from pydantic import BaseModel, SecretStr
-from typing import Dict, List, Any, Generator
+from typing import Dict, List, Any
 from collections import Counter
 
 import pandas as pd
@@ -143,7 +143,7 @@ class FLA_Formstack(BaseModel):
     ### HELPER FUNCTIONS ###
     ########################
 
-    def _chunk_list(self, ll: List[Any], chunk_size: int) -> Generator[List[Any]]:
+    def _chunk_list(self, ll: List[Any], chunk_size: int):
 
         for i in range(0, len(ll), chunk_size):
             yield ll[i:i + chunk_size]
