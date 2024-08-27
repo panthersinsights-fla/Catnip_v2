@@ -68,6 +68,7 @@ class FLA_Formstack(BaseModel):
             **({"min_time": min_time} if min_time is not None else {}),
             "per_page": 100
         }
+        print(f"params: {params}")
 
         ## run async requests
         df = asyncio.run(
