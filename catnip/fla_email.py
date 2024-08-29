@@ -2,7 +2,6 @@ from pydantic import BaseModel, SecretStr
 from typing import List, Dict
 
 import pandas as pd
-from io import BytesIO
 
 import smtplib
 from email.mime.multipart import MIMEMultipart
