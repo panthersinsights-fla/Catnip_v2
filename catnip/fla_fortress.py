@@ -298,7 +298,7 @@ class FLA_Fortress(BaseModel):
             return None
         
         print(responses[0])
-        responses = [{k: '999' if k == "fbMemberID" and not str(v).isdigit() else v for k, v in d.items()} for d in responses]
+        responses = [{k: '999' if k in ['fbMemberID', 'accountID'] and not str(v).isdigit() else v for k, v in d.items()} for d in responses]
         print(responses[0])
 
         # fbcheck = [v for d in responses for k, v in d.items() if k == "fbMemberID"]
