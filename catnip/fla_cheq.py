@@ -107,10 +107,16 @@ class FLA_Cheq(BaseModel):
 
                 # print(response); print(response.json())
 
+            try: 
                 # update variables
                 end = response.json()['end']
                 page += 1
                 responses.append(response)
+            except Exception as e:
+                print(response)
+                print(response.json())
+                print(f"Error: {e}")
+                break
         
         # create dataframe
         if self.input_schema:
