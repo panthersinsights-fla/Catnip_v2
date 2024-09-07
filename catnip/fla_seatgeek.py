@@ -75,6 +75,10 @@ class FLA_SeatGeek(BaseModel):
 
         return self._request_loop(endpoint = "clients", _cursor = cursor)
 
+    def get_installments(self, cursor: str | None) -> pd.DataFrame | None:
+
+        return self._request_loop(endpoint = "installments", _cursor = cursor)
+
     def get_manifests(self, cursor: str | None) -> pd.DataFrame | None:
 
         return self._request_loop(endpoint = "manifests", _cursor = cursor)
@@ -127,7 +131,7 @@ class FLA_SeatGeek(BaseModel):
     
     def _request_loop(
             self,
-            endpoint: str, # attendance, clients, manifests, payments, products, sales 
+            endpoint: str, # attendance, clients, installments, manifests, payments, products, sales 
             _cursor: str | None
         ) -> pd.DataFrame | None:
 
@@ -221,7 +225,7 @@ class FLA_SeatGeek(BaseModel):
     
     def _clean_response(
             self, 
-            endpoint: str, # attendance, clients, manifests, payments, products, sales 
+            endpoint: str, # attendance, clients, installments, manifests, payments, products, sales 
             response: List[Dict]
         ) -> pd.DataFrame | None:
 
@@ -233,7 +237,11 @@ class FLA_SeatGeek(BaseModel):
         elif endpoint == "clients":
             response = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
-
+        
+        elif endpoint == "installments":
+            response = [{k: v[:19] if k == "execution_date" else v for k, v in d.items()} for d in response]
+            return DataFrame[self.input_schema](response)
+        
         elif endpoint == "manifests":
             response = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
