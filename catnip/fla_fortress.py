@@ -13,6 +13,8 @@ from datetime import datetime
 import base64
 import time
 
+from json import JSONDecodeError
+
 class FLA_Fortress(BaseModel):
 
     api_key:        SecretStr
@@ -263,7 +265,17 @@ class FLA_Fortress(BaseModel):
                 json = {**base_payload, "PageNumber": 1}
             )
 
-        num_pages = response.json()['statistics']['numberOfPages']
+        try:
+            num_pages = response.json()['statistics']['numberOfPages']
+        except JSONDecodeError as e:
+            print(f"Failed to decode JSON: {e}")
+            print(f"Response content: {response.text[:500]}...")  # Print first 100 characters
+            raise Exception("JSON decoding failed")
+        except KeyError as ke:
+            print(f"Key not found: {ke}")
+            print(f"Available keys: {response.json().keys()}")
+            raise Exception("Required key missing in JSON")
+        
         print(f"# Pages: {num_pages}")
         response_datetime = pd.Timestamp(response.headers['Date']).astimezone("America/New_York").tz_localize(None).to_datetime64()
         responses = [response]
