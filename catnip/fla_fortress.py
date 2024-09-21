@@ -274,6 +274,12 @@ class FLA_Fortress(BaseModel):
         except KeyError as ke:
             print(f"Key not found: {ke}")
             print(f"Available keys: {response.json().keys()}")
+            print(f"Response content: {response.text[:500]}...")  # Print first 100 characters
+            raise Exception("Required key missing in JSON")
+        except TypeError as te:
+            print(f"Key not found: {te}")
+            print(f"Available keys: {response.json().keys()}")
+            print(f"Response content: {response.text[:500]}...")  # Print first 100 characters
             raise Exception("Required key missing in JSON")
         
         print(f"# Pages: {num_pages}")
