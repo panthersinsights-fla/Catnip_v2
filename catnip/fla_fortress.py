@@ -257,7 +257,9 @@ class FLA_Fortress(BaseModel):
             else:
                 raise Exception("Max retries exceeded")
 
+
         ### Initial Request ##############################################
+        print(base_payload)
         with self._create_session() as session:
             response = session.post(
                 url = f"{self._base_url}/{endpoint}",
@@ -269,17 +271,17 @@ class FLA_Fortress(BaseModel):
             num_pages = response.json()['statistics']['numberOfPages']
         except JSONDecodeError as e:
             print(f"Failed to decode JSON: {e}")
-            print(f"Response content: {response.text[:500]}...")  # Print first 100 characters
+            print(f"Response content: {response.text[:500]}...")
             raise Exception("JSON decoding failed")
         except KeyError as ke:
             print(f"Key not found: {ke}")
             print(f"Available keys: {response.json().keys()}")
-            print(f"Response content: {response.text[:500]}...")  # Print first 100 characters
+            print(f"Response content: {response.text[:500]}...") 
             raise Exception("Required key missing in JSON")
         except TypeError as te:
             print(f"Key not found: {te}")
             print(f"Available keys: {response.json().keys()}")
-            print(f"Response content: {response.text[:500]}...")  # Print first 100 characters
+            print(f"Response content: {response.text[:500]}...")
             raise Exception("Required key missing in JSON")
         
         print(f"# Pages: {num_pages}")
