@@ -24,11 +24,11 @@ class FLA_Fortress(BaseModel):
 
     @property
     def _base_url_2324(self) -> str:
-        return "https://panthers.fortressus.com/FGB_WebApplication/Panthers22/Production/api/CRM"
+        return "https://panthers.fortressus.com/FGB_WebApplication/Panthers_22/Production/api/CRM"
     
     @property
     def _base_url_2425(self) -> str:
-        return "https://panthers.fortressus.com/FGB_WebApplication/Panthers23/Production/api/CRM"
+        return "https://panthers.fortressus.com/FGB_WebApplication/Panthers_23/Production/api/CRM"
     
     @property
     def _headers(self) -> Dict:
@@ -135,17 +135,17 @@ class FLA_Fortress(BaseModel):
             num_pages = response.json()['statistics']['numberOfPages']
         except JSONDecodeError as e:
             print(f"Failed to decode JSON: {e}")
-            print(f"Response content: {response.text[:1000]}...")
+            print(f"Response content: {response.text}...")
             raise Exception("JSON decoding failed")
         except KeyError as ke:
             print(f"Key not found: {ke}")
             print(f"Available keys: {response.json().keys()}")
-            print(f"Response content: {response.text[:1000]}...") 
+            print(f"Response content: {response.text}...") 
             raise Exception("Required key missing in JSON")
         except TypeError as te:
             print(f"Key not found: {te}")
             print(f"Available keys: {response.json().keys()}")
-            print(f"Response content: {response.text[:1000]}...")
+            print(f"Response content: {response.text}...")
             raise Exception("Required key missing in JSON")
         
         print(f"# Pages: {num_pages}")
