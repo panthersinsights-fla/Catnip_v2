@@ -122,6 +122,7 @@ class FLA_Fortress(BaseModel):
 
 
         ### Initial Request ##############################################
+        print(f"{base_url}/{endpoint}")
         print(base_payload)
         with FLA_Requests().create_session() as session:
             response = session.post(
@@ -134,17 +135,17 @@ class FLA_Fortress(BaseModel):
             num_pages = response.json()['statistics']['numberOfPages']
         except JSONDecodeError as e:
             print(f"Failed to decode JSON: {e}")
-            print(f"Response content: {response.text[:500]}...")
+            print(f"Response content: {response.text[:1000]}...")
             raise Exception("JSON decoding failed")
         except KeyError as ke:
             print(f"Key not found: {ke}")
             print(f"Available keys: {response.json().keys()}")
-            print(f"Response content: {response.text[:500]}...") 
+            print(f"Response content: {response.text[:1000]}...") 
             raise Exception("Required key missing in JSON")
         except TypeError as te:
             print(f"Key not found: {te}")
             print(f"Available keys: {response.json().keys()}")
-            print(f"Response content: {response.text[:500]}...")
+            print(f"Response content: {response.text[:1000]}...")
             raise Exception("Required key missing in JSON")
         
         print(f"# Pages: {num_pages}")
