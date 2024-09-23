@@ -136,16 +136,19 @@ class FLA_Fortress(BaseModel):
         except JSONDecodeError as e:
             print(f"Failed to decode JSON: {e}")
             print(f"Response content: {response.text}...")
+            print(f"Status Code: {response.status_code}")
             raise Exception("JSON decoding failed")
         except KeyError as ke:
             print(f"Key not found: {ke}")
             print(f"Available keys: {response.json().keys()}")
             print(f"Response content: {response.text}...") 
+            print(f"Status Code: {response.status_code}")
             raise Exception("Required key missing in JSON")
         except TypeError as te:
             print(f"Key not found: {te}")
             print(f"Available keys: {response.json().keys()}")
             print(f"Response content: {response.text}...")
+            print(f"Status Code: {response.status_code}")
             raise Exception("Required key missing in JSON")
         
         print(f"# Pages: {num_pages}")
@@ -160,7 +163,7 @@ class FLA_Fortress(BaseModel):
                     print(f"Requesting: Page #{i}")
                     responses = [*responses, _get_response(session, i)]
 
-                    time.sleep(5)
+                    time.sleep(4)
                 
                 except Exception as e:
                     print(e)
