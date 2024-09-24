@@ -156,7 +156,7 @@ class FLA_Fortress(BaseModel):
                     print(f"Requesting: Page #{i}")
                     responses = [*responses, _get_response(session, i)]
 
-                    time.sleep(4)
+                    time.sleep(4.5)
                 
                 except Exception as e:
                     print(e)
