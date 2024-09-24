@@ -149,7 +149,20 @@ class FLA_Sftp(BaseModel):
         conn.close()
 
         return None
+
+
+    def remove_file(self):
+
+        ## Create connection
+        conn = self._create_connection()
+
+        ## Remove file at remote path
+        conn.remove(self.remote_path)
     
+        ## Close connection
+        conn.close()
+
+        return None
 
     ########################
     ### HELPER FUNCTIONS ###
