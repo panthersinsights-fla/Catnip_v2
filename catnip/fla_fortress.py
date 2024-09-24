@@ -21,14 +21,6 @@ class FLA_Fortress(BaseModel):
     password:       SecretStr
     
     input_schema:   DataFrameModel = None
-
-    @property
-    def _base_url_2324(self) -> str:
-        return "https://panthers.fortressus.com/FGB_WebApplication/Panthers_22/Production/api/CRM"
-    
-    @property
-    def _base_url_2425(self) -> str:
-        return "https://panthers.fortressus.com/FGB_WebApplication/Panthers_23/Production/api/CRM"
     
     @property
     def _headers(self) -> Dict:
@@ -51,8 +43,9 @@ class FLA_Fortress(BaseModel):
     
     def _base_url_lookup(self) -> str:
         return {
-            "2023-24": self._base_url_2324,
-            "2024-25": self._base_url_2425
+            "2022-23": "https://panthers.fortressus.com/FGB_WebApplication/Panthers_22/Production/api/CRM",
+            "2023-24": "https://panthers.fortressus.com/FGB_WebApplication/Panthers_23/Production/api/CRM",
+            "2024-25": "https://panthers.fortressus.com/FGB_WebApplication/FGB/Production/api/CRM"
         } 
 
     def _endpoint_lookup(self) -> str:
@@ -72,7 +65,7 @@ class FLA_Fortress(BaseModel):
         endpoint: Literal["attendance", "events", "members", "tickets"],
         from_datetime: datetime, 
         to_datetime: datetime,
-        season: Literal["2023-24", "2024-25"]
+        season: Literal["2022-23", "2023-24", "2024-25"]
     ) -> pd.DataFrame:
         
         return self._request_loop(
