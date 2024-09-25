@@ -9,7 +9,7 @@ import asyncio
 import httpx
 
 from datetime import datetime
-from typing import Dict, List, Literal
+from typing import Dict, List, Literal, Any
 
 class FLA_Blinkfire(BaseModel):
 
@@ -51,7 +51,7 @@ class FLA_Blinkfire(BaseModel):
     ### DEMOGRAPHICS ###################################
     ####################################################
 
-    def get_demographics_channel(self, dates: List[datetime]) -> List[dict]:
+    def get_demographics_channel(self, dates: List[datetime]) -> List[Dict[str, Any]]:
         url = f"{self._base_url}/demographics/channel"
         mediums = ["facebook", "twitter", "instagram"]
 
@@ -66,13 +66,13 @@ class FLA_Blinkfire(BaseModel):
         ## return list of json objects - to parse in etl
         return asyncio.run(self._get_results(url, params_list))
     
-    def get_demographics_entity(self, dates: List[datetime]) -> List[dict]:
+    def get_demographics_entity(self, dates: List[datetime]) -> List[Dict]:
         url = f"{self._base_url}/demographics/entity"
         params_list = [{"entity_id": self.entity_id, "search_date": self._convert_dt(date)} for date in dates]
         ## return list of json objects - to parse in etl
         return asyncio.run(self._get_results(url, params_list))
     
-    def get_demographics_viewers(self, dates: List[datetime]) -> List[dict]:
+    def get_demographics_viewers(self, dates: List[datetime]) -> List[Dict]:
         url = f"{self._base_url}/reports/viewership_demographics/{self.entity_id}"
         params_list = [{"start_date": date, "end_date": date, "breakdown": "channel"} for date in dates]
         ## return list of json objects - to parse in etl
