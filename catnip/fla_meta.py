@@ -14,6 +14,8 @@ from catnip.fla_prefect import FLA_Prefect
 import httpx
 import asyncio
 
+import hmac
+import hashlib
 
 class FLA_Meta(BaseModel):
 
@@ -26,6 +28,11 @@ class FLA_Meta(BaseModel):
     @property
     def _base_url(self) -> str:
         return "https://graph.facebook.com"
+    
+    @property
+    def _app_secret_proof(self) -> str:
+        return hmac.new(self.app_secret.get_secret_value().encode('utf8'), self.access_token.get_secret_value().encode('utf8'), hashlib.sha256).hexdigest()
+    
     
     def cache_long_lived_token(self) -> str:
 
