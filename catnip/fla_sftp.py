@@ -79,7 +79,8 @@ class FLA_Sftp(BaseModel):
                     if encoding == "utf-8":
                         file = StringIO(file.read().decode(encoding=encoding))
                     content = file.getvalue()
-                    modified_content = content.replace(list(to_replace.keys())[0], list(to_replace.values())[0])
+                    for key, value in to_replace.items():
+                        modified_content = content.replace(key, value)
                     file.seek(0)
                     file.write(modified_content)
                     file.seek(0)
