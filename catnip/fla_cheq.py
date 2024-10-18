@@ -107,6 +107,10 @@ class FLA_Cheq(BaseModel):
 
                 # print(response); print(response.json())
 
+            if response.status_code == 503:
+                time.sleep(2)
+                continue
+            
             try: 
                 # update variables
                 end = response.json()['end']
