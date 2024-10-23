@@ -252,7 +252,7 @@ class FLA_SeatGeek(BaseModel):
             return DataFrame[self.input_schema](response)
 
         elif endpoint == "products":
-            response = [{k: v[:19] if k == "creation_date" else v for k, v in d.items()} for d in response]
+            response = [{k: v[:19] if k == "creation_date" and v is not None else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
 
         elif endpoint == "sales":
