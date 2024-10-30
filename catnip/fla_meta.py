@@ -75,8 +75,8 @@ class FLA_Meta(BaseModel):
         with FLA_Requests().create_session() as session:
 
             response = session.get(
-                url= url,
-                params= params
+                url=url,
+                params=params
             )
         
         return response.json()
@@ -187,7 +187,7 @@ class FLA_Meta(BaseModel):
                     })
                 ),
                 "access_token": (None, self._base_parameters['access_token']),
-                "appsecret_proof": (None, self._base_parameters['access_token'])
+                "appsecret_proof": (None, self._base_parameters['appsecret_proof'])
             }
 
             with FLA_Requests().create_session() as session:
