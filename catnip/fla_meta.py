@@ -213,7 +213,7 @@ class FLA_Meta(BaseModel):
         with FLA_Requests().create_session() as session:
 
             response = session.get(
-                url = f"{self._base_url}/v{self.version}/oauth/access_token",
+                url = f"{self._base_url}/{self.version}/oauth/access_token",
                 params = {
                     "grant_type": "fb_exchange_token",
                     "client_id": self.app_id.get_secret_value(),
