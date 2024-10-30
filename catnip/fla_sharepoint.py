@@ -1,5 +1,4 @@
 from pydantic import BaseModel, SecretStr
-from typing import List
 
 from office365.sharepoint.client_context import ClientContext
 from office365.runtime.auth.user_credential import UserCredential
