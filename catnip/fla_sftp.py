@@ -2,7 +2,7 @@ from pydantic import BaseModel, SecretStr
 from typing import Optional, List, Dict
 
 from paramiko import Transport, SFTPClient, SFTPError
-from os import getcwd
+import os
 from io import StringIO
 
 import pandas as pd
@@ -116,7 +116,7 @@ class FLA_Sftp(BaseModel):
         ## Create local path string
         if temp_filename is None:
             temp_filename = f"{self.remote_path.split('/')[-1]}"
-        local_path = f"{getcwd()}/{temp_filename}.{self.remote_path.split('.')[-1]}"
+        local_path = f"{os.getcwd()}/{temp_filename}.{self.remote_path.split('.')[-1]}"
 
         ## Download file and write to local path
         conn.get(self.remote_path, local_path)
@@ -164,6 +164,54 @@ class FLA_Sftp(BaseModel):
         conn.close()
 
         return None
+
+    def get_all_files_info(self) -> pd.DataFrame:
+
+        # Establish SFTP connection
+        connection = self._create_connection()
+        
+        # List to store file information
+        files_data = []
+
+        # Recursive function to retrieve file details
+        def traverse_directory(path, top_level):
+            for item in connection.listdir_attr(path):
+                item_path = f"{path}/{item.filename}"
+                
+                # If it's a directory, traverse into it
+                if item.st_mode & 0o40000:  # Check if directory
+                    traverse_directory(item_path, top_level)
+                else:
+                    # Calculate size in GB
+                    size_bytes = item.st_size
+                    size_gb = size_bytes / (1024 ** 3)
+                    
+                    # Extract file name and type
+                    file_name = item.filename
+                    file_type = os.path.splitext(item.filename)[1].replace('.', '')  # Remove dot
+
+                    # Collect file data
+                    files_data.append({
+                        'file_path': item_path,
+                        'file_name': file_name,
+                        'file_type': file_type,
+                        'file_size_bytes': size_bytes,
+                        'file_size_gb': size_gb,
+                        'top_level_directory': top_level
+                    })
+
+        # Start traversal from root (or a specific directory if required)
+        root_path = '/'  # Specify directory as needed
+        for directory in connection.listdir(root_path):
+            # Traverse each top-level directory
+            top_level_path = f"{root_path}/{directory}"
+            traverse_directory(top_level_path, directory)
+        
+        # Close the SFTP connection
+        connection.close()
+
+        # Convert to DataFrame
+        return pd.DataFrame(files_data)
 
     ########################
     ### HELPER FUNCTIONS ###
