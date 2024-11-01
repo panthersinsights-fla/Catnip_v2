@@ -16,7 +16,7 @@ class FLA_Sftp(BaseModel):
     host: str
     username: str
     password: SecretStr
-    remote_path: str
+    remote_path: str = None
 
     port: int = 22
 
