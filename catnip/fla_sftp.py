@@ -173,8 +173,18 @@ class FLA_Sftp(BaseModel):
         # List to store file information
         files_data = []
 
+        def sftp_exists(sftp, path):
+            try:
+                sftp.stat(path)
+                return True
+            except FileNotFoundError:
+                return False
+            
         # Recursive function to retrieve file details
         def traverse_directory(path, top_level):
+            if not sftp_exists(connection, path):
+                print(f"Path does not exist: {path}")
+                return
             for item in connection.listdir_attr(path):
                 item_path = f"{path}/{item.filename}"
                 print(item_path)
