@@ -179,7 +179,8 @@ class FLA_Sftp(BaseModel):
                 for item in connection.listdir_attr(path):
                     item_path = f"{path}/{item.filename}"
                     print(item_path)
-                    if any(substring in path for substring in [".cache", "optimus", ".pgp"]):
+                    if any(substring in path for substring in ["cache", "optimus", "pgp"]):
+                        print(f"Skipped {path}")
                         continue
                     # If it's a directory, traverse into it
                     if item.st_mode & 0o40000:  # Check if directory
