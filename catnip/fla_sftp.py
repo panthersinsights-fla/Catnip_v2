@@ -172,45 +172,39 @@ class FLA_Sftp(BaseModel):
         
         # List to store file information
         files_data = []
-
-        def sftp_exists(sftp, path):
-            try:
-                sftp.stat(path)
-                return True
-            except FileNotFoundError:
-                return False
             
         # Recursive function to retrieve file details
         def traverse_directory(path, top_level):
-            if not sftp_exists(connection, path):
-                print(f"Path does not exist: {path}")
-                return
-            for item in connection.listdir_attr(path):
-                item_path = f"{path}/{item.filename}"
-                print(item_path)
-                if item.filename == ".cache":
-                    continue
-                # If it's a directory, traverse into it
-                if item.st_mode & 0o40000:  # Check if directory
-                    traverse_directory(item_path, top_level)
-                else:
-                    # Calculate size in GB
-                    size_bytes = item.st_size
-                    size_gb = size_bytes / (1024 ** 3)
-                    
-                    # Extract file name and type
-                    file_name = item.filename
-                    file_type = os.path.splitext(item.filename)[1].replace('.', '')  # Remove dot
+            try:
+                for item in connection.listdir_attr(path):
+                    item_path = f"{path}/{item.filename}"
+                    print(item_path)
+                    if item.filename == ".cache":
+                        continue
+                    # If it's a directory, traverse into it
+                    if item.st_mode & 0o40000:  # Check if directory
+                        traverse_directory(item_path, top_level)
+                    else:
+                        # Calculate size in GB
+                        size_bytes = item.st_size
+                        size_gb = size_bytes / (1024 ** 3)
+                        
+                        # Extract file name and type
+                        file_name = item.filename
+                        file_type = os.path.splitext(item.filename)[1].replace('.', '')  # Remove dot
 
-                    # Collect file data
-                    files_data.append({
-                        'file_path': item_path,
-                        'file_name': file_name,
-                        'file_type': file_type,
-                        'file_size_bytes': size_bytes,
-                        'file_size_gb': size_gb,
-                        'top_level_directory': top_level
-                    })
+                        # Collect file data
+                        files_data.append({
+                            'file_path': item_path,
+                            'file_name': file_name,
+                            'file_type': file_type,
+                            'file_size_bytes': size_bytes,
+                            'file_size_gb': size_gb,
+                            'top_level_directory': top_level
+                        })
+            except FileNotFoundError as e:
+                print(f"Path does not exist: {path}")
+                print(e)
 
         # Start traversal from root (or a specific directory if required)
         root_path = '/'  # Specify directory as needed
