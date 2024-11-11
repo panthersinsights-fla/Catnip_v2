@@ -57,10 +57,9 @@ class FLA_Sftp(BaseModel):
 
     def download_csv(
         self, 
-        separator: str = ",", 
         encoding: str = "utf-8",
         to_replace: Dict[str, str] = None,
-        quotechar: str = None
+        **kwargs
     ) -> pd.DataFrame:
 
         ## Create connection
@@ -88,15 +87,9 @@ class FLA_Sftp(BaseModel):
                 try:
 
                     if self.input_schema:
-                        if quotechar is not None:
-                            df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator, quotechar=quotechar))
-                        else:
-                            df = DataFrame[self.input_schema](pd.read_csv(file, sep=separator, engine='python', on_bad_lines='skip'))
+                        df = DataFrame[self.input_schema](pd.read_csv(file, **kwargs))
                     else:
-                        if quotechar is not None:
-                            df = pd.read_csv(file, sep=separator, quotechar=quotechar)
-                        else:
-                            df = pd.read_csv(file, sep=separator)
+                        df = pd.read_csv(file, **kwargs)
 
 
                 except Exception as e:
