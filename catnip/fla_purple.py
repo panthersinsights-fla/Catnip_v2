@@ -62,6 +62,9 @@ class FLA_Purple(BaseModel):
             return df
         
         else:
+            print("Error")
+            print(f"Status Code: {response.status_code}")
+            print(f"Response: {response.text}")
             return None
 
     ########################
