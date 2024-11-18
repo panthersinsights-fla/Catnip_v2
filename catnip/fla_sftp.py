@@ -71,20 +71,21 @@ class FLA_Sftp(BaseModel):
                 with conn.open(self.remote_path) as file:
                     file.prefetch()  # Prefetch file content if supported
                     
-                    # Read file content with appropriate encoding
-                    if encoding != "utf-8":
-                        file = StringIO(file.read().decode(encoding))
-                    else:
-                        file = StringIO(file.read())
+                    # Read the content from the file
+                    content = file.read()
                     
+                    # Decode the content if it is in bytes
+                    if isinstance(content, bytes):
+                        content = content.decode(encoding)
+
                     # Perform string replacements if specified
                     if to_replace is not None:
-                        content = file.getvalue()  # Read the entire content of the file
                         for key, value in to_replace.items():
                             print(f"Replacing: {key} with {value}")
                             content = content.replace(key, value)
-                        # Reset the file-like object with the modified content
-                        file = StringIO(content)
+                    
+                    # Wrap the modified content into a StringIO object
+                    file = StringIO(content)
                     
                     # Read the CSV content into a DataFrame
                     if self.input_schema:
