@@ -79,6 +79,7 @@ class FLA_Sftp(BaseModel):
                         file = StringIO(file.read().decode(encoding=encoding))
                     content = file.getvalue()
                     for key, value in to_replace.items():
+                        print(f"Replacing: {key} with {value}")
                         modified_content = content.replace(key, value)
                     file.seek(0)
                     file.write(modified_content)
