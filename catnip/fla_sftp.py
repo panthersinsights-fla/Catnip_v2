@@ -56,49 +56,49 @@ class FLA_Sftp(BaseModel):
 
 
     def download_csv(
-        self, 
+        self,
         encoding: str = "utf-8",
         to_replace: Dict[str, str] = None,
         **kwargs
     ) -> pd.DataFrame:
 
-        ## Create connection
+        # Create a connection to the remote file
         conn = self._create_connection()
-
-        ## Download csv as dataframe
-        if self.file_exists(conn):
-            with conn.open(self.remote_path) as file:
-
-                file.prefetch()
-
-                if encoding != "utf-8":
-                    file = StringIO(file.read().decode(encoding=encoding))
-
-                if to_replace is not None:
-                    if encoding == "utf-8":
-                        file = StringIO(file.read().decode(encoding=encoding))
-                    content = file.getvalue()
-                    for key, value in to_replace.items():
-                        print(f"Replacing: {key} with {value}")
-                        modified_content = content.replace(key, value)
-                    file.seek(0)
-                    file.write(modified_content)
-                    file.seek(0)
-
-                try:
-
+        
+        try:
+            # Check if the file exists
+            if self.file_exists(conn):
+                with conn.open(self.remote_path) as file:
+                    file.prefetch()  # Prefetch file content if supported
+                    
+                    # Read file content with appropriate encoding
+                    if encoding != "utf-8":
+                        file = StringIO(file.read().decode(encoding))
+                    else:
+                        file = StringIO(file.read())
+                    
+                    # Perform string replacements if specified
+                    if to_replace is not None:
+                        content = file.getvalue()  # Read the entire content of the file
+                        for key, value in to_replace.items():
+                            print(f"Replacing: {key} with {value}")
+                            content = content.replace(key, value)
+                        # Reset the file-like object with the modified content
+                        file = StringIO(content)
+                    
+                    # Read the CSV content into a DataFrame
                     if self.input_schema:
                         df = DataFrame[self.input_schema](pd.read_csv(file, **kwargs))
                     else:
                         df = pd.read_csv(file, **kwargs)
-
-
-                except Exception as e:
-                    print(f"ERROR: {e}")
-
-        ## Close connection
-        conn.close()
-
+        
+        except Exception as e:
+            print(f"ERROR: {e}")
+        
+        finally:
+            # Ensure the connection is closed in all cases
+            conn.close()
+        
         return df
 
 
