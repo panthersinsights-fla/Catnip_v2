@@ -9,6 +9,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from datetime import datetime
 
 class FLA_Tradable_Bits(BaseModel):
 
@@ -65,6 +66,23 @@ class FLA_Tradable_Bits(BaseModel):
                 responses = [*responses, *response.json()['data']]    
             
         print(f"# responses: {len(responses)}")
+
+        ## 2024119 - adhoc removal
+        def modify_birth_dates(dict_list):
+            for dictionary in dict_list:
+                if 'birth_date' in dictionary:
+                    birth_date = dictionary['birth_date']
+                    if not pd.isnull(birth_date):
+                        try:
+                            date = datetime.strptime(birth_date, '%Y-%m-%d')
+                            if date.year < 1900:
+                                dictionary['birth_date'] = None
+                        except ValueError:
+                            # Handle invalid date formats
+                            pass
+            return dict_list
+        
+        responses = modify_birth_dates(responses)
 
         ### Create dataframe ####################################
         if self.input_schema:
