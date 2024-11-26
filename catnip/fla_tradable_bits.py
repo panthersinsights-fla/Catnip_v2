@@ -79,6 +79,7 @@ class FLA_Tradable_Bits(BaseModel):
                                 dictionary['birth_date'] = None
                         except ValueError:
                             # Handle invalid date formats
+                            dictionary['birth_date'] = None
                             pass
             return dict_list
         
