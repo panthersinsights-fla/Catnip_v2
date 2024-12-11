@@ -1,6 +1,6 @@
 from pydantic import BaseModel, SecretStr
 from typing import Dict, Literal
-from fla_requests import FLA_Requests
+from catnip.fla_requests import FLA_Requests
 
 class FLA_Gemini(BaseModel):
 
