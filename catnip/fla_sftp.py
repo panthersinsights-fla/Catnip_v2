@@ -83,6 +83,7 @@ class FLA_Sftp(BaseModel):
                         for key, value in to_replace.items():
                             print(f"Replacing: {key} with {value}")
                             content = content.replace(key, value)
+                            print(f"After replacement: '{content[:100]}...'")
                     
                     # Wrap the modified content into a StringIO object
                     file = StringIO(content)
