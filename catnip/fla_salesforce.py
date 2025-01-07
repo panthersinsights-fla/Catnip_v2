@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 from io import StringIO, BytesIO
 import time 
 
+from catnip.fla_requests import FLA_Requests
+
 '''
     - authorization token good for 120 minutes
 '''
@@ -18,6 +20,10 @@ class FLA_Salesforce(BaseModel):
     username: SecretStr
     password: SecretStr
     security_token: SecretStr
+
+    # access_token: SecretStr = None
+    # consumer_key: SecretStr = None
+    # consumer_secret: SecretStr = None
 
     @property
     def _soap_login_url(self) -> str:
@@ -88,7 +94,7 @@ class FLA_Salesforce(BaseModel):
                 )
 
                 state = job_status_response['state']
-                time.sleep(2)
+                time.sleep(4)
 
             # get failed results
             failed_results_response = self._get_failed_results(
@@ -133,7 +139,7 @@ class FLA_Salesforce(BaseModel):
         external_id_field_name: str = None
     ) -> Dict:
 
-        with self._create_session() as session:
+        with FLA_Requests().create_session() as session:
 
             response = session.post(
                 url = f"https://{urlparse(connection_dict['server_url']).hostname}/services/data/v59.0/jobs/ingest",
@@ -165,7 +171,7 @@ class FLA_Salesforce(BaseModel):
     ) -> None:
 
         # make request
-        with self._create_session() as session:
+        with FLA_Requests().create_session() as session:
 
             response = session.put(
                 url = f"https://{urlparse(connection_dict['server_url']).hostname}/{content_url}",
@@ -190,7 +196,7 @@ class FLA_Salesforce(BaseModel):
         
         content_url = content_url.replace("/batches", "")
 
-        with self._create_session() as session:
+        with FLA_Requests().create_session() as session:
 
             response = session.patch(
                 url = f"https://{urlparse(connection_dict['server_url']).hostname}/{content_url}",
@@ -218,7 +224,7 @@ class FLA_Salesforce(BaseModel):
         
         content_url = content_url.replace("/batches", "")
 
-        with self._create_session() as session:
+        with FLA_Requests().create_session() as session:
 
             response = session.get(
                 url = f"https://{urlparse(connection_dict['server_url']).hostname}/{content_url}",
@@ -242,7 +248,7 @@ class FLA_Salesforce(BaseModel):
         
         content_url = content_url.replace("/batches", "/failedResults/")
 
-        with self._create_session() as session:
+        with FLA_Requests().create_session() as session:
 
             response = session.get(
                 url = f"https://{urlparse(connection_dict['server_url']).hostname}/{content_url}",
@@ -266,7 +272,7 @@ class FLA_Salesforce(BaseModel):
         
         content_url = content_url.replace("/batches", "/unprocessedRecords/")
 
-        with self._create_session() as session:
+        with FLA_Requests().create_session() as session:
 
             response = session.get(
                 url = f"https://{urlparse(connection_dict['server_url']).hostname}/{content_url}",
@@ -342,13 +348,6 @@ class FLA_Salesforce(BaseModel):
         print("Session ID:", session_id)
 
         return {"server_url": server_url, "session_id": session_id}
-
-    def _create_session(self) -> httpx.Client:
-
-        transport = httpx.HTTPTransport(retries = 5)
-        client = httpx.Client(transport = transport, timeout=45)
-
-        return client
 
     def _convert_datetime_columns(
         self, 
