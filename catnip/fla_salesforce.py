@@ -21,9 +21,9 @@ class FLA_Salesforce(BaseModel):
     password: SecretStr
     security_token: SecretStr
 
-    # access_token: SecretStr = None
-    # consumer_key: SecretStr = None
-    # consumer_secret: SecretStr = None
+    client_id: SecretStr = None
+    client_secret: SecretStr = None
+    grant_type: Literal["password"] = "password"
 
     @property
     def _soap_login_url(self) -> str:
@@ -36,6 +36,20 @@ class FLA_Salesforce(BaseModel):
             "charset": "UTF-8",
             "SOAPAction": "login"
         }
+
+    @property
+    def _rest_login_url(self) -> str:
+        return "https://login.salesforce.com/services/oauth2/token"
+
+    @property
+    def _rest_base_url(self) -> str:
+        return "https://flpanthers2023.my.salesforce.com/services/data/v62.0"
+
+    #########################################################################
+    #########################################################################
+    ############################ BULK TWO INGEST ############################
+    #########################################################################
+    #########################################################################
 
     #######################
     ### CLASS FUNCTIONS ###
@@ -83,6 +97,7 @@ class FLA_Salesforce(BaseModel):
                 connection_dict=connection_dict,
                 content_url=content_url
             )
+            print(set_job_state_response.keys())
 
             # check job status
             state = "UploadComplete"
@@ -392,3 +407,52 @@ class FLA_Salesforce(BaseModel):
             csv_list.append(csv_buffer.getvalue())
 
         return csv_list
+    
+    #########################################################################
+    #########################################################################
+    ############################ PLATFORM EVENTS ############################
+    #########################################################################
+    #########################################################################
+
+    #######################
+    ### CLASS FUNCTIONS ###
+    #######################
+
+    def publish_platform_event(self, payload: Dict):
+
+        url = f"{self._rest_base_url}/composite/"
+        headers = {
+            'Authorization': f"Bearer {self._get_access_token()}",
+            'Content-Type': 'application/json'
+        }
+
+        with FLA_Requests().create_session() as session:
+            response = session.post(
+                url = url, 
+                headers = headers,
+                json = payload
+            )
+
+        return response.json()
+
+    #########################
+    ### PROCESS FUNCTIONS ###
+    #########################
+
+    def _get_access_token(self) -> str:
+
+        data = {
+            'grant_type':       self.grant_type,
+            'client_id':        self.client_id.get_secret_value(),
+            'client_secret':    self.client_secret.get_secret_value(),
+            'username':         self.username.get_secret_value(),
+            'password':         self.password.get_secret_value()
+        }
+
+        with FLA_Requests().create_session() as session:
+            response = session.post(
+                url = self._rest_login_url, 
+                data = data
+            )
+
+        return response.json()['access_token']
