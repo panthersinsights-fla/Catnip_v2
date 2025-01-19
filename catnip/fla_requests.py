@@ -3,6 +3,10 @@ import httpx
 
 class FLA_Requests(BaseModel):
 
+    ################
+    ### SESSIONS ###
+    ################
+
     def create_session(self) -> httpx.Client:
 
         transport = httpx.HTTPTransport(retries=5)

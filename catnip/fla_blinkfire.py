@@ -4,7 +4,7 @@ from pandera import DataFrameModel
 from pandera.typing import DataFrame
 import pandas as pd
 
-from fla_requests import FLA_Requests
+from catnip.fla_requests import FLA_Requests
 import asyncio
 import httpx
 
