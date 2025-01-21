@@ -12,6 +12,8 @@ import time
 
 from catnip.fla_requests import FLA_Requests
 
+import statistics
+
 '''
     - authorization token good for 120 minutes
 '''
@@ -418,22 +420,51 @@ class FLA_Salesforce(BaseModel):
     ### CLASS FUNCTIONS ###
     #######################
 
-    def publish_platform_event(self, payload: Dict):
+    def publish_platform_events(self, payloads: List[Dict]):
 
         url = f"{self._rest_base_url}/composite/"
         headers = {
             'Authorization': f"Bearer {self._get_access_token()}",
             'Content-Type': 'application/json'
         }
+        request_times = []
 
         with FLA_Requests().create_session() as session:
-            response = session.post(
-                url = url, 
-                headers = headers,
-                json = payload
-            )
+            for i in range(len(payloads)):
+                try:
+                    # start timer
+                    start_time = time.time()
+                    # response
+                    response = session.post(
+                        url = url, 
+                        headers = headers,
+                        json = payloads[i]
+                    )
+                    # record time
+                    end_time = time.time()
+                    request_time = end_time - start_time
+                    request_times.append(request_time)
+                    
+                except Exception as e:
+                    print(response.status_code)
+                    print(response.json())
+                    print(e)
 
-        return response.json()
+        # print request statistics
+        min_time = min(request_times)
+        median_time = statistics.median(request_times)
+        average_time = statistics.mean(request_times)
+        max_time = max(request_times)
+        stats_string = f"""
+        Request Statistics:
+            Min Time: {min_time:.4f}
+            Median Time: {median_time:.4f}
+            Avg Time: {average_time:.4f}
+            Max Time: {max_time:.4f}
+        """
+        print(stats_string)
+
+        return stats_string
 
     #########################
     ### PROCESS FUNCTIONS ###
