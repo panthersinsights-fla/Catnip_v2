@@ -451,16 +451,22 @@ class FLA_Salesforce(BaseModel):
                     print(e)
 
         # print request statistics
+        # create class of stats and return object?
+
         min_time = min(request_times)
         median_time = statistics.median(request_times)
         average_time = statistics.mean(request_times)
         max_time = max(request_times)
+        total_time = sum(request_times)
+
         stats_string = f"""
         Request Statistics:
-            Min Time: {min_time:.4f}
-            Median Time: {median_time:.4f}
-            Avg Time: {average_time:.4f}
-            Max Time: {max_time:.4f}
+            Min Time: {min_time*1000:.4f} ms
+            Median Time: {median_time*1000:.4f} ms
+            Avg Time: {average_time*1000:.4f} ms
+            Max Time: {max_time*1000:.4f} ms
+
+            Total Time: {total_time:.4f} seconds
         """
         print(stats_string)
 
