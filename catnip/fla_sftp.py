@@ -6,6 +6,7 @@ import os
 from io import StringIO
 
 import pandas as pd
+import polars as pl
 from pandera import DataFrameModel
 from pandera.typing import DataFrame
 
@@ -59,6 +60,7 @@ class FLA_Sftp(BaseModel):
         self,
         encoding: str = "utf-8",
         to_replace: Dict[str, str] = None,
+        using_polars: bool = False,
         **kwargs
     ) -> pd.DataFrame:
 
@@ -88,7 +90,9 @@ class FLA_Sftp(BaseModel):
                     file = StringIO(content)
                     
                     # Read the CSV content into a DataFrame
-                    if self.input_schema:
+                    if using_polars:
+                        df = pl.scan_csv(file, **kwargs)
+                    elif self.input_schema:
                         df = DataFrame[self.input_schema](pd.read_csv(file, **kwargs))
                     else:
                         df = pd.read_csv(file, **kwargs)
