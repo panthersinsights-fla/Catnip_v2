@@ -210,10 +210,10 @@ class FLA_Blinkfire(BaseModel):
         results = asyncio.run(self._get_results(url, params_list))
         return self._create_dataframe(
             pd.json_normalize(
-                results, 
-                record_path=['entity','by_asset'], 
-                meta=[['end_date'], ['entity_id'], ['entity','entity_name']], 
-                sep="_"
+                results,
+                record_path=['entity', 'by_asset'],
+                meta=['end_date', 'entity_id', ['entity', 'entity_id'], ['entity', 'entity_name']],
+                sep='_'
             )
         )
     
