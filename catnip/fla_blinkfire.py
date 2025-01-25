@@ -1,4 +1,4 @@
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, SecretStr, Field
 
 from pandera import DataFrameModel
 from pandera.typing import DataFrame
@@ -10,7 +10,18 @@ import httpx
 
 from datetime import datetime
 from typing import Dict, List, Literal, Any
+import time
 
+'''
+    RATE LIMITS:
+    The API is limited per-resource and per-user. 
+    Limits are generous for most endpoints and should not impede use cases.
+
+    For all users the API is by default limited to 15 requests per resource in a 15 minutes window.
+
+    For instance, a user has run during the last minute 3 requests to /teams?sport=:sportId and 12 requests to /teams/:teamId. 
+    Then the teams resource is unavailable until the next request window. 
+'''
 class FLA_Blinkfire(BaseModel):
 
     api_token: SecretStr
@@ -20,6 +31,9 @@ class FLA_Blinkfire(BaseModel):
     # Pandera
     input_schema: DataFrameModel = None
 
+    # tracking
+    request_timestamps: List[datetime] = Field(default_factory=list)
+
     @property
     def _base_url(self) -> str:
         return "https://api.blinkfire.com/developer/api/v1"
@@ -27,6 +41,13 @@ class FLA_Blinkfire(BaseModel):
     @property
     def _base_headers(self) -> Dict:
         return {"Authorization" : f"Bearer {self.api_token.get_secret_value()}"}
+    
+    @property
+    def _rate_limits(self) -> Dict:
+        return {
+            "rate_limit": 15,   # 15 requests
+            "time_window": 900  # 15 minutes in seconds
+        }
 
     ####################################################
     ### AUDIENCES ######################################
@@ -317,27 +338,33 @@ class FLA_Blinkfire(BaseModel):
 
     async def _get_async_request(self, url: str, params: Dict) -> httpx.Response:
 
-        print(f"""
-            Running {url}: 
-            Params: {params}
-        """)
-        async with FLA_Requests().create_async_session() as session:
-            response = await session.get(
-                url = url,
-                headers = self._base_headers,
-                params = params
-            )
+        # check rate limit
+        async with asyncio.Semaphore(self._rate_limits['rate_limit']):
 
-        if response.status_code != 200:
+            # wait, if necessary
+            await self._enforce_rate_limit()
+            
             print(f"""
-                Failed to get results for:
-                Url: {url}
+                Running {url}: 
                 Params: {params}
-
-                Status code: {response.status_code}
-                Response: {response.text}
             """)
-            return None 
+            async with FLA_Requests().create_async_session() as session:
+                response = await session.get(
+                    url = url,
+                    headers = self._base_headers,
+                    params = params
+                )
+
+            if response.status_code != 200:
+                print(f"""
+                    Failed to get results for:
+                    Url: {url}
+                    Params: {params}
+
+                    Status code: {response.status_code}
+                    Response: {response.text}
+                """)
+                return None 
         
         return response.json()
     
@@ -348,6 +375,26 @@ class FLA_Blinkfire(BaseModel):
 
     async def _get_results(self, url: str, params_list: List[Dict] = [{}]) -> List[Dict]:
         return await self._gather_responses(url, params_list)
+
+    async def _enforce_rate_limit(self) -> None:
+        """
+        Enforces the rate limit by checking request timestamps.
+        Removes old timestamps and sleeps if the limit is reached.
+        """
+        current_time = time()
+        self.request_timestamps = [
+            ts for ts in self.request_timestamps if ts > current_time - self._rate_limits['time_window']
+        ]
+
+        if len(self.request_timestamps) >= self._rate_limits['rate_limit']:
+            sleep_time = self.request_timestamps[0] + self._rate_limits['time_window'] - current_time
+            print(f"Rate limit reached. Sleeping for {sleep_time:.2f} seconds.")
+            await asyncio.sleep(sleep_time)
+
+        self.request_timestamps.append(current_time)
+        print(f"Request Timestamps: {self.request_timestamps}")
+        
+        return None
     
     ##############################################
     ### HELPER FUNCTIONS #########################
