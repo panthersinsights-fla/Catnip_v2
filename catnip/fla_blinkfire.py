@@ -212,7 +212,7 @@ class FLA_Blinkfire(BaseModel):
             pd.json_normalize(
                 results,
                 record_path=['entity', 'by_asset'],
-                meta=['end_date', 'entity_id', ['entity', 'entity_id'], ['entity', 'entity_name']],
+                meta=["entity_id", ["entity", "entity_name"], "start_date", "end_date"],
                 sep='_'
             )
         )
