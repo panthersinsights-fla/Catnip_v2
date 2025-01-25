@@ -62,7 +62,7 @@ class FLA_Sftp(BaseModel):
         to_replace: Dict[str, str] = None,
         using_polars: bool = False,
         **kwargs
-    ) -> pd.DataFrame:
+    ) -> pd.DataFrame | pl.LazyFrame:
 
         # Create a connection to the remote file
         conn = self._create_connection()
@@ -91,6 +91,7 @@ class FLA_Sftp(BaseModel):
                     
                     # Read the CSV content into a DataFrame
                     if using_polars:
+                        print(f"Polar Bear Scanning {self.remote_path}")
                         df = pl.scan_csv(file, **kwargs)
                     elif self.input_schema:
                         df = DataFrame[self.input_schema](pd.read_csv(file, **kwargs))
