@@ -208,6 +208,7 @@ class FLA_Blinkfire(BaseModel):
             } for date in dates
         ]
         results = asyncio.run(self._get_results(url, params_list))
+        results = [response for response in results if "entity" in response]
         return self._create_dataframe(
             pd.json_normalize(
                 results,
