@@ -381,7 +381,7 @@ class FLA_Blinkfire(BaseModel):
         Enforces the rate limit by checking request timestamps.
         Removes old timestamps and sleeps if the limit is reached.
         """
-        current_time = time()
+        current_time = time.time()
         self.request_timestamps = [
             ts for ts in self.request_timestamps if ts > current_time - self._rate_limits['time_window']
         ]
@@ -393,7 +393,7 @@ class FLA_Blinkfire(BaseModel):
 
         self.request_timestamps.append(current_time)
         print(f"Request Timestamps: {self.request_timestamps}")
-        
+
         return None
     
     ##############################################
