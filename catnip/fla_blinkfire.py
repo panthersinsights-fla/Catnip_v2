@@ -123,7 +123,7 @@ class FLA_Blinkfire(BaseModel):
             )
         )
     
-    def get_brands(self, limit: int = 10) -> pd.DataFrame:
+    def get_brands(self, limit: int = 100) -> pd.DataFrame:
         url = f"{self._base_url}/brands"
         params_list = [{"sponsoring": self.entity_id, "limit": limit}]
         results = asyncio.run(self._get_results(url, params_list))
@@ -185,7 +185,7 @@ class FLA_Blinkfire(BaseModel):
         )   
     ####################################################
     ### REPORTS ########################################
-    ####################################################    
+    ####################################################
 
     def get_global_ranking_report(self, dates: List[datetime]) -> List[Dict]:
         url = f"{self._base_url}/reports/global_ranking/{self.entity_id}"
@@ -291,11 +291,11 @@ class FLA_Blinkfire(BaseModel):
     ### POSTS ##########################################
     ####################################################  
 
-    def get_posts(self, dates: List[datetime], limit: int = 10) -> List[Dict]:
+    def get_posts(self, dates: List[datetime], limit: int = 100) -> List[Dict]:
         url = f"{self._base_url}/posts"
         params_list = [
             {
-                "entity": self.entity_id, 
+                "entity": self.entity_id,
                 "start_date": self._convert_dt(date), 
                 "end_date": self._convert_dt(date), 
                 "limit": limit

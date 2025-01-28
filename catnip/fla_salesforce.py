@@ -461,10 +461,10 @@ class FLA_Salesforce(BaseModel):
 
         stats_string = f"""
         Request Statistics:
-            Min Time: {min_time*1000:.4f} ms
-            Median Time: {median_time*1000:.4f} ms
-            Avg Time: {average_time*1000:.4f} ms
-            Max Time: {max_time*1000:.4f} ms
+            Min Time: {min_time*1000:.2f} ms
+            Median Time: {median_time*1000:.2f} ms
+            Avg Time: {average_time*1000:.2f} ms
+            Max Time: {max_time*1000:.2f} ms
 
             Total Time: {total_time:.4f} seconds
         """
