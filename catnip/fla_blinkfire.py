@@ -147,11 +147,20 @@ class FLA_Blinkfire(BaseModel):
     
     def get_brands(self, limit: int = 100) -> pd.DataFrame:
         url = f"{self._base_url}/brands"
-        params_list = [{"sponsoring": self.entity_id, "limit": limit}]
-        results = asyncio.run(self._get_results(url, params_list))
+
+        with FLA_Requests().create_session() as session:
+            response = session.get(
+                url = url,
+                headers = self._base_headers,
+                params = {"sponsoring": self.entity_id, "limit": limit}
+            )
+
+        # params_list = [{"sponsoring": self.entity_id, "limit": limit}]
+        # results = asyncio.run(self._get_results(url, params_list))
+
         final_results = self._get_cursor_results(
             url=url,
-            results=results,
+            results=response,
             key="sponsoring",
             limit=limit
         )
@@ -221,24 +230,49 @@ class FLA_Blinkfire(BaseModel):
         ## return list of json objects - to parse in etl
         return asyncio.run(self._get_results(url, params_list))
         
-    def get_asset_report(self, dates: List[datetime]) -> pd.DataFrame:
+    # def get_asset_report(self, dates: List[datetime]) -> pd.DataFrame:
+    def get_asset_report(self, request_date: datetime) -> pd.DataFrame:
+        # url = f"{self._base_url}/reports/assets/{self.entity_id}"
+        # params_list = [
+        #     {
+        #         "start_date": self._convert_dt(date), 
+        #         "end_date": self._convert_dt(date)
+        #     } for date in dates
+        # ]
+        # results = asyncio.run(self._get_results(url, params_list))
+        # results = [response for response in results if "entity" in response]
+        # return self._create_dataframe(
+        #     pd.json_normalize(
+        #         results,
+        #         record_path=['entity', 'by_asset'],
+        #         meta=["entity_id", ["entity", "entity_name"], "start_date", "end_date"],
+        #         sep='_'
+        #     )
+        # )
+
         url = f"{self._base_url}/reports/assets/{self.entity_id}"
-        params_list = [
-            {
-                "start_date": self._convert_dt(date), 
-                "end_date": self._convert_dt(date)
-            } for date in dates
-        ]
-        results = asyncio.run(self._get_results(url, params_list))
-        results = [response for response in results if "entity" in response]
-        return self._create_dataframe(
-            pd.json_normalize(
-                results,
-                record_path=['entity', 'by_asset'],
-                meta=["entity_id", ["entity", "entity_name"], "start_date", "end_date"],
-                sep='_'
+
+        with FLA_Requests().create_session() as session:
+            response = session.get(
+                url = url,
+                headers = self._base_headers,
+                params = {
+                    "start_date": self._convert_dt(request_date),
+                    "end_date": self._convert_dt(request_date)
+                }
             )
-        )
+
+        if response.status_code == 200 and "entity" in response.json():
+            return self._create_dataframe(
+                pd.json_normalize(
+                    response.json(),
+                    record_path=['entity', 'by_asset'],
+                    meta=["entity_id", ["entity", "entity_name"], "start_date", "end_date"],
+                    sep='_'
+                )
+            )
+        else:
+            return None
     
     def get_sponsorship_report(self, dates: List[datetime]) -> List[Dict]:
         url = f"{self._base_url}/reports/sponsors/{self.entity_id}"
