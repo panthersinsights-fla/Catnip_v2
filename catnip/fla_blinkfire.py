@@ -249,7 +249,7 @@ class FLA_Blinkfire(BaseModel):
             )
         
         if response.status_code == 200:
-            return [response.json()]
+            return response.json()
         else:
             print("Failed response")
             print(response.status_code)
@@ -376,26 +376,55 @@ class FLA_Blinkfire(BaseModel):
     ### POSTS ##########################################
     ####################################################  
 
-    def get_posts(self, dates: List[datetime], limit: int = 100) -> List[Dict]:
-        url = f"{self._base_url}/posts"
-        params_list = [
-            {
-                "entity": self.entity_id,
-                "start_date": self._convert_dt(date), 
-                "end_date": self._convert_dt(date), 
-                "limit": limit
-            } for date in dates
-        ]
-        results = asyncio.run(self._get_results(url, params_list))
-        final_results = self._get_cursor_results(
-            url=url,
-            results=results,
-            key=None,
-            limit=limit
-        )
+    # def get_posts(self, dates: List[datetime], limit: int = 100) -> List[Dict]:
+    def get_posts(self, request_date: datetime, limit: int = 100) -> pd.DataFrame | None:
+        # url = f"{self._base_url}/posts"
+        # params_list = [
+        #     {
+        #         "entity": self.entity_id,
+        #         "start_date": self._convert_dt(date), 
+        #         "end_date": self._convert_dt(date), 
+        #         "limit": limit
+        #     } for date in dates
+        # ]
+        # results = asyncio.run(self._get_results(url, params_list))
+        # final_results = self._get_cursor_results(
+        #     url=url,
+        #     results=results,
+        #     key=None,
+        #     limit=limit
+        # )
 
-        ## return list of json objects - to parse in etl
-        return final_results
+        # ## return list of json objects - to parse in etl
+        # return final_results
+    
+        url = f"{self._base_url}/posts"
+
+        with FLA_Requests().create_session() as session:
+            response = session.get(
+                url = url,
+                headers = self._base_headers,
+                params = {
+                    "entity": self.entity_id,
+                    "start_date": self._convert_dt(request_date), 
+                    "end_date": self._convert_dt(request_date), 
+                    "limit": limit
+                }
+            )
+
+        if response.status_code == 200 and "posts" in response.json().keys():
+            final_results = self._get_cursor_results(
+                url=url,
+                results=[response.json()],
+                key=None,
+                limit=limit
+            )
+            return pd.json_normalize(final_results, record_path=["posts"], sep="_")
+        else:
+            print("Failed response")
+            print(response.status_code)
+            print(response.text)
+            return None
     
     def get_sponsorship_posts(self, dates: List[datetime], limit: int = 10) -> List[Dict]:
         url = f"{self._base_url}/reports/sponsors/{self.entity_id}/posts"
