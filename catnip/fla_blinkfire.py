@@ -53,21 +53,43 @@ class FLA_Blinkfire(BaseModel):
     ### AUDIENCES ######################################
     ####################################################
 
-    def get_audiences(self, dates: List[datetime]) -> pd.DataFrame:
+    def get_audiences(self, request_date: datetime) -> pd.DataFrame | None:
+
+        # url = f"{self._base_url}/audiences/{self.entity_id}"
+        # params_list = [{"day": self._convert_dt(date)} for date in dates]
+        # results = asyncio.run(self._get_results(url, params_list))
+
+        # return self._create_dataframe(
+        #     pd.json_normalize(
+        #         results, 
+        #         record_path=['mediums', 'channels'], 
+        #         meta= ['day', ['mediums', 'medium']], 
+        #         sep= "_"
+        #     )
+        # )
 
         url = f"{self._base_url}/audiences/{self.entity_id}"
-        params_list = [{"day": self._convert_dt(date)} for date in dates]
-        results = asyncio.run(self._get_results(url, params_list))
 
-        return self._create_dataframe(
-            pd.json_normalize(
-                results, 
-                record_path=['mediums', 'channels'], 
-                meta= ['day', ['mediums', 'medium']], 
-                sep= "_"
+        with FLA_Requests().create_session() as session:
+            response = session.get(
+                url = url,
+                headers = self._base_headers,
+                params = {"day": self._convert_dt(request_date)}
             )
-        )
-    
+
+        if response.status_code == 200:
+            return self._create_dataframe(
+                pd.json_normalize(
+                    response.json(), 
+                    record_path=['mediums', 'channels'], 
+                    meta= ['day', ['mediums', 'medium']], 
+                    sep= "_"
+                )
+            )
+        else:
+            return None
+
+        
     ####################################################
     ### DEMOGRAPHICS ###################################
     ####################################################
