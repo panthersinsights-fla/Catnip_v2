@@ -297,6 +297,11 @@ class FLA_Blinkfire(BaseModel):
                     sep='_'
                 )
             )
+        if response.status_code == 200 and "entity" not in response.json():
+            print(f"No data available for {request_date.strftime('%Y-%m-%d')}")
+            print(response.status_code)
+            print(response.text)
+            return pd.DataFrame()
         else:
             print("Failed response")
             print(response.status_code)
