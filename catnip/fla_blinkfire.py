@@ -87,6 +87,9 @@ class FLA_Blinkfire(BaseModel):
                 )
             )
         else:
+            print("Failed response")
+            print(response.status_code)
+            print(response.text)
             return None
 
         
@@ -94,7 +97,8 @@ class FLA_Blinkfire(BaseModel):
     ### DEMOGRAPHICS ###################################
     ####################################################
 
-    def get_demographics_channel(self, dates: List[datetime]) -> List[Dict[str, Any]]:
+    # def get_demographics_channel(self, dates: List[datetime]) -> List[Dict[str, Any]]:
+    def get_demographics_channel(self, request_date: datetime) -> List[Dict[str, Any]]:
         url = f"{self._base_url}/demographics/channel"
         mediums = ["facebook", "twitter", "instagram"]
 
@@ -102,8 +106,8 @@ class FLA_Blinkfire(BaseModel):
             {
                 "entity_id": self.entity_id, 
                 "medium_name": medium, 
-                "search_date": self._convert_dt(date)
-            } for date in dates for medium in mediums
+                "search_date": self._convert_dt(request_date)
+            } for medium in mediums
         ]
 
         ## return list of json objects - to parse in etl
@@ -272,6 +276,9 @@ class FLA_Blinkfire(BaseModel):
                 )
             )
         else:
+            print("Failed response")
+            print(response.status_code)
+            print(response.text)
             return None
     
     def get_sponsorship_report(self, dates: List[datetime]) -> List[Dict]:
