@@ -160,7 +160,7 @@ class FLA_Blinkfire(BaseModel):
 
         final_results = self._get_cursor_results(
             url=url,
-            results=response,
+            results=response.json(),
             key="sponsoring",
             limit=limit
         )
