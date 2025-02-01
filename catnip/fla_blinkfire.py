@@ -222,17 +222,39 @@ class FLA_Blinkfire(BaseModel):
     ### REPORTS ########################################
     ####################################################
 
-    def get_global_ranking_report(self, dates: List[datetime]) -> List[Dict]:
+    # def get_global_ranking_report(self, dates: List[datetime]) -> List[Dict]:
+    def get_global_ranking_report(self, request_date: datetime) -> List[Dict]:
+    #     url = f"{self._base_url}/reports/global_ranking/{self.entity_id}"
+    #     params_list = [
+    #         {
+    #             "entity_group": self.entity_group, 
+    #             "start_date": self._convert_dt(date), 
+    #             "end_date": self._convert_dt(date)
+    #         } for date in dates
+    #     ]
+    #     ## return list of json objects - to parse in etl
+    #     return asyncio.run(self._get_results(url, params_list))
+
         url = f"{self._base_url}/reports/global_ranking/{self.entity_id}"
-        params_list = [
-            {
-                "entity_group": self.entity_group, 
-                "start_date": self._convert_dt(date), 
-                "end_date": self._convert_dt(date)
-            } for date in dates
-        ]
-        ## return list of json objects - to parse in etl
-        return asyncio.run(self._get_results(url, params_list))
+
+        with FLA_Requests().create_session() as session:
+            response = session.get(
+                url = url,
+                headers = self._base_headers,
+                params = {
+                    "entity_group": self.entity_group, 
+                    "start_date": self._convert_dt(request_date), 
+                    "end_date": self._convert_dt(request_date)
+                }
+            )
+        
+        if response.status_code == 200:
+            return [response.json()]
+        else:
+            print("Failed response")
+            print(response.status_code)
+            print(response.text)
+            return None
         
     # def get_asset_report(self, dates: List[datetime]) -> pd.DataFrame:
     def get_asset_report(self, request_date: datetime) -> pd.DataFrame:
