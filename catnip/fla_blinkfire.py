@@ -424,6 +424,7 @@ class FLA_Blinkfire(BaseModel):
                 key=None,
                 limit=limit
             )
+            final_results = [x for x in final_results if "posts" in x.keys()]
             return pd.json_normalize(final_results, record_path=["posts"], sep="_")
         
         elif response.status_code == 200 and "post_count" in response.json().keys():
