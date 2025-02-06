@@ -555,11 +555,12 @@ class FLA_Blinkfire(BaseModel):
 
         # prepare final results
         final_results = [result for result in results]
+        count = 2
 
         # loop through and test for next page
         for result in results:
 
-            result_keys = list(result.keys())                
+            result_keys = list(result.keys())
 
             while 'next_page' in result_keys:
                 
@@ -571,6 +572,7 @@ class FLA_Blinkfire(BaseModel):
                 }
                 
                 with FLA_Requests().create_session() as session:
+                    print(f"Requesting Page: {count}")
                     new_result = session.get(
                         url=url,
                         headers=self._base_headers,
@@ -579,5 +581,6 @@ class FLA_Blinkfire(BaseModel):
                 
                 final_results.append(new_result.json())
                 result_keys = list(new_result.json().keys())
+                count += 1
 
         return final_results
