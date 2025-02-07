@@ -450,6 +450,8 @@ class FLA_Salesforce(BaseModel):
                     print(response.json())
                     print(e)
 
+                time.sleep(2)
+
         # print request statistics
         # create class of stats and return object?
 
