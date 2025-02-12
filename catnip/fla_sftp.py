@@ -12,6 +12,9 @@ from pandera.typing import DataFrame
 
 from datetime import datetime
 
+from zipfile import ZipFile, ZIP_DEFLATED
+from io import BytesIO
+
 class FLA_Sftp(BaseModel):
 
     host: str
@@ -219,6 +222,52 @@ class FLA_Sftp(BaseModel):
 
         # Convert to DataFrame
         return pd.DataFrame(files_data)
+
+    def compress_files(
+        self,
+        input_filenames: List[str], 
+        output_filename: str, 
+        compression_level: int = 9
+    ) -> None:
+
+        conn = self._create_connection()
+
+        with conn.open(f"{self.remote_path}/{output_filename}", 'wb') as zip_file:
+            with ZipFile(zip_file, 'w', compression=ZIP_DEFLATED, compresslevel=compression_level) as zf:
+                for filename in input_filenames:
+                    full_path = f"{self.remote_path}/{filename}"
+                    with conn.open(full_path, 'rb') as source_file:
+                        rel_path = full_path.replace(self.remote_path + '/', '')
+                        zf.writestr(rel_path, source_file.read())
+
+        conn.close()
+
+        return None
+
+    def add_csv_to_zip(self, zip_filename: str, csv_filename: str) -> None:
+        
+        conn = self._create_connection()
+
+        try:
+            with conn.open(f"{self.remote_path}/{zip_filename}", 'rb') as zip_file:
+                zip_data = zip_file.read()
+            
+            zip_buffer = BytesIO(zip_data)
+            
+            with ZipFile(zip_buffer, 'a', compression=ZIP_DEFLATED) as zf:
+                with conn.open(f"{self.remote_path}/{csv_filename}", 'rb') as csv_file:
+                    zf.writestr(csv_filename, csv_file.read())
+            
+            with conn.open(f"{self.remote_path}/{zip_filename}", 'wb') as zip_file:
+                zip_file.write(zip_buffer.getvalue())
+            
+        except Exception as e:
+            print(f"Error adding CSV to ZIP: {str(e)}")
+    
+        finally:
+            conn.close()
+        
+        return None
 
     ########################
     ### HELPER FUNCTIONS ###
