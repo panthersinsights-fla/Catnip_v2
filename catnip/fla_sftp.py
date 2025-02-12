@@ -14,7 +14,6 @@ from datetime import datetime
 
 from zipfile import ZipFile, ZIP_DEFLATED
 from io import BytesIO
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class FLA_Sftp(BaseModel):
 
@@ -235,21 +234,12 @@ class FLA_Sftp(BaseModel):
 
         with conn.open(f"{self.remote_path}/{output_filename}", 'wb') as zip_file:
             with ZipFile(zip_file, 'w', compression=ZIP_DEFLATED, compresslevel=compression_level) as zf:
-                
-                def read_file(filename):
-                    """Reads a file in chunks from remote storage."""
+                for i, filename in enumerate(input_filenames):
                     full_path = f"{self.remote_path}/{filename}"
                     with conn.open(full_path, 'rb') as source_file:
-                        return filename, source_file.read()  # Read entire file in parallel
-
-                # Use ThreadPoolExecutor to read files concurrently
-                with ThreadPoolExecutor() as executor:
-                    future_to_filename = {executor.submit(read_file, f): f for f in input_filenames}
-                    
-                    for i, future in enumerate(as_completed(future_to_filename), 1):
-                        rel_path, data = future.result()
+                        rel_path = full_path.replace(self.remote_path + '/', '')
                         print(f"[{i}/{len(input_filenames)}] Processing {rel_path}...")
-                        zf.writestr(rel_path, data)  # Write synchronously to ZIP
+                        zf.writestr(rel_path, source_file.read())
 
         conn.close()
 
