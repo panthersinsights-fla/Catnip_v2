@@ -14,6 +14,7 @@ from datetime import datetime
 
 from zipfile import ZipFile, ZIP_DEFLATED
 from io import BytesIO
+import time
 
 class FLA_Sftp(BaseModel):
 
@@ -231,18 +232,51 @@ class FLA_Sftp(BaseModel):
     ) -> None:
 
         conn = self._create_connection()
+        start_time = time.time()
+        file_times = []  # Store time taken for each file
 
         with conn.open(f"{self.remote_path}/{output_filename}", 'wb') as zip_file:
             with ZipFile(zip_file, 'w', compression=ZIP_DEFLATED, compresslevel=compression_level) as zf:
+
                 for i, filename in enumerate(input_filenames):
+
+                    file_start_time = time.time()
                     full_path = f"{self.remote_path}/{filename}"
+
                     with conn.open(full_path, 'rb') as source_file:
+
                         rel_path = full_path.replace(self.remote_path + '/', '')
                         print(f"[{i}/{len(input_filenames)}] Processing {rel_path}...")
                         zf.writestr(rel_path, source_file.read())
 
+                        # Get times
+                        file_end_time = time.time()
+                        file_time = file_end_time - file_start_time
+                        file_times.append(file_time)
+
+                        # Calculate statistics
+                        total_elapsed_time = time.time() - start_time
+                        avg_time_per_file = sum(file_times) / len(file_times) if file_times else 0
+                        files_remaining = len(input_filenames) - (i + 1)
+                        estimated_time_remaining = avg_time_per_file * files_remaining
+
+                        print(f"    File time: {file_time:.2f}s")
+                        print(f"    Total elapsed: {total_elapsed_time:.2f}s")
+                        print(f"    Avg file time: {avg_time_per_file:.2f}s")
+                        print(f"    Estimated remaining: {estimated_time_remaining:.2f}s")
+
         conn.close()
 
+        end_time = time.time()
+        total_time = end_time - start_time
+
+        print("\n--- Compression Summary ---")
+        print(f"Total Compression Time: {total_time:.2f} seconds")
+        if file_times:
+            print(f"Average Time per File: {sum(file_times) / len(file_times):.2f} seconds")
+        else:
+            print("No files were successfully processed.")
+        
         return None
 
     def add_csv_to_zip(self, zip_filename: str, csv_filename: str) -> None:
