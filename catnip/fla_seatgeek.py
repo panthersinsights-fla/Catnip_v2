@@ -87,6 +87,10 @@ class FLA_SeatGeek(BaseModel):
 
         return self._request_loop(endpoint = "payments", _cursor = cursor)
 
+    def get_pricing(self, cursor: str | None) -> pd.DataFrame | None:
+
+        return self._request_loop(endpoint = "pricing", _cursor = cursor)
+
     def get_products(self, cursor: str | None) -> pd.DataFrame | None:
 
         return self._request_loop(endpoint = "products", _cursor = cursor)
@@ -249,6 +253,9 @@ class FLA_SeatGeek(BaseModel):
         elif endpoint == "payments":
             response = [{k: v[:19] if k in ["event_datetime_utc", "datetime_utc"] and v is not None else v for k, v in d.items()} for d in response]
             response = [{k: v.replace("$","").replace(",", "") if k in ["debit_amt", "credit_amt", "credit_applied_amnt", "debit_commissions_amount"] and v is not None else v for k, v in d.items()} for d in response]
+            return DataFrame[self.input_schema](response)
+
+        elif endpoint == "pricing":
             return DataFrame[self.input_schema](response)
 
         elif endpoint == "products":
