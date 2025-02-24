@@ -163,9 +163,10 @@ class FLA_Meta(BaseModel):
         responses = []
 
         session_id = self._get_session_id()
-        print(session_id)
+        print(f"Session ID: {session_id}")
 
         num_batches = len(df) // self.batch_size + (1 if len(df) % self.batch_size else 0)
+        print(f"Num Batches: {num_batches}")
 
         url = f"{self._base_url}/{self.version}/{audience_id}/usersreplace"
         
