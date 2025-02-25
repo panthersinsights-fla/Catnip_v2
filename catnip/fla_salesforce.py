@@ -420,7 +420,11 @@ class FLA_Salesforce(BaseModel):
     ### CLASS FUNCTIONS ###
     #######################
 
-    def publish_platform_events(self, payloads: List[Dict]) -> Dict[str, str | List]:
+    def publish_platform_events(
+        self, 
+        payloads: List[Dict],
+        pause_interval: int = 2
+    ) -> Dict[str, str | List]:
 
         url = f"{self._rest_base_url}/composite/"
         headers = {
@@ -452,7 +456,7 @@ class FLA_Salesforce(BaseModel):
                     print(response.json())
                     print(e)
 
-                time.sleep(2)
+                time.sleep(pause_interval)
 
         # print request statistics
         # create class of stats and return object?
