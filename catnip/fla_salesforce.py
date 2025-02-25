@@ -420,7 +420,7 @@ class FLA_Salesforce(BaseModel):
     ### CLASS FUNCTIONS ###
     #######################
 
-    def publish_platform_events(self, payloads: List[Dict]):
+    def publish_platform_events(self, payloads: List[Dict]) -> Dict[str, str | List]:
 
         url = f"{self._rest_base_url}/composite/"
         headers = {
@@ -428,6 +428,7 @@ class FLA_Salesforce(BaseModel):
             'Content-Type': 'application/json'
         }
         request_times = []
+        responses = []
 
         with FLA_Requests().create_session() as session:
             for i in range(len(payloads)):
@@ -444,6 +445,7 @@ class FLA_Salesforce(BaseModel):
                     end_time = time.time()
                     request_time = end_time - start_time
                     request_times.append(request_time)
+                    responses.append(response)
                     
                 except Exception as e:
                     print(response.status_code)
@@ -472,7 +474,12 @@ class FLA_Salesforce(BaseModel):
         """
         print(stats_string)
 
-        return stats_string
+        return_dict = {
+            "responses": responses,
+            "stats": stats_string
+        }
+
+        return return_dict
 
     #########################
     ### PROCESS FUNCTIONS ###
