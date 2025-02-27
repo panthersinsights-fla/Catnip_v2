@@ -7,8 +7,12 @@ from io import StringIO
 
 import pandas as pd
 import polars as pl
+
 from pandera import DataFrameModel
+from pandera.polars import DataFrameModel as PolarsDataFrameModel
+
 from pandera.typing import DataFrame
+from pandera.typing.polars import DataFrame as PolarsDataFrame
 
 from datetime import datetime
 
@@ -26,8 +30,8 @@ class FLA_Sftp(BaseModel):
     port: int = 22
 
     ## Import Pandera Schema
-    input_schema: DataFrameModel = None
-    output_schema: DataFrameModel = None
+    input_schema: DataFrameModel | PolarsDataFrameModel = None
+    output_schema: DataFrameModel | PolarsDataFrameModel = None
 
     ######################
     ### USER FUNCTIONS ###
@@ -224,6 +228,61 @@ class FLA_Sftp(BaseModel):
         # Convert to DataFrame
         return pd.DataFrame(files_data)
 
+    def download_parquet(self, using_polars: bool = False, **kwargs) -> pd.DataFrame | pl.LazyFrame:
+
+        conn = self._create_connection()
+        
+        try:
+            # Check if the file exists
+            if self.file_exists(conn):
+                with conn.open(self.remote_path) as file:
+                    
+                    # Prefetch file content if supported
+                    file.prefetch()
+                    
+                    # Read the content from the file
+                    content = file.read()
+                    
+                    # Wrap the modified content into a StringIO object
+                    file = BytesIO(content)
+                    
+                    # Read the CSV content into a DataFrame
+                    if using_polars:
+                        if self.input_schema:
+                            df = PolarsDataFrame[self.input_schema](pl.scan_parquet(file, **kwargs).collect()).lazy()
+                        else:
+                            df = pl.scan_parquet(file, **kwargs)
+                    elif self.input_schema:
+                        df = DataFrame[self.input_schema](pd.read_parquet(file, **kwargs))
+                    else:
+                        df = pd.read_parquet(file, **kwargs)
+        
+        except Exception as e:
+            print(f"ERROR: {e}")
+        
+        finally:
+            # Ensure the connection is closed in all cases
+            conn.close()
+        
+        return df
+
+    def upload_parquet(self, df: pd.DataFrame | pl.LazyFrame, using_polars: bool = False, **kwargs) -> None:
+
+        ## Create connection
+        conn = self._create_connection()
+
+        ## Upload csv
+        with conn.open(self.remote_path, "wb") as file:
+            if using_polars:
+                df.collect().write_parquet(file, **kwargs)
+            else:
+                file.write(df.to_parquet(index = False, **kwargs))
+
+        ## Close connection
+        conn.close()
+
+        return None
+    
     def compress_files(
         self,
         input_filenames: List[str], 
