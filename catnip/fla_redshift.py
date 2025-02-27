@@ -5,7 +5,7 @@ from pandera import DataFrameModel
 from pandera.polars import DataFrameModel as PolarsDataFrameModel
 
 from pandera.typing import DataFrame
-# from pandera.typing.polars import DataFrame as PolarsDataFrame
+from pandera.typing.polars import DataFrame as PolarsDataFrame
 
 from pydantic import BaseModel, SecretStr
 from typing import List, Literal
