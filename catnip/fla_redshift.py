@@ -1,13 +1,18 @@
 import pandas as pd
+import polars as pl
+
 from pandera import DataFrameModel
+from pandera.polars import DataFrameModel as PolarsDataFrameModel
+
 from pandera.typing import DataFrame
+# from pandera.typing.polars import DataFrame as PolarsDataFrame
 
 from pydantic import BaseModel, SecretStr
-from typing import List
+from typing import List, Literal
 
 from datetime import datetime, timezone
 import re
-from io import StringIO
+from io import StringIO, BytesIO
 from uuid import uuid4
 from os import getcwd
 import traceback
@@ -38,8 +43,8 @@ class FLA_Redshift(BaseModel):
     verbose: bool = True
 
     ## Import Pandera Schema
-    input_schema: DataFrameModel = None
-    output_schema: DataFrameModel = None
+    input_schema: DataFrameModel | PolarsDataFrameModel = None
+    output_schema: DataFrameModel | PolarsDataFrameModel = None
     
     ######################
     ### USER FUNCTIONS ###
@@ -47,8 +52,9 @@ class FLA_Redshift(BaseModel):
 
     def write_to_warehouse(
             self,
-            df: pd.DataFrame,
+            df: pd.DataFrame | pl.LazyFrame,
             table_name: str,
+            file_type: Literal["csv", "parquet"] = "csv",   # New parameter to determine what type of file is written to s3 bucket
             to_append: bool = False,
             column_data_types: List[str] | None = None,
             varchar_max_list: List = [],
@@ -63,7 +69,8 @@ class FLA_Redshift(BaseModel):
             distkey: str = "",
             sort_interleaved: bool = False,
             sortkey: str = "",
-            parameters: str = "BLANKSASNULL"
+            parameters: str = "BLANKSASNULL",
+            using_polars: bool = False              # New parameter to determine whether we are using polars or pandas
     ) -> None:
         
         """ 
@@ -72,26 +79,49 @@ class FLA_Redshift(BaseModel):
                 - can change column data_types
         """
 
-        ## Validate & reorder column names
-        self._validate_column_names(df)
-        if self.output_schema:
-            df = self.output_schema.validate(df)
-            df = df.reindex(columns = [x for x in [*self.output_schema.to_schema().columns] if x in df.columns.to_list()])
+        ## Create nulls for string fields is using polars
+        if using_polars:
+            df = df.select([pl.col(col).replace("", None).alias(col) if dtype in [pl.Utf8, pl.String] else pl.col(col).alias(col) for col, dtype in zip(df.collect_schema().names(), df.collect_schema().dtypes())])
 
+        ## Validate & reorder column names
+        self._validate_column_names(df, using_polars)
+        if self.output_schema:
+            if using_polars:
+                ## Temporarily convert LazyFrame to DataFrame so that we can validate schema
+                df = self.output_schema.validate(df.collect())
+                df = df.lazy()
+                df = df.select([x for x in [*self.output_schema.to_schema().columns] if x in df.collect_schema().names()])
+            else:
+                df = self.output_schema.validate(df)
+                df = df.reindex(columns = [x for x in [*self.output_schema.to_schema().columns] if x in df.columns.to_list()])
+        
         ## Create processed date field
-        df['processed_date'] = datetime.now(timezone.utc)
+        if using_polars:
+            df = df.with_columns(pl.lit(datetime.now(timezone.utc)).cast(pl.Datetime).alias("processed_date"))
+        else:
+            df['processed_date'] = datetime.now(timezone.utc)
 
         ## Write to S3
         redshift_table_name = f"custom.{table_name}"
-        csv_name = f"{redshift_table_name}-{uuid4()}.csv"
+        filename = f"{redshift_table_name}-{uuid4()}.{file_type}"
 
-        self._pandas_to_s3(
-            df = df,
-            csv_name = csv_name,
-            index = index,
-            save_local = save_local,
-            delimiter = delimiter
-        )
+        if using_polars:
+            self._polars_to_s3(
+                df = df,
+                filename = filename,
+                save_local = save_local,
+                delimiter = delimiter,
+                file_type= file_type
+            )
+        else:
+            self._pandas_to_s3(
+                df = df,
+                filename = filename,
+                index = index,
+                save_local = save_local,
+                delimiter = delimiter,
+                file_type = file_type
+            )
 
         ## Create empty table in Redshift
         if not to_append:
@@ -104,19 +134,21 @@ class FLA_Redshift(BaseModel):
                 diststyle = diststyle,
                 distkey = distkey,
                 sort_interleaved = sort_interleaved,
-                sortkey = sortkey
+                sortkey = sortkey,
+                using_polars = using_polars
             )
 
         ## S3 to Redshift
         self._s3_to_redshift(
             redshift_table_name = redshift_table_name,
-            csv_name = csv_name,
+            filename = filename,
             delimiter = delimiter,
             quotechar = quotechar,
             dateformat = dateformat,
             timeformat = timeformat,
             region = region,
-            parameters = parameters
+            parameters = parameters,
+            file_type = file_type
         )
 
         return None 
@@ -333,9 +365,12 @@ class FLA_Redshift(BaseModel):
     ##########################
 
     ## validate column names
-    def _validate_column_names(self, df: pd.DataFrame) -> None:
+    def _validate_column_names(self, df: pd.DataFrame | pl.LazyFrame, using_polars: bool = False) -> None:
 
-        cols = [str(x).lower() for x in df.columns]
+        if using_polars:
+            cols = [str(x).lower() for x in df.collect_schema().names()]
+        else:
+            cols = [str(x).lower() for x in df.columns]
 
         ## Check reserved words
         reserved_words = self._get_redshift_reserved_words()
@@ -370,31 +405,82 @@ class FLA_Redshift(BaseModel):
     def _pandas_to_s3(
             self,
             df: pd.DataFrame,
-            csv_name: str,
+            filename: str,
             index: bool,
             save_local: bool,
-            delimiter: str
+            delimiter: str,
+            file_type: Literal["csv", "parquet"]
     ) -> None:
         
         if save_local:
-            df.to_csv(csv_name, index = index, sep = delimiter)
+            if file_type == "csv":
+                df.to_csv(filename, index = index, sep = delimiter)
+            elif file_type == "parquet":
+                print(filename)
+                df.to_parquet(filename, index = index, engine = 'pyarrow', coerce_timestamps = 'us')
             if self.verbose:
                 ## add logger!
-                print(f"Save file {csv_name} in {getcwd()} 🙌")
+                print(f"Save file {filename} in {getcwd()} 🙌")
 
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer, index = index, sep = delimiter)
+        if file_type == "csv":
+            buffer = StringIO()
+            df.to_csv(buffer, index = index, sep = delimiter)
+        elif file_type == "parquet":
+            buffer = BytesIO()
+            df.to_parquet(buffer, index = index, engine = 'pyarrow', coerce_timestamps = 'us')
 
-        self._connect_to_s3()\
-            .Bucket(self.bucket.get_secret_value())\
-                .put_object(
-                    Key = f"{self.subdirectory.get_secret_value()}/{csv_name}",
-                    Body = csv_buffer.getvalue()
-                )
+        (self._connect_to_s3()
+            .Bucket(self.bucket.get_secret_value())
+            .put_object(
+                Key = f"{self.subdirectory.get_secret_value()}/{filename}",
+                Body = buffer.getvalue()
+            )
+        )
         
         if self.verbose:
             ## add logger!
-            print(f"Saved file {csv_name} in bucket {self.subdirectory.get_secret_value()} 🙌")
+            print(f"Saved file {filename} in bucket {self.subdirectory.get_secret_value()} 🙌")
+
+        return None
+
+    def _polars_to_s3(
+            self,
+            df: pl.LazyFrame,
+            filename: str,
+            save_local: bool,
+            delimiter: str,
+            file_type: Literal["csv", "parquet"]
+    ) -> None:
+        
+        if save_local:
+            if file_type == "csv":
+                df.sink_csv(filename, separator = delimiter)
+            elif file_type == "parquet":
+                df.sink_parquet(filename)
+            else:
+                print("Invalid file type")
+            if self.verbose:
+                ## add logger!
+                print(f"Save file {filename} in {getcwd()} 🙌")
+
+        if file_type == "csv":
+            buffer = StringIO()
+            df.collect().write_csv(buffer, separator = delimiter)
+        elif file_type == "parquet":
+            buffer = BytesIO()
+            df.collect().write_parquet(buffer, use_pyarrow = True)
+
+        (self._connect_to_s3()
+            .Bucket(self.bucket.get_secret_value())
+            .put_object(
+                Key = f"{self.subdirectory.get_secret_value()}/{filename}",
+                Body = buffer.getvalue()
+            )
+        )
+        
+        if self.verbose:
+            ## add logger!
+            print(f"Saved file {filename} in bucket {self.subdirectory.get_secret_value()} 🙌")
 
         return None
 
@@ -402,35 +488,45 @@ class FLA_Redshift(BaseModel):
     def _s3_to_redshift(
             self,
             redshift_table_name: str,
-            csv_name: str,
+            filename: str,
             delimiter: str,
             quotechar: str,
             dateformat: str,
             timeformat: str,
             region: str,
-            parameters: str
+            parameters: str,
+            file_type: Literal["csv", "parquet"]
     ) -> None:
         
         ## Construct query
-        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{self.subdirectory.get_secret_value()}/{csv_name}"
+        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{self.subdirectory.get_secret_value()}/{filename}"
         authorization_string = f"""
             access_key_id '{self.aws_access_key_id.get_secret_value()}'
             secret_access_key '{self.aws_secret_access_key.get_secret_value()}'
         """
-
-        s3_to_sql = f""" 
-            COPY {redshift_table_name}
-            FROM '{bucket_file_name}'
-            DELIMITER '{delimiter}'
-            IGNOREHEADER 1
-            CSV QUOTE AS '{quotechar}'
-            DATEFORMAT '{dateformat}'
-            TIMEFORMAT '{timeformat}'
-            {authorization_string}
-            {parameters}
-            {f" REGION '{region}'" if region else ""}
-            ;
-        """
+        if file_type == "csv":
+            s3_to_sql = f""" 
+                COPY {redshift_table_name}
+                FROM '{bucket_file_name}'
+                DELIMITER '{delimiter}'
+                IGNOREHEADER 1
+                CSV QUOTE AS '{quotechar}'
+                DATEFORMAT '{dateformat}'
+                TIMEFORMAT '{timeformat}'
+                {authorization_string}
+                {parameters}
+                {f" REGION '{region}'" if region else ""}
+                ;
+            """
+        elif file_type == "parquet":
+            s3_to_sql = f"""
+                COPY {redshift_table_name}
+                FROM '{bucket_file_name}'
+                {f" REGION '{region}'" if region else ""}
+                FORMAT AS PARQUET
+                {authorization_string}
+                ;
+            """
 
         ## Execute & commit
         if self.verbose:
@@ -467,9 +563,10 @@ class FLA_Redshift(BaseModel):
     ## data types to redshift data types
     def _get_column_data_types(
             self, 
-            df: pd.DataFrame, 
+            df: pd.DataFrame | pl.LazyFrame, 
             varchar_max_list: List, 
-            index: bool
+            index: bool,
+            using_polars: bool
     ) -> List[str]:
         
         def _pd_dtype_to_redshift_dtype(dtype: str) -> str:
@@ -490,10 +587,17 @@ class FLA_Redshift(BaseModel):
             else:
                 return "VARCHAR(256)"
         
-        column_data_types = [_pd_dtype_to_redshift_dtype(str(dtype.name).lower()) for dtype in df.dtypes.values]
+        if using_polars:
+            column_data_types = [_pd_dtype_to_redshift_dtype(str(dtype).lower()) for dtype in df.collect_schema().dtypes()]
+                    
+            max_indexes = [idx for idx, val in enumerate(df.collect_schema().names()) if val in varchar_max_list]
+            column_data_types = ["VARCHAR(MAX)" if idx in max_indexes else val for idx, val in enumerate(column_data_types)]
+
+        else:
+            column_data_types = [_pd_dtype_to_redshift_dtype(str(dtype.name).lower()) for dtype in df.dtypes.values]
         
-        max_indexes = [idx for idx, val in enumerate(list(df.columns)) if val in varchar_max_list]
-        column_data_types = ["VARCHAR(MAX)" if idx in max_indexes else val for idx, val in enumerate(column_data_types)]
+            max_indexes = [idx for idx, val in enumerate(list(df.columns)) if val in varchar_max_list]
+            column_data_types = ["VARCHAR(MAX)" if idx in max_indexes else val for idx, val in enumerate(column_data_types)]
         
         if index:
             column_data_types.insert(0, _pd_dtype_to_redshift_dtype(df.index.dtype.name))
@@ -520,7 +624,7 @@ class FLA_Redshift(BaseModel):
     ## create redshift table
     def _create_redshift_table(
             self,
-            df: pd.DataFrame,
+            df: pd.DataFrame | pl.LazyFrame,
             redshift_table_name: str,
             column_data_types: List[str] | None,
             varchar_max_list: List,
@@ -528,11 +632,16 @@ class FLA_Redshift(BaseModel):
             diststyle: str,
             distkey: str,
             sort_interleaved: bool,
-            sortkey: str
+            sortkey: str,
+            using_polars: bool
     ) -> None:
 
         ## Adjust for potential index
-        columns = list(df.columns)
+        
+        if using_polars:
+            columns = df.collect_schema().names()
+        else:
+            columns = list(df.columns)
         if index:
             if df.index.name:
                 columns.insert(0, df.index.name)
@@ -541,7 +650,7 @@ class FLA_Redshift(BaseModel):
 
         ## Get column data types
         if column_data_types is None:
-            column_data_types = self._get_column_data_types(df = df, varchar_max_list = varchar_max_list, index = index)
+            column_data_types = self._get_column_data_types(df = df, varchar_max_list = varchar_max_list, index = index, using_polars = using_polars)
 
         ## Get encoded values
         encoded_values = self._get_encoded_values(column_data_types)
