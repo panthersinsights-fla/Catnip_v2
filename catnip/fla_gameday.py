@@ -16,7 +16,7 @@ class FLA_Gameday(BaseModel):
 
     @property
     def _base_url(self):
-        return "https:/api.dev.flapanthersgameday.com"
+        return "https://api.dev.flapanthersgameday.com"
     
     @property
     def _base_headers(self):
