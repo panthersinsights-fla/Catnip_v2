@@ -6,6 +6,7 @@ from pandera import DataFrameModel
 
 from catnip.fla_requests import FLA_Requests
 import httpx
+import json 
 
 class FLA_Gameday(BaseModel):
 
@@ -43,6 +44,7 @@ class FLA_Gameday(BaseModel):
                         {**member_dict} for member_dict in batch.to_dict('records')
                     ]
                 }
+                payload = json.dumps(payload)
 
                 try:
                     response = session.post(
