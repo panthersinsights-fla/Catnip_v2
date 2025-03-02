@@ -11,8 +11,8 @@ class FLA_Gameday(BaseModel):
 
     api_key: SecretStr
 
-    input_schema: DataFrameModel
-    output_schema: DataFrameModel
+    input_schema: DataFrameModel = None
+    output_schema: DataFrameModel = None
 
     @property
     def _base_url(self):
@@ -42,7 +42,7 @@ class FLA_Gameday(BaseModel):
                         {**member_dict} for member_dict in batch.to_dict('records')
                     ]
                 }
-                
+
                 try:
                     response = session.post(
                         url = f"{self._base_url}/add-members",
