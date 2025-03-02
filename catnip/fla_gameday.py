@@ -21,7 +21,8 @@ class FLA_Gameday(BaseModel):
     @property
     def _base_headers(self):
         return {
-            "x-api-key": self.api_key.get_secret_value()
+            "x-api-key": self.api_key.get_secret_value(),
+            "Content-Type": "application/json"
         }
     
     def post_members(self, df: pd.DataFrame, batch_size: int = 100) -> List[httpx.Response]:
