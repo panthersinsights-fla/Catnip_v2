@@ -108,7 +108,7 @@ class FLA_Sftp(BaseModel):
         
         except Exception as e:
             print(f"ERROR: {e}")
-            raise SFTPError
+            raise SFTPError(str(e))
         
         finally:
             # Ensure the connection is closed in all cases
