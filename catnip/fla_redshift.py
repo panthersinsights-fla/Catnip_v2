@@ -162,7 +162,8 @@ class FLA_Redshift(BaseModel):
                 columns_list = [desc[0] for desc in cursor.description]
                 
                 if using_polars:
-                    data_type_list = [self._get_redshift_type_code_dict[desc[1]] for desc in cursor.description]
+                    data_type_dict = self._get_redshift_type_code_dict()
+                    data_type_list = [data_type_dict[desc[1]] for desc in cursor.description]
                     polars_schema = dict(zip(columns_list, data_type_list))
 
                     if self.input_schema:
