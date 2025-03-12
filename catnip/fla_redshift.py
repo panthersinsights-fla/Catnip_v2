@@ -154,7 +154,7 @@ class FLA_Redshift(BaseModel):
         return None 
 
 
-    def query_warehouse(self, sql_string: str, using_polars: bool = False) -> pd.DataFrame:
+    def query_warehouse(self, sql_string: str, using_polars: bool = False) -> pd.DataFrame | pl.LazyFrame:
         
         with self._connect_to_redshift() as conn:
             with conn.cursor() as cursor:
