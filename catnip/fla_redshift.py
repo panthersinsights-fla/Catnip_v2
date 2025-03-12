@@ -154,17 +154,26 @@ class FLA_Redshift(BaseModel):
         return None 
 
 
-    def query_warehouse(self, sql_string: str) -> pd.DataFrame:
+    def query_warehouse(self, sql_string: str, using_polars: bool = False) -> pd.DataFrame:
         
         with self._connect_to_redshift() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(sql_string)
                 columns_list = [desc[0] for desc in cursor.description]
+                
+                if using_polars:
+                    data_type_list = [self._get_redshift_type_code_dict[desc[1]] for desc in cursor.description]
+                    polars_schema = dict(zip(columns_list, data_type_list))
 
-                if self.input_schema:
-                    df = DataFrame[self.input_schema](cursor.fetchall(), columns = columns_list)
+                    if self.input_schema:
+                        df = PolarsDataFrame[self.input_schema](cursor.fetchall(), schema=polars_schema).lazy()
+                    else:
+                        df = pl.LazyFrame(cursor.fetchall(), schema=polars_schema)
                 else:
-                    df = pd.DataFrame(cursor.fetchall(), columns = columns_list)
+                    if self.input_schema:
+                        df = DataFrame[self.input_schema](cursor.fetchall(), columns=columns_list)
+                    else:
+                        df = pd.DataFrame(cursor.fetchall(), columns=columns_list)
 
         ## close up shop
         cursor.close()
@@ -620,7 +629,40 @@ class FLA_Redshift(BaseModel):
         }
         
         return [encoding_dict[dt.split("(")[0]] for dt in column_data_types]
+
+
+    def _get_redshift_type_code_dict(self):
+        # for use w polars
+        type_mapping = {
+            # Numeric types
+            20: int,      # INTEGER
+            21: int,      # BIGINT
+            23: float,    # DECIMAL
+            701: float,   # FLOAT4
+            702: float,   # FLOAT8
+            1700: float,  # NUMERIC
+            
+            # String types
+            25: str,      # TEXT
+            1042: str,    # VARCHAR,
+            1043: str,    # VARCHAR
+            
+            # Date/Time types
+            1082: datetime,    # DATE
+            1114: datetime,    # TIMESTAMP
+            1184: datetime,    # TIME
+            
+            # Boolean
+            16: bool,     # BOOLEAN
+            
+            # Other types
+            2950: bytes,  # UUID
+            1007: bytes,  # JSON
+            1009: bytes   # SUPER
+        }
     
+        return type_mapping
+
     ## create redshift table
     def _create_redshift_table(
             self,
