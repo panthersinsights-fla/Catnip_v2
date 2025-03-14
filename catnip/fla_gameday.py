@@ -8,6 +8,8 @@ from catnip.fla_requests import FLA_Requests
 import httpx
 import json 
 
+import time
+
 class FLA_Gameday(BaseModel):
 
     api_key: SecretStr
@@ -20,7 +22,7 @@ class FLA_Gameday(BaseModel):
         return "https://api.dev.flapanthersgameday.com"
     
     @property
-    def _base_headers(self):
+    def _base_headers(self) -> Dict[str, str]:
 
         return {
             "x-api-key": self.api_key.get_secret_value(),
@@ -57,7 +59,7 @@ class FLA_Gameday(BaseModel):
                     response.raise_for_status()
                     responses.append(
                         {
-                            "iteration": i,
+                            "iteration": i / batch_size,
                             "status_code": response.status_code,
                             "response": response.json()
                         }
@@ -68,5 +70,7 @@ class FLA_Gameday(BaseModel):
                     print(response.status_code)
                     print(response.json())
                     print(f"Error: {e}")
+                
+                time.sleep(0.5)
 
         return responses
