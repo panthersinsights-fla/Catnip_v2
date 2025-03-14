@@ -55,7 +55,13 @@ class FLA_Gameday(BaseModel):
                     )
 
                     response.raise_for_status()
-                    responses.append(response)
+                    responses.append(
+                        {
+                            "iteration": i,
+                            "status_code": response.status_code,
+                            "response": response.json()
+                        }
+                    )
 
                 except Exception as e:
 
