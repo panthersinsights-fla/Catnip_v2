@@ -455,6 +455,8 @@ class FLA_Salesforce(BaseModel):
                     print(response.status_code)
                     print(response.json())
                     print(e)
+                    responses.append(response.text)
+                    raise e
 
                 time.sleep(pause_interval)
 
