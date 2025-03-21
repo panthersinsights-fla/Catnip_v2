@@ -42,13 +42,15 @@ class FLA_Sharepoint(BaseModel):
 
     def upload_dataframe(
         self,
-        df: pd.DataFrame,
+        df: pd.DataFrame | BytesIO,
         folder_path: str,
         file_name: str,
         as_csv: bool = True,
         as_xml: bool = False,
         as_excel: bool = False,
-        add_log_date: bool = False 
+        as_buffer: bool = False,
+        as_buffer_suffix: str = "",
+        add_log_date: bool = False,
     ) -> str:
 
         ## Update dataframe
@@ -77,6 +79,11 @@ class FLA_Sharepoint(BaseModel):
             file.seek(0)
 
             file_suffix = "xlsx"
+
+        elif as_buffer:
+            df.seek(0)
+            file = df.getvalue()
+            file_suffix = as_buffer_suffix
 
         else:
             raise SyntaxError("You Failed! 👎 Please select a file type to write to!")
