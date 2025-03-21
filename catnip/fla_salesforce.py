@@ -449,8 +449,10 @@ class FLA_Salesforce(BaseModel):
                     end_time = time.time()
                     request_time = end_time - start_time
                     request_times.append(request_time)
+
+                    response.raise_for_status()
                     responses.append(response)
-                    
+
                 except Exception as e:
                     print(response.status_code)
                     print(response.json())
