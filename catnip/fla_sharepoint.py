@@ -54,9 +54,10 @@ class FLA_Sharepoint(BaseModel):
     ) -> str:
 
         ## Update dataframe
-        df['processed_date'] = datetime.utcnow()
-        if self.output_schema:
-            df = df.reindex(columns = [*self.output_schema.__dict__['__annotations__']])
+        if not as_buffer:
+            df['processed_date'] = datetime.utcnow()
+            if self.output_schema:
+                df = df.reindex(columns = [*self.output_schema.__dict__['__annotations__']])
 
         ## Convert dataframe
         if as_csv:
