@@ -60,7 +60,7 @@ class FLA_Sharepoint(BaseModel):
                 df = df.reindex(columns = [*self.output_schema.__dict__['__annotations__']])
 
         ## Convert dataframe
-        if as_csv:
+        if as_csv and not as_buffer:
             file = BytesIO()
             df.to_csv(file, index = False, encoding = "utf-8")
             file.seek(0)
