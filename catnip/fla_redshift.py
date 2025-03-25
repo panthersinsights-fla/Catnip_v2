@@ -88,8 +88,8 @@ class FLA_Redshift(BaseModel):
         if self.output_schema:
             if using_polars:
                 ## Temporarily convert LazyFrame to DataFrame so that we can validate schema
-                df = self.output_schema.validate(df.collect())
-                df = df.lazy()
+                sample_df = df.fetch(1000)
+                self.output_schema.validate(sample_df)
                 df = df.select([x for x in [*self.output_schema.to_schema().columns] if x in df.collect_schema().names()])
             else:
                 df = self.output_schema.validate(df)
@@ -475,10 +475,10 @@ class FLA_Redshift(BaseModel):
 
         if file_type == "csv":
             buffer = StringIO()
-            df.collect().write_csv(buffer, separator = delimiter)
+            df.sink_csv(buffer, separator = delimiter)
         elif file_type == "parquet":
             buffer = BytesIO()
-            df.collect().write_parquet(buffer, use_pyarrow = True)
+            df.sink_parquet(buffer, use_pyarrow = True)
 
         (self._connect_to_s3()
             .Bucket(self.bucket.get_secret_value())
