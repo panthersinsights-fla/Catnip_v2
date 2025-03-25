@@ -478,7 +478,7 @@ class FLA_Redshift(BaseModel):
             df.sink_csv(buffer, separator = delimiter)
         elif file_type == "parquet":
             buffer = BytesIO()
-            df.sink_parquet(buffer, use_pyarrow = True)
+            df.sink_parquet(buffer)
 
         (self._connect_to_s3()
             .Bucket(self.bucket.get_secret_value())
