@@ -454,7 +454,7 @@ class FLA_Salesforce(BaseModel):
                     responses.append(response)
 
                 except Exception as e:
-                    print(response.status_code)
+                    # print(response.status_code)
                     print(response.json())
                     print(e)
                     responses.append(response.text)
