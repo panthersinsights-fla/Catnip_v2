@@ -77,7 +77,7 @@ class FLA_Stripe(BaseModel):
                 raise RuntimeError("Too many attempts - try again later brohem")
 
             # pause
-            time.sleep(5)
+            time.sleep(5*attempts)
 
 
         # retrieve data
