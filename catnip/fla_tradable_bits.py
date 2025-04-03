@@ -37,10 +37,7 @@ class FLA_Tradable_Bits(BaseModel):
 
     def get_businesses(self) -> pd.DataFrame:
 
-        return self._get_dataframe(
-            self._get_response(url = f"{self._base_url.replace('/crm/', '')}/businesses"),
-            max_level=0
-        )
+        return self._get_dataframe(self._get_response(url = f"{self._base_url.replace('/crm/', '')}/businesses"), max_level=0)
     
     def get_campaigns(self) -> pd.DataFrame:
 
@@ -181,6 +178,6 @@ class FLA_Tradable_Bits(BaseModel):
                 return pd.json_normalize(response.json()['data'], **kwargs)
         else:
             if self.input_schema:
-                return DataFrame[self.input_schema](pd.json_normalize(response.json()['data'], **kwargs))
+                return DataFrame[self.input_schema](pd.json_normalize(response.json(), **kwargs))
             else:
-                return pd.json_normalize(response.json()['data'], **kwargs)
+                return pd.json_normalize(response.json(), **kwargs)
