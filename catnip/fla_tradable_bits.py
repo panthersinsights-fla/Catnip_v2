@@ -35,6 +35,10 @@ class FLA_Tradable_Bits(BaseModel):
     ### CLASS FUNCTIONS ###
     #######################
 
+    def get_businesses(self) -> pd.DataFrame:
+
+        return self._get_dataframe(self._get_response(url = f"{self._base_url}/businesses"))
+    
     def get_campaigns(self) -> pd.DataFrame:
 
         return self._get_dataframe(self._get_response(url = f"{self._base_url}/campaigns"))
