@@ -5,7 +5,7 @@ from catnip.fla_requests import FLA_Requests
 class FLA_Gemini(BaseModel):
 
     api_key: SecretStr
-    model: Literal["gemini-1.5-flash"]
+    model: Literal["gemini-1.5-flash", "gemini-2.0-flash-lite", "gemini-2.0-flash"]
 
     @property
     def _base_url(self) -> str:
