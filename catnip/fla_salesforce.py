@@ -441,7 +441,7 @@ class FLA_Salesforce(BaseModel):
                     start_time = time.time()
 
                     # print expected finish
-                    print(f"Publishing event {i+1} of {len(payloads)}...")
+                    print(f"Publishing event {i+1} of {len(payloads)} ({(i+1)/(len(payloads)):.1f} %)...")
                     if request_times:
                         # Convert expected time remaining to hours, minutes, and seconds
                         remaining_time_seconds = (len(payloads) - i - 1) * pause_interval * statistics.mean(request_times)
@@ -468,7 +468,7 @@ class FLA_Salesforce(BaseModel):
                 except Exception as e:
                     # print(response.status_code)
                     # print(response.json())
-                    # print(response.text)
+                    print(response.text)
                     print(e)
                     # responses.append(response.text)
                     raise e
