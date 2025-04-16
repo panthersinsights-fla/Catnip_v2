@@ -442,7 +442,8 @@ class FLA_Salesforce(BaseModel):
 
                     # print expected finish
                     print(f"Publishing event {i+1} of {len(payloads)}...")
-                    print(f"Expected time remaining: {(len(payloads) - i - 1) * pause_interval * (statistics.mean(request_times) / 1000)} seconds")
+                    if request_times:
+                        print(f"Expected time remaining: {(len(payloads) - i - 1) * pause_interval * (statistics.mean(request_times) / 1000)} seconds")
 
                     # response
                     response = session.post(
