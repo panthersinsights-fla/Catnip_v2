@@ -439,6 +439,11 @@ class FLA_Salesforce(BaseModel):
                 try:
                     # start timer
                     start_time = time.time()
+
+                    # print expected finish
+                    print(f"Publishing event {i+1} of {len(payloads)}...")
+                    print(f"Expected time remaining: {(len(payloads) - i - 1) * pause_interval * (statistics.mean(request_times) / 1000)} seconds")
+
                     # response
                     response = session.post(
                         url = url, 
@@ -450,7 +455,7 @@ class FLA_Salesforce(BaseModel):
                     request_time = end_time - start_time
                     request_times.append(request_time)
 
-                    print(response.text)
+                    # print(response.text)
 
                     response.raise_for_status()
                     responses.append(response)
