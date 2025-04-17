@@ -48,6 +48,7 @@ class FLA_Cheq(BaseModel):
             "end_range": end_date.strftime('%Y-%m-%dT%H:%M:%SZ'),
             "payment_status": payment_status
         }
+        continue_counter = 0
 
         # iterate
         with FLA_Requests().create_session() as session:
@@ -66,6 +67,12 @@ class FLA_Cheq(BaseModel):
                 # print(response.json())
 
                 if response.status_code == 503:
+                    continue_counter += 1
+                    print(f"503 Error: {response.text}")
+                    print(f"Continue Counter: {continue_counter}")
+                    if continue_counter > 5:
+                        print("Continue Counter Exceeded")
+                        break
                     time.sleep(2)
                     continue
 
