@@ -71,6 +71,10 @@ class FLA_SeatGeek(BaseModel):
 
         return self._request_loop(endpoint = "attendance", _cursor = cursor)
 
+    def get_attribution(self, cursor: str | None) -> pd.DataFrame | None:
+
+        return self._request_loop(endpoint = "attribution", _cursor = cursor)
+    
     def get_clients(self, cursor: str | None) -> pd.DataFrame | None:
 
         return self._request_loop(endpoint = "clients", _cursor = cursor)
@@ -239,6 +243,9 @@ class FLA_SeatGeek(BaseModel):
         if endpoint == "attendance":
             return DataFrame[self.input_schema](response)
 
+        elif endpoint == "attribution":
+            return DataFrame[self.input_schema](response)
+        
         elif endpoint == "clients":
             response = [{k: v[:19] if k == "creation_datetime" else v for k, v in d.items()} for d in response]
             return DataFrame[self.input_schema](response)
