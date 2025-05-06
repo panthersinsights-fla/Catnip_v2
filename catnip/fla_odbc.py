@@ -4,6 +4,7 @@ from pandera.typing import DataFrame
 import pandas as pd
 import pyodbc
 from typing import Literal
+import traceback
 
 # set default variable
 pyodbc.lowercase = True
@@ -53,12 +54,22 @@ class FLA_Odbc(BaseModel):
             try:
                 df = DataFrame[self.input_schema](pd.read_sql(sql_string, connection))
             except Exception as e:
-                print(list(pd.read_sql(sql_string, connection).columns))
-                print(f"{e}")
+                # print(list(pd.read_sql(sql_string, connection).columns))
+                print("Error while validating schema:")
+                print(f"SQL Query: {sql_string}")
+                print(f"Error Message: {e}")
+                print("Traceback:")
+                traceback.print_exc()
+                raise
         else:
             try:
                 df = pd.read_sql(sql_string, connection)
             except Exception as e:
-                print(f"{e}")
+                print("Error while validating schema:")
+                print(f"SQL Query: {sql_string}")
+                print(f"Error Message: {e}")
+                print("Traceback:")
+                traceback.print_exc()
+                raise
 
         return df
