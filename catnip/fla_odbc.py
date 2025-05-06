@@ -6,9 +6,6 @@ import pyodbc
 from typing import Literal
 import traceback
 
-from prefect.blocks.system import Secret
-from catnip.fla_teams import FLA_Teams
-
 # set default variable
 pyodbc.lowercase = True
 
@@ -78,10 +75,7 @@ class FLA_Odbc(BaseModel):
     #     return df
 
     def query_database(self, sql_string: str) -> pd.DataFrame:
-        """
-        Execute a SQL query and return the result as a Pandas DataFrame.
-        Inspects and logs problematic data in case of encoding issues.
-        """
+
         try:
             # Establish the connection
             connection = pyodbc.connect(self._connection_string, readonly=True)
@@ -92,27 +86,12 @@ class FLA_Odbc(BaseModel):
 
             # Inspect raw data for encoding issues
             rows = cursor.fetchall()
-            problematic_rows = []
-            for i, row in enumerate(rows):
-                try:
-                    # Attempt to print each row to check for encoding issues
-                    print(f"Row {i}: {row}")
-                except UnicodeDecodeError as e:
-                    print(f"Encoding issue in row {i}: {e}")
-                    problematic_rows.append((i, row))
-            
-            # Log problematic rows if any
-            if problematic_rows:
-                log_content = "Problematic Rows:\n"
-                for index, row in problematic_rows:
-                    log_content += f"Row {index}: {row}\n"
-                    # send content to teams
-                    FLA_Teams(**self.get_teams_credentials()).send_message(log_content)
-                
-                raise UnicodeDecodeError("Encoding issues detected. See problematic_data.log for details.")
 
             # Load the full data into a DataFrame
-            df = pd.DataFrame.from_records(rows, columns=[desc[0] for desc in cursor.description])
+            if self.input_schema:
+                df = DataFrame[self.input_schema](pd.DataFrame.from_records(rows, columns=[desc[0] for desc in cursor.description]))
+            else:
+                df = pd.DataFrame.from_records(rows, columns=[desc[0] for desc in cursor.description])
 
             return df
 
@@ -131,11 +110,3 @@ class FLA_Odbc(BaseModel):
             print("Traceback:")
             traceback.print_exc()
             raise
-
-    def get_teams_credentials():
-
-        credentials = {
-            "webhook": Secret.load("teams-webhook-url").get()
-        }
-
-        return credentials
