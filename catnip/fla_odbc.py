@@ -31,7 +31,8 @@ class FLA_Odbc(BaseModel):
                 SERVER={self.host.get_secret_value()};
                 DATABASE={self.database_name.get_secret_value()};
                 UID={self.username.get_secret_value()};
-                PWD={self.password.get_secret_value()}
+                PWD={self.password.get_secret_value()};
+                CHARSET=UTF8
             """).strip().replace("\\n", "").replace("  ", "").replace("'", "")
         
         elif self.connection_type == "retailpro":
