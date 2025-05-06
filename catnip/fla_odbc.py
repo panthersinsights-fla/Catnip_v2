@@ -7,7 +7,7 @@ from typing import Literal
 import traceback
 
 from prefect.blocks.system import Secret
-from fla_teams import FLA_Teams
+from catnip.fla_teams import FLA_Teams
 
 # set default variable
 pyodbc.lowercase = True
