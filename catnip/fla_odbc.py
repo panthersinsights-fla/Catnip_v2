@@ -79,6 +79,9 @@ class FLA_Odbc(BaseModel):
         try:
             # Establish the connection
             connection = pyodbc.connect(self._connection_string, readonly=True)
+            connection.setdecoding(pyodbc.SQL_CHAR, encoding='utf-8')
+            connection.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')
+            connection.setencoding(encoding='utf-8')
 
             # Fetch data using a cursor
             cursor = connection.cursor()
