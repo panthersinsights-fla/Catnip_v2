@@ -99,7 +99,8 @@ class FLA_Salesforce(BaseModel):
                 connection_dict=connection_dict,
                 content_url=content_url
             )
-            print(set_job_state_response.keys())
+            print(f"Set Job State Response: {type(set_job_state_response)} - {set_job_state_response}")
+            print(f"Set Job State Response Keys: {set_job_state_response.keys()}")
 
             # check job status
             state = "UploadComplete"
