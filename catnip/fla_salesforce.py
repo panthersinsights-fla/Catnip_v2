@@ -93,6 +93,7 @@ class FLA_Salesforce(BaseModel):
                 content_url=content_url,
                 csv_data=data_part
             )
+            time.sleep(5)
 
             # set job state to complete
             set_job_state_response = self._set_job_state(
