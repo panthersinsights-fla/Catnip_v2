@@ -395,11 +395,13 @@ class FLA_Salesforce(BaseModel):
         max_size_bytes: int = 1000 * 1024 * 1024
     ) -> List[StringIO]:
         
+        num_chunks = 6
+
         if len(df.index) > 300000:
-            quarter_size = len(df.index) // 4
-            df_list = [df.iloc[i*quarter_size:(i+1)*quarter_size] for i in range(4)]
-            if len(df.index) % 4 != 0:
-                df_list[-1] = pd.concat([df_list[-1], df.iloc[4*quarter_size:]])
+            quarter_size = len(df.index) // num_chunks
+            df_list = [df.iloc[i*quarter_size:(i+1)*quarter_size] for i in range(num_chunks)]
+            if len(df.index) % num_chunks != 0:
+                df_list[-1] = pd.concat([df_list[-1], df.iloc[num_chunks*quarter_size:]])
         else:
             df_list = [df]
 
