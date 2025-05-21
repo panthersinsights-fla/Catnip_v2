@@ -1,5 +1,5 @@
 from pydantic import BaseModel, SecretStr
-from typing import Dict, List
+from typing import Dict, List, Literal
 
 import pandas as pd
 from pandera import DataFrameModel
@@ -13,13 +13,14 @@ import time
 class FLA_Gameday(BaseModel):
 
     api_key: SecretStr
+    prod_type: Literal["prod", "pre-prod", "dev"]
 
     input_schema: DataFrameModel = None
     output_schema: DataFrameModel = None
 
     @property
     def _base_url(self):
-        return "https://api.dev.flapanthersgameday.com"
+        return f"https://api.{self.prod_type}.flapanthersgameday.com"
     
     @property
     def _base_headers(self) -> Dict[str, str]:
