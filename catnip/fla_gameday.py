@@ -55,7 +55,7 @@ class FLA_Gameday(BaseModel):
                     response = session.post(
                         url = f"{self._base_url}/add-members",
                         headers = self._base_headers,
-                        data = payload
+                        json = payload
                     )
 
                     response.raise_for_status()
