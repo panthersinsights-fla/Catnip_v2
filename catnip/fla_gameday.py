@@ -31,7 +31,7 @@ class FLA_Gameday(BaseModel):
             "Content-Type": "application/json"
         }
     
-    def post_members(self, df: pd.DataFrame, batch_size: int = 100) -> List[httpx.Response]:
+    def post_members(self, df: pd.DataFrame, batch_size: int = 25) -> List[httpx.Response]:
 
         responses = []
 
