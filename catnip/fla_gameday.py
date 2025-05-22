@@ -19,8 +19,9 @@ class FLA_Gameday(BaseModel):
     output_schema: DataFrameModel = None
 
     @property
-    def _base_url(self):
+    def _base_url(self): # api.pre-prod.flapanthersgameday.com
         return f"https://api.{self.prod_type}.flapanthersgameday.com"
+    
     
     @property
     def _base_headers(self) -> Dict[str, str]:
@@ -68,8 +69,21 @@ class FLA_Gameday(BaseModel):
 
                 except Exception as e:
 
-                    print(response.status_code)
-                    print(response.json())
+                    # Print request details
+                    print("REQUEST:")
+                    print(f"{response.request.method} {response.request.url}")
+                    print(f"Headers: {response.request.headers}")
+                    if response.request.content:
+                        print(f"Body: {response.request.content.decode('utf-8')}")
+
+                    # Print response details
+                    print("\nRESPONSE:")
+                    print(f"Status Code: {response.status_code}")
+                    print(f"Headers: {response.headers}")
+                    print(f"Body: {response.text}")
+
+                    # print(response.status_code)
+                    # print(response.json())
                     print(f"Error: {e}")
                 
                 time.sleep(0.5)
