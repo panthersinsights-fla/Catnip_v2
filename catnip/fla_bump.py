@@ -173,7 +173,7 @@ class FLA_Bump(BaseModel):
         params: Dict
     ) -> httpx.Response:
 
-        max_retries = 3, 
+        max_retries = 3
         delay = 60
         last_exception = None
 
