@@ -69,18 +69,19 @@ class FLA_Gameday(BaseModel):
 
                 except Exception as e:
 
-                    # # Print request details
-                    # print("REQUEST:")
-                    # print(f"{response.request.method} {response.request.url}")
-                    # print(f"Headers: {response.request.headers}")
-                    # if response.request.content:
-                    #     print(f"Body: {response.request.content.decode('utf-8')}")
+                    # Print request details
+                    print("REQUEST:")
+                    print(f"{response.request.method} {response.request.url}")
+                    print(f"Headers: {response.request.headers}")
+                    print(f"Body: {payload}")
+                    if response.request.content:
+                        print(f"Body: {response.request.content.decode('utf-8')}")
 
-                    # # Print response details
-                    # print("\nRESPONSE:")
-                    # print(f"Status Code: {response.status_code}")
-                    # print(f"Headers: {response.headers}")
-                    # print(f"Body: {response.text}")
+                    # Print response details
+                    print("\nRESPONSE:")
+                    print(f"Status Code: {response.status_code}")
+                    print(f"Headers: {response.headers}")
+                    print(f"Body: {response.text}")
 
                     print(response.status_code)
                     print(response.json())
