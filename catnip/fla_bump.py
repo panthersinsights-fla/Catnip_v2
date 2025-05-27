@@ -299,7 +299,7 @@ class FLA_Bump(BaseModel):
                     temp_chunk_size = temp_chunk_size + chunk_size
                     if total_pages <= temp_chunk_size:
                         temp_chunk_size = total_pages
-                    time.sleep(30)
+                    time.sleep(45)
         else:
             params_list = [{**params, "page": page} for page in range(1,total_pages+1)]
             results = asyncio.run(self._get_results(url, params_list))
