@@ -69,6 +69,8 @@ class FLA_Gameday(BaseModel):
 
                 except Exception as e:
 
+                    print(f"FAILED ITERATION: {i / batch_size}")
+
                     # Print request details
                     print("REQUEST:")
                     print(f"{response.request.method} {response.request.url}")
