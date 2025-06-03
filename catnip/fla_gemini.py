@@ -1,6 +1,7 @@
 from pydantic import BaseModel, SecretStr
 from typing import Dict, Literal
 from catnip.fla_requests import FLA_Requests
+import time
 
 class FLA_Gemini(BaseModel):
 
@@ -37,21 +38,38 @@ class FLA_Gemini(BaseModel):
             ],
         }
 
-        with FLA_Requests().create_session() as session:
+        retries = 0
+        max_retries = 5
+        delay = 2
 
-            response = session.post(
-                url = f"{self._base_url}/models/{self.model}:generateContent",
-                params = self._base_params, 
-                headers = self._base_headers, 
-                json = json_data
-        )
+        while retries < max_retries:
+            try:
+                with FLA_Requests().create_session() as session:
 
-        if response.status_code != 200:
-            print(f"""
-                Error: Failed request to {response.url}. 
-                Status code: {response.status_code}. 
-                Reason: {response.text}.
-            """)
-            return None
+                    response = session.post(
+                        url = f"{self._base_url}/models/{self.model}:generateContent",
+                        params = self._base_params, 
+                        headers = self._base_headers, 
+                        json = json_data
+                )
+                
+                response.raise_for_status()
 
-        return response.json()['candidates'][0]['content']['parts'][0]['text']
+                return response.json()['candidates'][0]['content']['parts'][0]['text']
+            
+            except Exception as e:
+
+                print(f"""
+                    Exception: {e}
+                    Error: Failed request to {response.url}. 
+                    Status code: {response.status_code}. 
+                    Reason: {response.text}.
+                """)
+
+                print(f"Waiting {delay} seconds...")
+                time.sleep(delay)
+                delay *= 2
+                retries += 1
+        
+        print(f"Failed to get a successful response after {max_retries} retries.")
+        return None
