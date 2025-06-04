@@ -34,6 +34,7 @@ class FLA_Gameday(BaseModel):
     def post_members(self, df: pd.DataFrame, batch_size: int = 25) -> List[httpx.Response]:
 
         responses = []
+        service_rep_fields = ['service_rep_name', 'service_rep_email', 'service_rep_phone']
 
         with FLA_Requests().create_session() as session:
 
@@ -46,7 +47,15 @@ class FLA_Gameday(BaseModel):
                 # create payload
                 payload = {
                     "members": [
-                        {**member_dict} for member_dict in batch.to_dict('records')
+                        {
+                            **{k: v for k, v in row.items() if k not in service_rep_fields},
+                            "serviceRepresentative": {
+                                "fullName": row["service_rep_name"],
+                                "emailAddress": row["service_rep_email"],
+                                "phoneNumber": row["service_rep_phone"]
+                            }
+                        }
+                        for row in batch.to_dict('records')
                     ]
                 }
                 payload = json.dumps(payload)
