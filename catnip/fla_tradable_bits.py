@@ -143,7 +143,19 @@ class FLA_Tradable_Bits(BaseModel):
                 df = pd.json_normalize(responses)
             
             return df 
-    
+
+    def get_trackers(self, start_date: datetime, end_date: datetime) -> pd.DataFrame:
+
+        return self._get_dataframe(
+            self._get_response(
+                url = f"{self._base_url.replace('/crm/', '')}/trackers", 
+                params={
+                    "min_creation_date": start_date.strftime("%m/%d/%y"),
+                    "max_creation_date": end_date.strftime("%m/%d/%y")
+                }
+            )
+        )
+
     ########################
     ### HELPER FUNCTIONS ###
     ########################
