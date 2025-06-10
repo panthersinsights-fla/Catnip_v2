@@ -191,7 +191,7 @@ class MetadataWriter:
     def insert_metadata(self, metadata: Dict, redshift_client: "FLA_Redshift_v2") -> None:
 
         columns = ", ".join(f'"{key}"' for key in metadata.keys())
-        values = ", ".join('NULL' if v is pd.NA else f"'{v}'" for v in metadata.values())
+        values = ", ".join('NULL' if v is None or v is pd.NA else f"'{v}'" for v in metadata.values())
 
         q = f"""
             -- DROP TABLE IF EXISTS {METADATA_TABLE_NAME};
