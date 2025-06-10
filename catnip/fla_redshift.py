@@ -21,7 +21,7 @@ import sys
 import psycopg2
 from boto3 import resource
 
-from catnip.lookups import REDSHIFT_RESERVED_WORDS
+from catnip.redshift_helpers.lookups import REDSHIFT_RESERVED_WORDS
 
 
 class FLA_Redshift(BaseModel):
