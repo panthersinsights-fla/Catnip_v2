@@ -4,7 +4,7 @@ from pandera import DataFrameModel
 import polars as pl
 from pandera.polars import DataFrameModel as PolarsDataFrameModel
 
-from catnip.redshift_helpers.utils import ColumnValidator
+from catnip.redshift_helpers.validators import ColumnValidator
 from catnip.redshift_helpers.lookups import METADATA_TABLE_NAME
 from catnip.fla_redshift_v2 import FLA_Redshift_v2
 
