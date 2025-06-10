@@ -6,12 +6,14 @@ from pandera.polars import DataFrameModel as PolarsDataFrameModel
 
 from catnip.redshift_helpers.validators import ColumnValidator
 from catnip.redshift_helpers.lookups import METADATA_TABLE_NAME
-from catnip.fla_redshift_v2 import FLA_Redshift_v2
 
 from datetime import datetime
-from typing import List, Dict, Any, Literal
+from typing import List, Dict, Any, Literal, TYPE_CHECKING
 from io import BytesIO
 from uuid import uuid4
+
+if TYPE_CHECKING:
+    from catnip.fla_redshift_v2 import FLA_Redshift_v2
 
 class PandasWriter:
 
@@ -186,7 +188,7 @@ class MetadataWriter:
 
         return metadata
     
-    def insert_metadata(self, metadata: pd.DataFrame, redshift_client: FLA_Redshift_v2) -> None:
+    def insert_metadata(self, metadata: pd.DataFrame, redshift_client: "FLA_Redshift_v2") -> None:
 
         columns = ", ".join(f'"{key}"' for key in metadata.keys())
         values = ", ".join('NULL' if v is pd.NA else f"'{v}'" for v in metadata.values())
