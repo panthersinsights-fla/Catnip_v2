@@ -171,24 +171,24 @@ class MetadataWriter:
 
         ## create metadata dictionary
         metadata = {
-            "log_id": [str(uuid4())],
-            "operation": [operation],
-            "table_schema": [table_schema],
-            "table_name": [table_name],
-            "sql_query": [sql_query],
-            "status": [status],
-            "error": [error],
-            "execution_time_seconds": [execution_time],
-            "num_rows": [num_rows],
-            "s3_num_files": [s3_metadata and s3_metadata.get('num_files')],
-            "s3_total_file_size_mb": [s3_metadata and s3_metadata.get('total_file_size_mb')],
-            "s3_folder": [s3_folder],
-            "processed_date": [processed_date]
+            "log_id": str(uuid4()),
+            "operation": operation,
+            "table_schema": table_schema,
+            "table_name": table_name,
+            "sql_query": sql_query,
+            "status": status,
+            "error": error,
+            "execution_time_seconds": execution_time,
+            "num_rows": num_rows,
+            "s3_num_files": s3_metadata and s3_metadata.get('num_files'),
+            "s3_total_file_size_mb": s3_metadata and s3_metadata.get('total_file_size_mb'),
+            "s3_folder": s3_folder,
+            "processed_date": processed_date
         }
 
         return metadata
     
-    def insert_metadata(self, metadata: pd.DataFrame, redshift_client: "FLA_Redshift_v2") -> None:
+    def insert_metadata(self, metadata: Dict, redshift_client: "FLA_Redshift_v2") -> None:
 
         columns = ", ".join(f'"{key}"' for key in metadata.keys())
         values = ", ".join('NULL' if v is pd.NA else f"'{v}'" for v in metadata.values())
