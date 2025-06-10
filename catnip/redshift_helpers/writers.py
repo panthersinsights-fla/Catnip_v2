@@ -180,8 +180,8 @@ class MetadataWriter:
             "error": [error],
             "execution_time_seconds": [execution_time],
             "num_rows": [num_rows],
-            "s3_num_files": [s3_metadata['num_files']],
-            "s3_total_file_size_mb": [s3_metadata['total_file_size_mb']],
+            "s3_num_files": [s3_metadata and s3_metadata.get('num_files')],
+            "s3_total_file_size_mb": [s3_metadata and s3_metadata.get('total_file_size_mb')],
             "s3_folder": [s3_folder],
             "processed_date": [processed_date]
         }
