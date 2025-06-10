@@ -1,3 +1,35 @@
+from datetime import datetime
+
+METADATA_TABLE_NAME = "custom.pi_io_logs"
+
+REDSHIFT_TYPE_MAPPING = {
+    # Numeric types
+    20: int,      # INTEGER
+    21: int,      # BIGINT
+    23: float,    # DECIMAL
+    701: float,   # FLOAT4
+    702: float,   # FLOAT8
+    1700: float,  # NUMERIC
+    
+    # String types
+    25: str,      # TEXT
+    1042: str,    # VARCHAR,
+    1043: str,    # VARCHAR
+    
+    # Date/Time types
+    1082: datetime,    # DATE
+    1114: datetime,    # TIMESTAMP
+    1184: datetime,    # TIME
+    
+    # Boolean
+    16: bool,     # BOOLEAN
+    
+    # Other types
+    2950: bytes,  # UUID
+    1007: bytes,  # JSON
+    1009: bytes   # SUPER
+}
+
 REDSHIFT_RESERVED_WORDS = [
     "AES128",
     "AES256",
