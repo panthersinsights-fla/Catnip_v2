@@ -171,7 +171,7 @@ class MetadataWriter:
 
         ## create metadata dictionary
         metadata = {
-            "log_id": str(uuid4()),
+            "log_id": [str(uuid4())],
             "operation": [operation],
             "table_schema": [table_schema],
             "table_name": [table_name],
