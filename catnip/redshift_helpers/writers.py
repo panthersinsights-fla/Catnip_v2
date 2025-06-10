@@ -63,7 +63,7 @@ class PandasWriter:
 
             ## append to data structure
             data.append({
-                "filename": f"chunk_{chunk_num::03d}.parquet",
+                "filename": f"chunk_{chunk_num:03d}.parquet",
                 "data": buffer
             })
             
@@ -130,7 +130,7 @@ class PolarsWriter:
 
             ## append to data structure
             data.append({
-                "filename": f"chunk_{chunk_num::03d}.parquet",
+                "filename": f"chunk_{chunk_num:03d}.parquet",
                 "data": buffer
             })
             
