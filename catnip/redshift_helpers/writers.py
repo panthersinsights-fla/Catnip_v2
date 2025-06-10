@@ -46,7 +46,8 @@ class PandasWriter:
             ColumnValidator(column_names=self.get_column_names()).validate_column_names()
 
             ## validate schema
-            chunk = output_schema.validate(chunk)
+            if output_schema:
+                chunk = output_schema.validate(chunk)
 
             ## reorder columns
             chunk = chunk.reindex(columns = [x for x in [*output_schema.to_schema().columns] if x in chunk.columns.to_list()])
@@ -112,7 +113,8 @@ class PolarsWriter:
             ColumnValidator(column_names=self.get_column_names()).validate_column_names()
 
             ## validate schema
-            chunk = output_schema.validate(chunk)
+            if output_schema:
+                chunk = output_schema.validate(chunk)
 
             ## reorder columns
             chunk = chunk.select([x for x in [*output_schema.to_schema().columns] if x in chunk.columns])
@@ -142,7 +144,7 @@ class PolarsWriter:
     
     # return column names
     def get_column_names(self) -> List[str]:
-        return self.lf.columns
+        return self.lf.collect_schema().names()
     
     # Returns the number of rows in the LazyFrame
     def get_num_rows(self) -> int:

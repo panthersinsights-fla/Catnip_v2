@@ -53,7 +53,7 @@ class PolarsReader:
         if self.input_schema:
             return PolarsDataFrame[self.input_schema](cursor.fetchall(), schema=polars_schema).lazy()
         else:
-            return pl.LazyFrame(cursor.fetchall(), schema=polars_schema)
+            return pl.LazyFrame(cursor.fetchall(), schema=polars_schema, orient="row")
 
     def read_from_s3_stream(self, responses: List[StreamingBody]) -> pl.LazyFrame:
         ## Take in list of StreamingBody responses and read them into a polars LazyFrame
