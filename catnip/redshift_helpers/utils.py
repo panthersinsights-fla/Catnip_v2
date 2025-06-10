@@ -1,5 +1,5 @@
 from catnip.redshift_helpers.lookups import REDSHIFT_RESERVED_WORDS
-from catnip.redshift_helpers.writers import PandasWarehouseWriter, PolarsWarehouseWriter
+from catnip.redshift_helpers.writers import PandasWriter, PolarsWriter
 
 from typing import List
 import re
@@ -33,7 +33,7 @@ class ColumnValidator:
     
 class RedshiftTypeMapper:
 
-    def __init__(self, writer: PandasWarehouseWriter | PolarsWarehouseWriter):
+    def __init__(self, writer: PandasWriter | PolarsWriter):
         self.writer = writer
     
     def map_types(self, varchar_max_list: List[str]) -> List[str]:
