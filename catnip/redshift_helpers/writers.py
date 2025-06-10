@@ -45,12 +45,11 @@ class PandasWriter:
             ## validate columns
             ColumnValidator(column_names=self.get_column_names()).validate_column_names()
 
-            ## validate schema
             if output_schema:
+                ## validate schema
                 chunk = output_schema.validate(chunk)
-
-            ## reorder columns
-            chunk = chunk.reindex(columns = [x for x in [*output_schema.to_schema().columns] if x in chunk.columns.to_list()])
+                ## reorder columns
+                chunk = chunk.reindex(columns = [x for x in [*output_schema.to_schema().columns] if x in chunk.columns.to_list()])
 
             ## create buffer
             buffer = BytesIO()
@@ -112,12 +111,11 @@ class PolarsWriter:
             ## validate columns
             ColumnValidator(column_names=self.get_column_names()).validate_column_names()
 
-            ## validate schema
             if output_schema:
+                ## validate schema
                 chunk = output_schema.validate(chunk)
-
-            ## reorder columns
-            chunk = chunk.select([x for x in [*output_schema.to_schema().columns] if x in chunk.columns])
+                ## reorder columns
+                chunk = chunk.select([x for x in [*output_schema.to_schema().columns] if x in chunk.columns])
 
             ## create buffer
             buffer = BytesIO()
