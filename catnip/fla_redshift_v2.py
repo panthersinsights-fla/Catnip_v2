@@ -415,15 +415,18 @@ class FLA_Redshift_v2(BaseModel):
             print(create_table_query)
             print("Creating a table in Redshift! 🤞")
 
-        with self._connect_to_redshift() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(f"DROP TABLE IF EXISTS {redshift_table_name}")
-                cursor.execute(create_table_query)
-                conn.commit()
+        # with self._connect_to_redshift() as conn:
+        #     with conn.cursor() as cursor:
+        #         cursor.execute(f"DROP TABLE IF EXISTS {redshift_table_name};")
+        #         cursor.execute(create_table_query)
+        #         conn.commit()
 
-        ## close up shop
-        cursor.close()
-        conn.close()
+        # ## close up shop
+        # cursor.close()
+        # conn.close()
+
+        self.execute_and_commit(sql_string=f"DROP TABLE IF EXISTS {redshift_table_name};")
+        self.execute_and_commit(sql_string=create_table_query)
 
         return None
     
