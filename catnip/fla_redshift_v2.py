@@ -390,6 +390,10 @@ class FLA_Redshift_v2(BaseModel):
         column_data_types = RedshiftTypeMapper(writer=writer).map_types(varchar_max_list=varchar_max_list)
         encoded_values = RedshiftTypeMapper(writer=writer).map_encodings(column_data_types=column_data_types)
 
+        print(f"column names: {column_names}")
+        print(f"column_data_types: {column_data_types}")
+        print(f"encoded_values: {encoded_values}")
+
         ## Create table query
         create_table_query = f""" 
             
