@@ -116,14 +116,17 @@ class FLA_S3(BaseModel):
 
     def download_file(
         self,
-        folder: str,
         filename: str,
+        folder: str = None,
         s3_client: boto3.client = None,
         return_as_streaming_body: bool = True
     ) -> Dict | StreamingBody:
 
         ## create key
-        key = f"{self.subdirectory.get_secret_value()}/{folder}/{filename}"
+        if folder is not None:
+            key = f"{self.subdirectory.get_secret_value()}/{folder}/{filename}"
+        else:
+            key = f"{self.subdirectory.get_secret_value()}/{filename}"
 
         ## create connection, if necessary
         if not s3_client:
@@ -149,8 +152,8 @@ class FLA_S3(BaseModel):
 
     def download_files(
         self,
-        folder: str,
         filenames: List[str],
+        folder: str = None,
         return_as_streaming_body: bool = True
     ) -> Dict[str, Dict | StreamingBody]:
 

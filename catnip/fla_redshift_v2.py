@@ -251,7 +251,7 @@ class FLA_Redshift_v2(BaseModel):
 
                 # download from s3
                 files = list(set(self._s3.get_all_filenames_in_folder(folder)))         
-                responses = self._s3.download_files(folder, files)
+                responses = self._s3.download_files(files)
 
                 # read into dataframe or lazyframe
                 df = reader.read_from_s3_stream([v for v in responses.values()])
