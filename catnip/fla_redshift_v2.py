@@ -386,7 +386,7 @@ class FLA_Redshift_v2(BaseModel):
     ) -> None:
 
         ## get column names, data types, and encoded values to create table
-        column_names = writer.get_column_names().append("processed_date")
+        column_names = writer.get_column_names() + ["processed_date"]
         column_data_types = RedshiftTypeMapper(writer=writer).map_types(varchar_max_list=varchar_max_list)
         encoded_values = RedshiftTypeMapper(writer=writer).map_encodings(column_data_types=column_data_types)
 
