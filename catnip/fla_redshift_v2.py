@@ -78,7 +78,7 @@ class FLA_Redshift_v2(BaseModel):
         table_name: str,
         table_schema: str = "custom",
         to_append: bool = False,
-        chunk_size: int = 1000000,
+        chunk_size: int = 500000,
         varchar_max_list: List = [],
         diststyle: str = "even",
         distkey: str = "",
@@ -389,10 +389,6 @@ class FLA_Redshift_v2(BaseModel):
         column_names = writer.get_column_names() + ["processed_date"]
         column_data_types = RedshiftTypeMapper(writer=writer).map_types(varchar_max_list=varchar_max_list)
         encoded_values = RedshiftTypeMapper(writer=writer).map_encodings(column_data_types=column_data_types)
-
-        print(f"column names: {column_names}")
-        print(f"column_data_types: {column_data_types}")
-        print(f"encoded_values: {encoded_values}")
 
         ## Create table query
         create_table_query = f""" 
