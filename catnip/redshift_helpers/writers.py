@@ -35,6 +35,12 @@ class PandasWriter:
         ## Get total # of rows
         total_rows = self.get_num_rows()
 
+        if output_schema:
+            ## validate schema
+            self.df = output_schema.validate(self.df)
+            ## reorder columns
+            self.reorder_columns(output_schema)
+
         ## Get Chunky
         for chunk_num, i in enumerate(range(0, total_rows, chunk_size), start=1):
 
@@ -44,12 +50,6 @@ class PandasWriter:
 
             ## validate columns
             ColumnValidator(column_names=self.get_column_names()).validate_column_names()
-
-            if output_schema:
-                ## validate schema
-                chunk = output_schema.validate(chunk)
-                ## reorder columns
-                chunk = chunk.reindex(columns = [x for x in [*output_schema.to_schema().columns] if x in chunk.columns.to_list()])
 
             ## create buffer
             buffer = BytesIO()
@@ -80,6 +80,12 @@ class PandasWriter:
     # Returns the number of rows in the LazyFrame
     def get_num_rows(self) -> int:
         return len(self.df.index)
+    
+    # Reorder columns in the DataFrame
+    def reorder_columns(self, output_schema: DataFrameModel) -> None:
+        self.df = self.df.reindex(columns = [x for x in [*output_schema.to_schema().columns] if x in self.df.columns.to_list()])
+        return None
+
 
 class PolarsWriter:
 
@@ -101,6 +107,12 @@ class PolarsWriter:
         ## Get total # of rows
         total_rows = self.get_num_rows()
 
+        if output_schema:
+            ## validate schema
+            self.lf = output_schema.validate(self.lf)
+            ## reorder columns
+            self.reorder_columns(output_schema)
+
         ## Get Chunky
         for chunk_num, i in enumerate(range(0, total_rows, chunk_size), start=1):
 
@@ -110,12 +122,6 @@ class PolarsWriter:
 
             ## validate columns
             ColumnValidator(column_names=self.get_column_names()).validate_column_names()
-
-            if output_schema:
-                ## validate schema
-                chunk = output_schema.validate(chunk)
-                ## reorder columns
-                chunk = chunk.select([x for x in [*output_schema.to_schema().columns] if x in chunk.columns])
 
             ## create buffer
             buffer = BytesIO()
@@ -147,7 +153,12 @@ class PolarsWriter:
     # Returns the number of rows in the LazyFrame
     def get_num_rows(self) -> int:
         return self.lf.select(pl.len()).collect().item()
-    
+
+    # Reorder columns in the DataFrame
+    def reorder_columns(self, output_schema: PolarsDataFrameModel) -> None:
+        self.lf = self.lf.select([x for x in [*output_schema.to_schema().columns] if x in self.lf.columns])
+        return None
+
 
 class MetadataWriter:
 

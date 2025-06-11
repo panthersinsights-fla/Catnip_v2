@@ -123,7 +123,6 @@ class FLA_Redshift_v2(BaseModel):
                 writer=writer,
                 redshift_table_name=redshift_table_name,
                 varchar_max_list=varchar_max_list,
-                processed_date=processed_date,
                 diststyle=diststyle,
                 distkey=distkey,
                 sortkey=sortkey
@@ -379,13 +378,14 @@ class FLA_Redshift_v2(BaseModel):
         writer: PandasWriter | PolarsWriter,
         redshift_table_name: str,
         varchar_max_list: List,
-        processed_date: datetime,
         diststyle: str,
         distkey: str,
         sortkey: str,
     ) -> None:
 
         ## get column names, data types, and encoded values to create table
+        if self.output_schema:
+            writer.reorder_columns(output_schema=self.output_schema)
         column_names = writer.get_column_names() + ["processed_date"]
         column_data_types = RedshiftTypeMapper(writer=writer).map_types(varchar_max_list=varchar_max_list)
         encoded_values = RedshiftTypeMapper(writer=writer).map_encodings(column_data_types=column_data_types)
