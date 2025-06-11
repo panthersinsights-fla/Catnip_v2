@@ -153,7 +153,7 @@ class FLA_Redshift_v2(BaseModel):
             error=error,
             execution_time=time.perf_counter() - start_time,
             num_rows=writer.get_num_rows(),
-            s3_metadata=self._s3.get_folder_metadata(folder_name=folder_name),
+            s3_metadata=self._s3.get_folder_metadata(folder=folder_name),
             s3_folder=folder_name
         )
 
