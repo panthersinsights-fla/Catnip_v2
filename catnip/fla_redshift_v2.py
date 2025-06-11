@@ -489,7 +489,7 @@ class FLA_Redshift_v2(BaseModel):
         """
 
         unload_to_sql = f"""
-            UNLOAD ('{sql_string}')
+            UNLOAD ('{sql_string.replace("'", "''")}')
             TO '{bucket_file_name}'
             FORMAT AS PARQUET
             {authorization_string}
