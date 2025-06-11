@@ -175,7 +175,7 @@ class MetadataWriter:
             "operation": operation,
             "table_schema": table_schema,
             "table_name": table_name,
-            "sql_query": sql_query,
+            "sql_query": sql_query.replace("'", "''"),  # Escape single quotes for SQL
             "status": status,
             "error": error,
             "execution_time_seconds": execution_time,
