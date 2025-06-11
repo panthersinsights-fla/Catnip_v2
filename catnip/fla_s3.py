@@ -170,8 +170,8 @@ class FLA_S3(BaseModel):
         with ThreadPoolExecutor(max_workers=self.max_pool_connections) as executor:
             results = executor.map(
                 self.download_file,
-                folder_list,
                 filenames,
+                folder_list,
                 client_list,
                 return_as_streaming_body_list
             )
