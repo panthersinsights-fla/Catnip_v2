@@ -138,7 +138,7 @@ class PolarsWriter:
 
     # Returns the dtypes of the LazyFrame columns
     def get_column_dtypes(self) -> List[str]:
-        return [str(dtype).lower() for dtype in self.lf.dtypes]
+        return [str(dtype).lower() for dtype in self.lf.collect_schema().dtypes()]
     
     # return column names
     def get_column_names(self) -> List[str]:

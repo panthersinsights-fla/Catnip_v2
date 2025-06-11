@@ -13,6 +13,7 @@ class RedshiftTypeMapper:
         column_data_types = [self._get_redshift_dtype(dtype) for dtype in self.writer.get_column_dtypes()]
         max_indexes = [idx for idx, val in enumerate(self.writer.get_column_names()) if val in varchar_max_list]
         column_data_types = ["VARCHAR(MAX)" if idx in max_indexes else val for idx, val in enumerate(column_data_types)]
+        column_data_types.append("TIMESTAMP") # add processed_date column
 
         return column_data_types
     

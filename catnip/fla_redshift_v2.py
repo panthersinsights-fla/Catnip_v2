@@ -123,6 +123,7 @@ class FLA_Redshift_v2(BaseModel):
                 writer=writer,
                 redshift_table_name=redshift_table_name,
                 varchar_max_list=varchar_max_list,
+                processed_date=processed_date,
                 diststyle=diststyle,
                 distkey=distkey,
                 sortkey=sortkey
@@ -378,13 +379,14 @@ class FLA_Redshift_v2(BaseModel):
         writer: PandasWriter | PolarsWriter,
         redshift_table_name: str,
         varchar_max_list: List,
+        processed_date: datetime,
         diststyle: str,
         distkey: str,
         sortkey: str,
     ) -> None:
 
         ## get column names, data types, and encoded values to create table
-        column_names = writer.get_column_names()
+        column_names = writer.get_column_names().append("processed_date")
         column_data_types = RedshiftTypeMapper(writer=writer).map_types(varchar_max_list=varchar_max_list)
         encoded_values = RedshiftTypeMapper(writer=writer).map_encodings(column_data_types=column_data_types)
 
@@ -414,16 +416,6 @@ class FLA_Redshift_v2(BaseModel):
         if self.verbose:
             print(create_table_query)
             print("Creating a table in Redshift! 🤞")
-
-        # with self._connect_to_redshift() as conn:
-        #     with conn.cursor() as cursor:
-        #         cursor.execute(f"DROP TABLE IF EXISTS {redshift_table_name};")
-        #         cursor.execute(create_table_query)
-        #         conn.commit()
-
-        # ## close up shop
-        # cursor.close()
-        # conn.close()
 
         self.execute_and_commit(sql_string=f"DROP TABLE IF EXISTS {redshift_table_name};")
         self.execute_and_commit(sql_string=create_table_query)
