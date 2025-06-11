@@ -175,9 +175,9 @@ class MetadataWriter:
             "operation": operation,
             "table_schema": table_schema,
             "table_name": table_name,
-            "sql_query": sql_query.replace("'", "''"),  # Escape single quotes for SQL
+            "sql_query": sql_query and sql_query.replace("'", "''"),  # Escape single quotes for SQL
             "status": status,
-            "error": error,
+            "error": error and error.replace("'", "''"),
             "execution_time_seconds": execution_time,
             "num_rows": num_rows,
             "s3_num_files": s3_metadata and s3_metadata.get('num_files'),
