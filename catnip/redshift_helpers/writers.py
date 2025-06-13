@@ -152,7 +152,7 @@ class PolarsWriter:
     
     # Returns the number of rows in the LazyFrame
     def get_num_rows(self) -> int:
-        return self.lf.select(pl.len()).collect().item()
+        return self.lf.select(pl.count()).collect().item()
 
     # Reorder columns in the DataFrame
     def reorder_columns(self, output_schema: PolarsDataFrameModel) -> None:
