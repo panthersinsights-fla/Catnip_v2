@@ -188,6 +188,7 @@ class MetadataWriter:
             "table_name": table_name,
             "sql_query": sql_query and sql_query.replace("'", "''"),  # Escape single quotes for SQL
             "status": status,
+            "is_successful": status == "success",
             "error": error and error.replace("'", "''"),
             "execution_time_seconds": execution_time,
             "num_rows": num_rows,
@@ -216,6 +217,7 @@ class MetadataWriter:
                 table_name              varchar(256) encode LZO,
                 sql_query               varchar(65535) encode LZO,
                 status                  varchar(256) encode LZO,
+                is_successful           boolean encode LZO,
                 error                   varchar(65535) encode LZO,
                 execution_time_seconds  double precision encode RAW,
                 num_rows                bigint encode AZ64,
