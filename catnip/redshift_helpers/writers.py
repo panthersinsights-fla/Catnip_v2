@@ -217,7 +217,7 @@ class MetadataWriter:
                 table_name              varchar(256) encode LZO,
                 sql_query               varchar(65535) encode LZO,
                 status                  varchar(256) encode LZO,
-                is_successful           boolean encode LZO,
+                is_successful           boolean encode RAW,
                 error                   varchar(65535) encode LZO,
                 execution_time_seconds  double precision encode RAW,
                 num_rows                bigint encode AZ64,
