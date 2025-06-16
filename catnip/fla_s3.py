@@ -15,7 +15,6 @@ class FLA_S3(BaseModel):
     aws_access_key_id: SecretStr
     aws_secret_access_key: SecretStr
     bucket: SecretStr
-    subdirectory: SecretStr
 
     max_pool_connections: int = 10    # max amount of threads to use
 
@@ -32,7 +31,7 @@ class FLA_S3(BaseModel):
     ) -> bool:
 
         ## create key
-        key = f"{self.subdirectory.get_secret_value()}/{folder}/{filename}"
+        key = f"{folder}/{filename}"
 
         ## create connection, if necessary
         if not s3_client:
@@ -64,7 +63,7 @@ class FLA_S3(BaseModel):
         Upload multiple files to an S3 folder in parallel.
 
         Args:
-            folder (str): The S3 folder (within the subdirectory) to upload files to.
+            folder (str): The S3 folder to upload files to.
             file_payloads (List[Dict[str, str | BytesIO]]): 
                 A list of dictionaries, each with:
                     - "filename": The name of the file (str)
@@ -79,7 +78,7 @@ class FLA_S3(BaseModel):
             - Prints a summary of upload results.
             - If any file fails to upload, the function returns False.
             - The S3 key for each file is constructed as: 
-                '{subdirectory}/{folder}/{filename}'
+                '{folder}/{filename}'
             - Ensure that each dictionary in file_payloads contains both "filename" and "data" keys.
             - The function assumes that the S3 client and credentials are valid.
         """
@@ -124,9 +123,9 @@ class FLA_S3(BaseModel):
 
         ## create key
         if folder is not None:
-            key = f"{self.subdirectory.get_secret_value()}/{folder}/{filename}"
+            key = f"{folder}/{filename}"
         else:
-            key = f"{self.subdirectory.get_secret_value()}/{filename}"
+            key = f"{filename}"
 
         ## create connection, if necessary
         if not s3_client:
@@ -193,7 +192,7 @@ class FLA_S3(BaseModel):
 
         response = s3_client.list_objects_v2(
             Bucket=self.bucket.get_secret_value(), 
-            Prefix=f"{self.subdirectory.get_secret_value()}/{folder}"
+            Prefix=folder
         )
         results = ['/'.join(x['Key'].split('/')[1:]) for x in response['Contents']]
         
@@ -208,7 +207,7 @@ class FLA_S3(BaseModel):
 
         response = s3_client.list_objects_v2(
             Bucket=self.bucket.get_secret_value(), 
-            Prefix=f"{self.subdirectory.get_secret_value()}/{folder}"
+            Prefix=folder
         )
 
         files = [{'filepath': x['Key'], 'size': x['Size']} for x in response['Contents']]

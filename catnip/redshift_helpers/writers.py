@@ -167,7 +167,7 @@ class MetadataWriter:
 
     def create_metadata_dictionary(
         self,
-        operation: Literal["write", "append", "query", "query-unload", "delete", "create-table", "create-table-as"],
+        operation: Literal["write", "append", "query", "query-unload", "delete", "create-table", "create-table-as", "copy"],
         table_name: str,
         table_schema: str,
         sql_query: str,

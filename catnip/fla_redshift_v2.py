@@ -47,7 +47,6 @@ class FLA_Redshift_v2(BaseModel):
     aws_access_key_id: SecretStr
     aws_secret_access_key: SecretStr
     bucket: SecretStr
-    subdirectory: SecretStr
     max_pool_connections: int = 10
 
     ## Options
@@ -61,11 +60,10 @@ class FLA_Redshift_v2(BaseModel):
     def _s3(self):
 
         return FLA_S3(
-            aws_access_key_id= self.aws_access_key_id.get_secret_value(),
-            aws_secret_access_key= self.aws_secret_access_key.get_secret_value(),
-            bucket= self.bucket.get_secret_value(),
-            subdirectory= self.subdirectory.get_secret_value(),
-            max_pool_connections= self.max_pool_connections
+            aws_access_key_id=self.aws_access_key_id.get_secret_value(),
+            aws_secret_access_key=self.aws_secret_access_key.get_secret_value(),
+            bucket=self.bucket.get_secret_value(),
+            max_pool_connections=self.max_pool_connections
         )
 
     ######################
@@ -324,6 +322,8 @@ class FLA_Redshift_v2(BaseModel):
             status = "failure"
 
         if insert_metadata:
+            if query_type is None:
+                raise ValueError("Must add a query type if you're inserting metadata, doofus!")
             ## Create metadata dictionary and insert into metadata table
             metadata = MetadataWriter().create_metadata_dictionary(
                 operation=query_type,
@@ -347,6 +347,60 @@ class FLA_Redshift_v2(BaseModel):
         ## Raise exception if failed to query warehouse
         if status == "failure":
             raise Exception(f"Failed to execute for {sql_string}. Error: {error}")
+    
+        return metadata if insert_metadata else None
+    
+    def copy_to_warehouse(
+        self, 
+        s3_folder: str,
+        table_name: str,
+        table_schema: str = "custom",
+        is_parquet: bool = True,
+        insert_metadata: bool = False
+    ) -> None:
+
+        ## Start clock for execution time tracking
+        start_time = time.perf_counter()
+
+        if not is_parquet:
+            raise ValueError("Non-parquet functionality not currently supported. Sorry bub!")
+        try:
+            self._s3_to_redshift(
+                redshift_table_name=f"{table_schema}.{table_name}",
+                folder_name=s3_folder
+            )
+            status = "success"
+            error = None
+
+        except Exception as e:
+            print(f"ERROR: {e}")
+            error = str(e)
+            status = "failure"
+
+        if insert_metadata:
+            ## Create metadata dictionary and insert into metadata table
+            metadata = MetadataWriter().create_metadata_dictionary(
+                operation="copy",
+                table_name=table_name,
+                table_schema=table_schema,
+                sql_query=None,
+                processed_date=self._get_processed_date(),
+                status=status,
+                error=error,
+                execution_time=time.perf_counter() - start_time,
+                num_rows=None,
+                s3_metadata=self._s3.get_folder_metadata(folder=s3_folder),
+                s3_folder=s3_folder
+            )
+
+            MetadataWriter().insert_metadata(
+                metadata=metadata,
+                redshift_client=self
+            )
+
+        ## Raise exception if failed to query warehouse
+        if status == "failure":
+            raise Exception(f"Failed to copy {s3_folder} into Redshift. Error: {error}")
     
         return metadata if insert_metadata else None
     
@@ -425,11 +479,12 @@ class FLA_Redshift_v2(BaseModel):
     def _s3_to_redshift(
         self,
         redshift_table_name: str,
-        folder_name: str
+        folder_name: str,
+        is_parquet: bool = True
     ) -> None:
         
         ## Construct query
-        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{self.subdirectory.get_secret_value()}/{folder_name}"
+        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{folder_name}"
         authorization_string = f"""
             access_key_id '{self.aws_access_key_id.get_secret_value()}'
             secret_access_key '{self.aws_secret_access_key.get_secret_value()}'
@@ -438,7 +493,7 @@ class FLA_Redshift_v2(BaseModel):
         s3_to_sql = f"""
             COPY {redshift_table_name}
             FROM '{bucket_file_name}'
-            FORMAT AS PARQUET
+            {" FORMAT AS PARQUET" if is_parquet else ""}
             {authorization_string}
             ;
         """
@@ -482,7 +537,7 @@ class FLA_Redshift_v2(BaseModel):
     ) -> None:
         
         ## Construct query
-        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{self.subdirectory.get_secret_value()}/{folder_name}/{folder_name}"
+        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{folder_name}/{folder_name}"
         authorization_string = f"""
             access_key_id '{self.aws_access_key_id.get_secret_value()}'
             secret_access_key '{self.aws_secret_access_key.get_secret_value()}'
@@ -505,6 +560,6 @@ class FLA_Redshift_v2(BaseModel):
 
         if self.verbose:
             print("Successfully unloaded data to S3! ✅")
-            print(f"Files can be found in 's3://{self.bucket.get_secret_value()}/{self.subdirectory.get_secret_value()}/{folder_name}/'")
+            print(f"Files can be found in 's3://{self.bucket.get_secret_value()}/{folder_name}/'")
 
         return None
