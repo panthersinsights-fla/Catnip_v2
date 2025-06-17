@@ -77,7 +77,7 @@ class FLA_Big_Commerce(BaseModel):
             print(f"{datetime.now() - start_time}")
 
         # df_list = [asyncio.run(self._async_gather_urls_v2(url_list=url_list)) for url_list in urls]
-        df_list = [item for sublist in df_list for item in sublist]
+        df_list = [item for sublist in df_list for item in sublist if item is not None]
 
         # concat everything together
         df = pd.concat(df_list, ignore_index = True)
@@ -247,6 +247,8 @@ class FLA_Big_Commerce(BaseModel):
             )
 
         try:
+            if response.status_code == 404:
+                return None
             df = _create_dataframe(response=response)
         except Exception as e:
             print(f"Error: {e}")
