@@ -61,7 +61,8 @@ class FLA_Big_Commerce(BaseModel):
     def get_order_products(self, order_ids: List[int]) -> pd.DataFrame:
 
         # create urls
-        urls = [f"orders/{x}/products" for x in order_ids]; print(urls)
+        urls = [f"orders/{x}/products" for x in order_ids]
+        print(f"# URLS: {len(urls)}")
 
         # break into batches
         urls = self._chunk_list(urls, 25)
@@ -245,7 +246,14 @@ class FLA_Big_Commerce(BaseModel):
                 headers = self._headers
             )
 
-        df = _create_dataframe(response=response)
+        try:
+            df = _create_dataframe(response=response)
+        except Exception as e:
+            print(f"Error: {e}")
+            print(f"Status Code: {response.status_code}")
+            print(f"Response: {response.text}")
+            raise
+        
         responses = [response]
         
         ### Request Rest ##################################################
