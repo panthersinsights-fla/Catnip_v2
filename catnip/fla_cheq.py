@@ -133,7 +133,12 @@ class FLA_Cheq(BaseModel):
         
         # create dataframe
         if self.input_schema:
-            df = DataFrame[self.input_schema]([d for response in responses for d in response.json()['results']])
+            try:
+                df = DataFrame[self.input_schema]([d for response in responses if response.json()['results'] is not None for d in response.json()['results']])
+            except Exception as e:
+                print(e)
+                print([response.text for response in responses if response.json()['results'] is None])
+                print([response.status_code for response in responses if response.json()['results'] is None])
         else:    
             df = pd.DataFrame([d for response in responses for d in response.json()['results']])
         
