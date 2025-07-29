@@ -537,7 +537,7 @@ class FLA_Redshift_v2(BaseModel):
     ) -> None:
         
         ## Construct query
-        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{folder_name}/{folder_name}"
+        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{folder_name}"
         authorization_string = f"""
             access_key_id '{self.aws_access_key_id.get_secret_value()}'
             secret_access_key '{self.aws_secret_access_key.get_secret_value()}'

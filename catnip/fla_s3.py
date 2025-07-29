@@ -123,9 +123,9 @@ class FLA_S3(BaseModel):
 
         ## create key
         if folder is not None:
-            key = f"{folder}/{filename}"
+            key = f"{self.bucket}/{folder}/{filename}"
         else:
-            key = f"{filename}"
+            key = f"{self.bucket}/{filename}"
 
         ## create connection, if necessary
         if not s3_client:
@@ -188,7 +188,7 @@ class FLA_S3(BaseModel):
     
     def get_all_filenames_in_folder(self, folder: str) -> List[str]:
         
-        s3_client = self._connect_to_s3()
+        s3_client = self._connect_to_s3() 
 
         response = s3_client.list_objects_v2(
             Bucket=self.bucket.get_secret_value(), 
