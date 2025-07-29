@@ -123,9 +123,9 @@ class FLA_S3(BaseModel):
 
         ## create key
         if folder is not None:
-            key = f"{self.bucket}/{folder}/{filename}"
+            key = f"{folder}/{filename}"
         else:
-            key = f"{self.bucket}/{filename}"
+            key = f"{filename}"
 
         ## create connection, if necessary
         if not s3_client:
@@ -145,7 +145,7 @@ class FLA_S3(BaseModel):
                 return response
         
         except Exception as e:
-            print(f"Failed to download 's3://{key}'")
+            print(f"Failed to download 's3://{self.bucket.get_secret_value()}/{key}'")
             print(f"Error: {e}")
             return None
 
