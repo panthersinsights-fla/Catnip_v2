@@ -247,7 +247,10 @@ class FLA_Redshift_v2(BaseModel):
                 )
 
                 # download from s3
-                files = list(set(self._s3.get_all_filenames_in_folder(folder)))         
+                files = list(set(self._s3.get_all_filenames_in_folder(folder)))
+                print(f"Downloading {len(files)} files from S3 folder '{folder}'")
+                print(f"Files: {files}")
+
                 responses = self._s3.download_files(files)
 
                 # read into dataframe or lazyframe
@@ -537,7 +540,7 @@ class FLA_Redshift_v2(BaseModel):
     ) -> None:
         
         ## Construct query
-        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{folder_name}"
+        bucket_file_name = f"s3://{self.bucket.get_secret_value()}/{folder_name}/"
         authorization_string = f"""
             access_key_id '{self.aws_access_key_id.get_secret_value()}'
             secret_access_key '{self.aws_secret_access_key.get_secret_value()}'
