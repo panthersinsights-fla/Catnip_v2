@@ -1,3 +1,4 @@
+from pandera.typing import Series
 import pandas as pd
 from pandera import DataFrameModel
 
@@ -40,6 +41,8 @@ class PandasWriter:
             self.df = output_schema.validate(self.df)
             ## reorder columns
             self.reorder_columns(output_schema)
+            ## cast string columns to string for parquet compatibility
+            self.cast_string_columns(output_schema)
 
         ## Get Chunky
         for chunk_num, i in enumerate(range(0, total_rows, chunk_size), start=1):
@@ -85,6 +88,22 @@ class PandasWriter:
     def reorder_columns(self, output_schema: DataFrameModel) -> None:
         self.df = self.df.reindex(columns = [x for x in [*output_schema.to_schema().columns] if x in self.df.columns.to_list()])
         return None
+    
+    # Explicitly cast all string columns to string for parquet compatibility
+    def cast_string_columns(self, output_schema: DataFrameModel) -> None:
+
+        string_types = [Series[str], Series[pd.StringDtype]]
+
+        string_columns = [
+            field
+            for field, field_type in output_schema.__annotations__.items()
+            if field_type in string_types
+        ]
+
+        for col in string_columns:
+            self.df[col] = self.df[col].astype(pd.StringDtype())
+
+        return None
 
 
 class PolarsWriter:
@@ -112,6 +131,8 @@ class PolarsWriter:
             self.lf = output_schema.validate(self.lf)
             ## reorder columns
             self.reorder_columns(output_schema)
+            ## cast string columns to string for parquet compatibility
+            self.cast_string_columns(output_schema)
 
         ## Get Chunky
         for chunk_num, i in enumerate(range(0, total_rows, chunk_size), start=1):
@@ -159,6 +180,22 @@ class PolarsWriter:
         self.lf = self.lf.select([x for x in [*output_schema.to_schema().columns] if x in self.lf.columns])
         return None
 
+    # Explicitly cast all string columns to string for parquet compatibility
+    def cast_string_columns(self, output_schema: PolarsDataFrameModel) -> None:
+
+        string_types = [Series[pl.String], Series[pl.Utf8]]
+
+        casting_expressions = [
+            pl.col(field).cast(pl.Utf8)
+            for field, field_type in output_schema.__annotations__.items()
+            if field in self.lf.columns and field_type in string_types
+        ]
+
+        if casting_expressions:
+            self.lf = self.lf.with_columns(casting_expressions)
+
+        return None
+    
 
 class MetadataWriter:
 
