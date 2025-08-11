@@ -61,7 +61,14 @@ class PandasWriter:
             chunk['processed_date'] = processed_date
             
             ## convert to parquet
-            chunk.to_parquet(buffer, index=False, engine="pyarrow", coerce_timestamps="us", compression="zstd")
+            chunk.to_parquet(
+                buffer, 
+                index=False, 
+                engine="pyarrow", 
+                coerce_timestamps="us", 
+                compression="zstd", 
+                allow_truncated_timestamps=True
+            )
             buffer.seek(0)
 
             ## append to data structure
