@@ -6,7 +6,14 @@ import time
 class FLA_Gemini(BaseModel):
 
     api_key: SecretStr
-    model: Literal["gemini-1.5-flash", "gemini-2.0-flash-lite", "gemini-2.0-flash"]
+    model: Literal[
+        "gemini-1.5-flash", 
+        "gemini-2.0-flash-lite", 
+        "gemini-2.0-flash", 
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite", 
+        "gemini-2.5-pro"
+    ]
 
     @property
     def _base_url(self) -> str:
