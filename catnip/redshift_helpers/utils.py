@@ -45,10 +45,17 @@ class RedshiftTypeMapper:
             return "FLOAT8"
         
         elif dtype.startswith("datetime"):
-            if len(dtype.split(",")) > 1:
-                return "TIMESTAMPTZ"
+
+            if isinstance(self.writer, PandasWriter):
+                if len(dtype.split(",")) > 1:
+                    return "TIMESTAMPTZ"
+                else:
+                    return "TIMESTAMP"
             else:
-                return "TIMESTAMP"
+                if "time_zone=none" in dtype:
+                    return "TIMESTAMP"
+                else:
+                    return "TIMESTAMPTZ"
         
         elif dtype in ["bool", "boolean"]:
             return "BOOL"
