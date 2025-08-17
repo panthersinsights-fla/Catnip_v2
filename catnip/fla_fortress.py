@@ -45,8 +45,9 @@ class FLA_Fortress(BaseModel):
         return {
             "2022-23": "https://panthers.fortressus.com/FGB_WebApplication/Panthers_22/Production/api/CRM",
             "2023-24": "https://panthers.fortressus.com/FGB_WebApplication/Panthers_23/Production/api/CRM",
-            "2024-25": "https://panthers.fortressus.com/FGB_WebApplication/FGB/Production/api/CRM"
-        } 
+            "2024-25": "https://panthers.fortressus.com/FGB_WebApplication/Panthers_24/Production/api/CRM",
+            "2025-26": "https://panthers.fortressus.com/FGB_WebApplication/FGB/Production/api/CRM"
+        }
 
     def _endpoint_lookup(self) -> str:
         return {
@@ -65,7 +66,7 @@ class FLA_Fortress(BaseModel):
         endpoint: Literal["attendance", "events", "members", "tickets"],
         from_datetime: datetime, 
         to_datetime: datetime,
-        season: Literal["2022-23", "2023-24", "2024-25"]
+        season: Literal["2022-23", "2023-24", "2024-25", "2025-26"]
     ) -> pd.DataFrame:
         
         return self._request_loop(
