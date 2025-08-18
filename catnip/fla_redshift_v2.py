@@ -177,9 +177,9 @@ class FLA_Redshift_v2(BaseModel):
         start_time = time.perf_counter()
 
         if return_polars:
-            reader = PolarsReader()
+            reader = PolarsReader(input_schema=self.input_schema)
         else:
-            reader = PandasReader()
+            reader = PandasReader(input_schema=self.input_schema)
         
         if not use_unload:
 
