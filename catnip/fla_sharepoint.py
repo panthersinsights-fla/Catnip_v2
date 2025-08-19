@@ -91,6 +91,7 @@ class FLA_Sharepoint(BaseModel):
 
         ## Connect folder
         this_folder = self._my_ctx.web.get_folder_by_server_relative_path(f"Shared Documents/Data Science/{folder_path}")
+        print(this_folder)
 
         ## Filename
         if add_log_date:
