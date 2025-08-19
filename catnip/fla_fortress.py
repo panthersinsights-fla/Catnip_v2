@@ -116,8 +116,9 @@ class FLA_Fortress(BaseModel):
 
 
         ### Initial Request ##############################################
-        print(f"{base_url}/{endpoint}")
-        print(base_payload)
+        print(f"URL: {base_url}/{endpoint}")
+        print(f"Headers: {self._headers}")
+        print(f"Base Payload: {base_payload}")
         with FLA_Requests().create_session() as session:
             response = session.post(
                 url = f"{base_url}/{endpoint}",
