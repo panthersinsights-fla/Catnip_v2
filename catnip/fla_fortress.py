@@ -148,6 +148,7 @@ class FLA_Fortress(BaseModel):
         print(f"# Pages: {num_pages}")
         response_datetime = pd.Timestamp(response.headers['Date']).astimezone("America/New_York").tz_localize(None).to_datetime64()
         responses = [response]
+        time.sleep(5)  # Sleep to avoid rate limiting
 
         ### Request Rest ##################################################
         with FLA_Requests().create_session() as session:
@@ -157,7 +158,7 @@ class FLA_Fortress(BaseModel):
                     print(f"Requesting: Page #{i}")
                     responses = [*responses, _get_response(session, i)]
 
-                    time.sleep(4.5)
+                    time.sleep(5)
                 
                 except Exception as e:
                     print(e)
@@ -169,6 +170,8 @@ class FLA_Fortress(BaseModel):
             print("Only one response, here's the JSON value:")
             print(response.json())
         
+        for response in responses:
+            print(len(response.json()['data']))
         responses = [item for response in responses for item in response.json()['data']]
 
         if len(responses) == 0:
