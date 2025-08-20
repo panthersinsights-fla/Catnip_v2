@@ -29,7 +29,7 @@ class FLA_Sharepoint(BaseModel):
     
     @property
     def _my_credentials(self) -> ClientCredential:
-        return ClientCredential(self.client_id.get_secret_value(), self.client_secret.get_secret_value())
+        return ClientCredential(client_id=self.client_id.get_secret_value(), client_secret=self.client_secret.get_secret_value())
     
     @property
     def _my_ctx(self) -> ClientContext:
