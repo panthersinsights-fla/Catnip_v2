@@ -1,7 +1,7 @@
 from pydantic import BaseModel, SecretStr
 
 from office365.sharepoint.client_context import ClientContext
-from office365.runtime.auth.user_credential import UserCredential
+from office365.runtime.auth.client_credential import ClientCredential
 
 import pandas as pd
 from pandera import DataFrameModel
@@ -16,8 +16,8 @@ import tempfile
 class FLA_Sharepoint(BaseModel):
 
     ## Windows Login Credentials
-    username: str 
-    password: SecretStr 
+    client_id: SecretStr
+    client_secret: SecretStr
 
     ## Import Pandera Schema
     input_schema: DataFrameModel = None
@@ -28,8 +28,8 @@ class FLA_Sharepoint(BaseModel):
         return "https://floridapanthers.sharepoint.com/sites/SP-BS/"
     
     @property
-    def _my_credentials(self) -> UserCredential:
-        return UserCredential(self.username, self.password.get_secret_value())
+    def _my_credentials(self) -> ClientCredential:
+        return ClientCredential(self.client_id.get_secret_value(), self.client_secret.get_secret_value())
     
     @property
     def _my_ctx(self) -> ClientContext:
