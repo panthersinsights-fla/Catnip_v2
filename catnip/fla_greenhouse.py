@@ -2,6 +2,8 @@ from typing import List, Optional, Dict, Any
 from fla_requests import FLA_Requests
 import requests
 import time # For rate limiting (basic example)
+import base64
+
 # from pydantic import BaseModel, SecretStr
 # from pandera import DataFrameModel
 # import httpx
@@ -38,7 +40,7 @@ class FLA_Greenhouse:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.session = FLA_Requests().create_session()
-        self.session.auth = (self.api_key, '') # Basic Auth
+        self.headers = { "Authorization": f"Basic {base64.b64encode(f"{self.api_key}:".encode()).decode()}"}
         self.last_request_time = 0
 
     def _get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict:
@@ -48,7 +50,7 @@ class FLA_Greenhouse:
             time.sleep(self.RATE_LIMIT_DELAY - time_since_last_request)
 
         url = f"{self.BASE_URL}/{endpoint}"
-        response = self.session.get(url, params=params)
+        response = self.session.get(url, headers=self.headers, params=params)
         self.last_request_time = time.monotonic()
         response.raise_for_status()
         return response.json()
@@ -62,7 +64,7 @@ class FLA_Greenhouse:
         next_page_url = f"{self.BASE_URL}/{endpoint}"
         
         while next_page_url:
-            response = self._get(next_page_url, params=params if next_page_url == f"{self.BASE_URL}/{endpoint}" else None)
+            response = self.session.get(next_page_url, headers=self.headers, params=params if next_page_url == f"{self.BASE_URL}/{endpoint}" else None)
             all_data.extend(response)
             
             next_page_url = None
