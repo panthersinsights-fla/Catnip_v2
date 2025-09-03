@@ -79,7 +79,10 @@ class FLA_Sftp(BaseModel):
             # Check if the file exists
             if self.file_exists(conn):
                 with conn.open(self.remote_path) as file:
-                    file.prefetch()  # Prefetch file content if supported
+                    try:
+                        file.prefetch()
+                    except (SFTPError, OSError):
+                        pass  # Continue without prefetch
                     
                     # Read the content from the file
                     content = file.read()
