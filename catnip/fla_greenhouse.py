@@ -69,7 +69,7 @@ class FLA_Greenhouse:
                 headers=self.headers, 
                 params=params if next_page_url == f"{self.BASE_URL}/{endpoint}" else None
             )
-            all_data.append(response.json())
+            all_data.extend(response.json())
             
             next_page_url = None
             if 'link' in response.headers:
