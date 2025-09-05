@@ -40,7 +40,7 @@ class FLA_Greenhouse:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.session = FLA_Requests().create_session()
-        self.headers = { "Authorization": f"Basic {base64.b64encode(f"{self.api_key}:".encode()).decode()}"}
+        self.headers = { "Authorization": f'Basic {base64.b64encode(f"{self.api_key}:".encode()).decode()}'}
         self.last_request_time = 0
 
     def _get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict:
@@ -100,3 +100,8 @@ class FLA_Greenhouse:
 
     def get_job_post(self, job_id: int, **kwargs) -> List[Dict]:
         return self._get(f"job_posts/{job_id}", params=kwargs)
+    
+    def download_attachment(self, attachment_url: int) -> bytes:
+        response = self.session.get(attachment_url, headers=self.headers)
+        response.raise_for_status()
+        return response.content
