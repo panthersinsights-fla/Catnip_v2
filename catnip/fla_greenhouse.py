@@ -64,8 +64,12 @@ class FLA_Greenhouse:
         next_page_url = f"{self.BASE_URL}/{endpoint}"
         
         while next_page_url:
-            response = self.session.get(next_page_url, headers=self.headers, params=params if next_page_url == f"{self.BASE_URL}/{endpoint}" else None)
-            all_data.extend(response)
+            response = self.session.get(
+                next_page_url, 
+                headers=self.headers, 
+                params=params if next_page_url == f"{self.BASE_URL}/{endpoint}" else None
+            )
+            all_data.append(response.json())
             
             next_page_url = None
             if 'link' in response.headers:
