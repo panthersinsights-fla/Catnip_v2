@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any
-from fla_requests import FLA_Requests
+from catnip.fla_requests import FLA_Requests
 import requests
 import time # For rate limiting (basic example)
 import base64
