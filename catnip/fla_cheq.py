@@ -36,7 +36,8 @@ class FLA_Cheq(BaseModel):
         self,
         start_date: datetime,
         end_date: datetime,
-        payment_status: List[int] = list(range(1, 9))
+        payment_status: List[int] = list(range(1, 9)),
+        partner_ids: List[int] = None
     ) -> List[httpx.Response]:
         
         # initialize
@@ -46,7 +47,8 @@ class FLA_Cheq(BaseModel):
         data = {
             "start_range": start_date.strftime('%Y-%m-%dT%H:%M:%SZ'),
             "end_range": end_date.strftime('%Y-%m-%dT%H:%M:%SZ'),
-            "payment_status": payment_status
+            "payment_status": payment_status,
+            **({} if partner_ids is None else {"partners": partner_ids})
         }
         continue_counter = 0
 
