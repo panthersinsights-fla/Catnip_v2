@@ -227,7 +227,7 @@ class FLA_Meta(BaseModel):
         bearer_token = response.json()['access_token']
 
         ## Override Prefect block
-        FLA_Prefect().create_secret_block(name = "meta-access-token-long", value = bearer_token)
+        FLA_Prefect().create_secret_block(name = "meta-user-access-token-long", value = bearer_token)
 
         return None
     
