@@ -195,8 +195,10 @@ class MetaClient:
 
     # --- Lead-Gen Methods ---
 
-    def get_leadgen_forms(self, page_id: str) -> Dict[str, Any]:
+    def get_leadgen_forms(self, page_id: str, params: Dict = None) -> Dict[str, Any]:
         """Gets all lead generation forms for a given page."""
+        if params is not None:
+            return self._request("GET", f"/{page_id}/leadgen_forms", params=params)
         return self._request("GET", f"/{page_id}/leadgen_forms")
 
     def get_form_submissions(self, form_id: str) -> Dict[str, Any]:
