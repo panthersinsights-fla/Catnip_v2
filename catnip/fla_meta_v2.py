@@ -201,8 +201,10 @@ class MetaClient:
             return self._request("GET", f"/{page_id}/leadgen_forms", params=params)
         return self._request("GET", f"/{page_id}/leadgen_forms")
 
-    def get_form_submissions(self, form_id: str) -> Dict[str, Any]:
+    def get_form_submissions(self, form_id: str, params: Dict = None) -> Dict[str, Any]:
         """Gets all lead submissions for a specific form."""
+        if params is not None:
+            self._request("GET", f"/{form_id}/leads", params=params)
         return self._request("GET", f"/{form_id}/leads")
 
 
