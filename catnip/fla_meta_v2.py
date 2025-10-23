@@ -201,11 +201,49 @@ class MetaClient:
             return self._request("GET", f"/{page_id}/leadgen_forms", params=params)
         return self._request("GET", f"/{page_id}/leadgen_forms")
 
-    def get_form_submissions(self, form_id: str, params: Dict = None) -> Dict[str, Any]:
+    def get_all_form_submissions(self, form_id: str, params: Dict = None) -> List[Dict[str, Any]]:
         """Gets all lead submissions for a specific form."""
+
+        # Initial Request
         if params is not None:
-            self._request("GET", f"/{form_id}/leads", params=params)
-        return self._request("GET", f"/{form_id}/leads")
+            response = self._request("GET", f"/{form_id}/leads", params=params)
+        else:
+            response = self._request("GET", f"/{form_id}/leads")
+
+        submissions = []
+        while True:
+            leads = response.get("data", [])
+            submissions.append(leads)
+
+            # Check for the next page using the official method
+            paging_info = response.get("paging")
+            if not paging_info or "next" not in paging_info:
+                # No 'next' URL means we are on the last page.
+                break 
+
+            # The 'next' URL is a full URL. We must use it directly.
+            # Our internal _request method is for relative paths, so we make a direct
+            # call with our configured httpx client.
+            next_page_url = paging_info["next"]
+            try:
+                # Make the GET request to the full URL provided by the API
+                next_response = self._http_client.get(next_page_url)
+                next_response.raise_for_status()
+                response = next_response.json()
+            except httpx.HTTPStatusError as e:
+                raise MetaAPIError(
+                    message=f"API pagination request to '{e.request.url}' failed",
+                    status_code=e.response.status_code,
+                    response_body=e.response.text,
+                ) from e
+            except json.JSONDecodeError as e:
+                raise MetaAPIError(
+                    message="Failed to decode JSON from paginated API response",
+                    status_code=next_response.status_code,
+                    response_body=next_response.text
+                ) from e
+
+        return submissions
 
 
     # --- Helper & Utility Methods ---
