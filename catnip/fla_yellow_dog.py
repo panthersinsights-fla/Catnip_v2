@@ -1,7 +1,7 @@
 import httpx
 import pandas as pd
 
-from pydantic import BaseModel, SecretStr, model_validator
+from pydantic import BaseModel, SecretStr, root_validator
 
 from pandera import DataFrameModel
 from pandera.typing import DataFrame
@@ -29,11 +29,16 @@ class FLA_Yellow_Dog(BaseModel):
 
    input_schema: DataFrameModel = None
 
-   @model_validator(mode='after')
-   def validate_auth_method(self):
+   @root_validator
+   def validate_auth_method(cls, values):
       """Ensure either access_token OR (username, password, client_id) are provided."""
-      has_token = self.access_token is not None
-      has_credentials = all([self.username, self.password, self.client_id])
+      access_token = values.get('access_token')
+      username = values.get('username')
+      password = values.get('password')
+      client_id = values.get('client_id')
+      
+      has_token = access_token is not None
+      has_credentials = all([username, password, client_id])
       
       if not has_token and not has_credentials:
          raise ValueError(
@@ -42,7 +47,7 @@ class FLA_Yellow_Dog(BaseModel):
             "  - username, password, and client_id"
          )
       
-      return self
+      return values
 
    @property
    def _base_url(self):
