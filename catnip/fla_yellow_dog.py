@@ -165,5 +165,3 @@ class FLA_Yellow_Dog(BaseModel):
          return DataFrame[self.input_schema](df)
       else:
          return pd.DataFrame(df)
-
-
