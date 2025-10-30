@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, SecretStr, root_validator
 from pandera import DataFrameModel
 from pandera.typing import DataFrame
+from catnip.redshift_helpers.lookups import REDSHIFT_RESERVED_WORDS
 import time
 import json
 
@@ -251,6 +252,43 @@ class FLA_Tableau(BaseModel):
         df = self._get_paginated_df("views", params=params)
         return self._create_dataframe(df)
     
+    def get_usage_stats(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        view_id: Optional[str] = None,
+        workbook_id: Optional[str] = None,
+        user_id: Optional[str] = None
+    ) -> pd.DataFrame:
+        """
+        Get batch usage statistics using the usage-stats endpoint.
+        
+        Args:
+            start_date: Start date for usage statistics (ISO 8601 format, e.g., "2024-01-01")
+            end_date: End date for usage statistics (ISO 8601 format, e.g., "2024-12-31")
+            view_id: Optional view ID to filter by specific view
+            workbook_id: Optional workbook ID to filter by specific workbook
+            user_id: Optional user ID to filter by specific user
+            
+        Returns:
+            DataFrame with usage statistics
+        """
+        params = {}
+        
+        if start_date:
+            params['startDate'] = start_date
+        if end_date:
+            params['endDate'] = end_date
+        if view_id:
+            params['viewId'] = view_id
+        if workbook_id:
+            params['workbookId'] = workbook_id
+        if user_id:
+            params['userId'] = user_id
+        
+        df = self._get_paginated_df("usage-stats", params=params)
+        return self._create_dataframe(df)
+    
     ############################################
     ### UPDATE ENDPOINTS #######################
     ############################################
@@ -373,9 +411,35 @@ class FLA_Tableau(BaseModel):
     ### HELPER METHODS #########################
     ############################################
     
+    def _rename_reserved_words(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Rename columns that are Redshift reserved words by appending '_column'.
+        
+        Args:
+            df: DataFrame to process
+            
+        Returns:
+            DataFrame with renamed columns
+        """
+        if df.empty:
+            return df
+        
+        reserved_words = {word.strip().lower() for word in REDSHIFT_RESERVED_WORDS}
+        rename_map = {}
+        
+        for col in df.columns:
+            col_lower = str(col).lower()
+            if col_lower in reserved_words:
+                rename_map[col] = f"{col}_column"
+        
+        if rename_map:
+            return df.rename(columns=rename_map)
+        return df
+    
     def _create_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Create DataFrame with optional schema validation.
+        Automatically renames Redshift reserved word columns.
         
         Args:
             df: DataFrame to process
@@ -383,6 +447,9 @@ class FLA_Tableau(BaseModel):
         Returns:
             Processed DataFrame
         """
+        # Rename reserved words before schema validation
+        df = self._rename_reserved_words(df)
+        
         if self.input_schema:
             return DataFrame[self.input_schema](df)
         else:
