@@ -73,7 +73,7 @@ class FLA_Yellow_Dog(BaseModel):
    @property
    def _base_headers(self):
       return {
-         "Authorization": f"Bearer {self._authenticate()}"
+         "Authorization": f"Bearer {self._authenticate}"
       }
 
    ############################################
