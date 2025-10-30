@@ -34,7 +34,8 @@ class FLA_Tableau(BaseModel):
     
     # Authentication options
     server_url: str
-    site_id: Optional[str] = None  # If None, uses default site
+    site_id: Optional[str] = None  # If None, uses default site; prefer GUID
+    site_content_url: Optional[str] = None  # Friendly site name (contentUrl)
     personal_access_token_name: Optional[str] = None
     personal_access_token: Optional[SecretStr] = None
     username: Optional[str] = None
@@ -87,12 +88,15 @@ class FLA_Tableau(BaseModel):
     
     def _sign_in(self) -> str:
         """Sign in using JSON (supports PAT or username/password) and cache token."""
+        # Determine contentUrl to use: prefer explicit site_content_url; if site_id is a non-GUID, treat it as contentUrl
+        content_url_hint = self.site_content_url or (self.site_id if (self.site_id and '-' not in self.site_id) else "")
+
         if self.personal_access_token and self.personal_access_token_name:
             payload: Dict[str, Any] = {
                 "credentials": {
                     "personalAccessTokenName": self.personal_access_token_name,
                     "personalAccessTokenSecret": self.personal_access_token.get_secret_value(),
-                    "site": {"contentUrl": ""}
+                    "site": {"contentUrl": content_url_hint}
                 }
             }
         else:
@@ -100,7 +104,7 @@ class FLA_Tableau(BaseModel):
                 "credentials": {
                     "name": self.username,
                     "password": self.password.get_secret_value(),
-                    "site": {"contentUrl": ""}
+                    "site": {"contentUrl": content_url_hint}
                 }
             }
 
@@ -111,13 +115,15 @@ class FLA_Tableau(BaseModel):
         )
         response.raise_for_status()
         data = response.json()
-        print(data)
         credentials = data.get("credentials", {})
         self.auth_token = credentials.get("token")
         # If site_id not provided, capture from sign-in response
         site_info = credentials.get("site", {})
-        if not self.site_id and site_info.get("id"):
+        if site_info.get("id"):
+            # Always store resolved GUID; also keep contentUrl if present
             self.site_id = site_info.get("id")
+            if site_info.get("contentUrl") is not None:
+                self.site_content_url = site_info.get("contentUrl")
         return self.auth_token
     
     @property
