@@ -220,7 +220,7 @@ class FLA_Tableau(BaseModel):
         """
         params = {}
         if include_usage:
-            params['includeUsage'] = 'true'
+            params['fields'] = '_all'
         
         df = self._get_paginated_df("workbooks", params=params)
         return self._create_dataframe(df)
@@ -247,7 +247,7 @@ class FLA_Tableau(BaseModel):
         """
         params = {}
         if include_usage:
-            params['includeUsage'] = 'true'
+            params['fields'] = '_all'
         
         df = self._get_paginated_df("views", params=params)
         return self._create_dataframe(df)
