@@ -71,10 +71,12 @@ class FLA_Tableau(BaseModel):
         """Base URL for Tableau REST API."""
         return f"https://{self.server_url}/api/{self.api_version}"
     
-    @property
     def _site_url(self) -> str:
-        """Site-specific URL."""
-        # If we have a concrete site_id, use it; otherwise default site
+        """Site-specific URL. Forces authentication first to ensure site_id is resolved."""
+        # Ensure authentication has happened, which will resolve site_id if needed
+        _ = self._authenticate  # Trigger authentication to resolve site_id
+        
+        # After authentication, use resolved site_id or default
         if self.site_id:
             return f"{self._base_url}/sites/{self.site_id}"
         return f"{self._base_url}/sites/default"
@@ -193,7 +195,7 @@ class FLA_Tableau(BaseModel):
             Dictionary with detailed job information
         """
         response = httpx.get(
-            f"{self._site_url}/jobs/{job_id}",
+            f"{self._site_url()}/jobs/{job_id}",
             headers=self._base_headers
         )
         response.raise_for_status()
@@ -219,15 +221,8 @@ class FLA_Tableau(BaseModel):
         if include_usage:
             params['includeUsage'] = 'true'
         
-        response = httpx.get(
-            f"{self._site_url}/workbooks",
-            headers=self._base_headers,
-            params=params
-        )
-        response.raise_for_status()
-        
-        data = response.json()
-        return self._create_dataframe(self._normalize_json(data))
+        df = self._get_paginated_df("workbooks", params=params)
+        return self._create_dataframe(df)
     
     def get_projects(self) -> pd.DataFrame:
         """
@@ -253,13 +248,6 @@ class FLA_Tableau(BaseModel):
         if include_usage:
             params['includeUsage'] = 'true'
         
-        response = httpx.get(
-            f"{self._site_url}/views",
-            headers=self._base_headers,
-            params=params
-        )
-        response.raise_for_status()
-        
         df = self._get_paginated_df("views", params=params)
         return self._create_dataframe(df)
     
@@ -280,7 +268,7 @@ class FLA_Tableau(BaseModel):
         """
         payload = {"workbook": {"name": new_name}}
         response = httpx.put(
-            f"{self._site_url}/workbooks/{workbook_id}",
+            f"{self._site_url()}/workbooks/{workbook_id}",
             json=payload,
             headers=self._base_headers
         )
@@ -326,7 +314,7 @@ class FLA_Tableau(BaseModel):
             DataFrame with permission information
         """
         response = httpx.get(
-            f"{self._site_url}/projects/{project_id}/permissions",
+            f"{self._site_url()}/projects/{project_id}/permissions",
             headers=self._base_headers
         )
         response.raise_for_status()
@@ -371,7 +359,7 @@ class FLA_Tableau(BaseModel):
             DataFrame with user information for the group
         """
         response = httpx.get(
-            f"{self._site_url}/groups/{group_id}/users",
+            f"{self._site_url()}/groups/{group_id}/users",
             headers=self._base_headers
         )
         response.raise_for_status()
@@ -452,7 +440,7 @@ class FLA_Tableau(BaseModel):
         while True:
             page_params = {**params, 'pageSize': page_size, 'pageNumber': page_number}
             response = httpx.get(
-                f"{self._site_url}/{relative_path}",
+                f"{self._site_url()}/{relative_path}",
                 headers=self._base_headers,
                 params=page_params
             )
