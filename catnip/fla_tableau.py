@@ -111,6 +111,7 @@ class FLA_Tableau(BaseModel):
         )
         response.raise_for_status()
         data = response.json()
+        print(data)
         credentials = data.get("credentials", {})
         self.auth_token = credentials.get("token")
         # If site_id not provided, capture from sign-in response
