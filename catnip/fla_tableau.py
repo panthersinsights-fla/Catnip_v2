@@ -68,7 +68,7 @@ class FLA_Tableau(BaseModel):
     @property
     def _base_url(self) -> str:
         """Base URL for Tableau REST API."""
-        return f"{self.server_url}/api/{self.api_version}"
+        return f"https://{self.server_url}/api/{self.api_version}"
     
     @property
     def _site_url(self) -> str:
