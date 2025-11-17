@@ -58,6 +58,32 @@ class FLA_Big_Commerce(BaseModel):
 
         return asyncio.run(self._request_loop_v3(endpoint= "catalog/categories"))
 
+    def get_order_coupons(self, order_ids: List[int]) -> pd.DataFrame:
+
+        # create urls
+        urls = [f"orders/{x}/coupons" for x in order_ids]
+        print(f"# URLS: {len(urls)}")
+
+        # break into batches
+        urls = self._chunk_list(urls, 25)
+
+        # request loop v2 for each batch
+        df_list = []
+        start_time = datetime.now()
+        for index, url_list in enumerate(urls):
+            print(index)
+            print(f"{datetime.now() - start_time}")
+            df_list.append(asyncio.run(self._async_gather_urls_v2(url_list=url_list)))
+            print(f"{datetime.now() - start_time}")
+
+        # df_list = [asyncio.run(self._async_gather_urls_v2(url_list=url_list)) for url_list in urls]
+        df_list = [item for sublist in df_list for item in sublist if item is not None]
+
+        # concat everything together
+        df = pd.concat(df_list, ignore_index = True)
+
+        return df
+
     def get_order_products(self, order_ids: List[int]) -> pd.DataFrame:
 
         # create urls
