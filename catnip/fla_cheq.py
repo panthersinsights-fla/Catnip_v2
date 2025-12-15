@@ -50,8 +50,8 @@ class FLA_Cheq(BaseModel):
             "start_range": start_date.strftime('%Y-%m-%dT%H:%M:%SZ'),
             "end_range": end_date.strftime('%Y-%m-%dT%H:%M:%SZ'),
             "payment_status": payment_status,
+            "include_sku": include_sku,
             **({} if order_ids is None else {"order_id": order_ids}),
-            "include_sku": include_sku, ## Add include_sku to data dictionary
             **({} if partner_ids is None else {"partners": partner_ids})
         }
         continue_counter = 0
