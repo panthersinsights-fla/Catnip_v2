@@ -37,7 +37,9 @@ class FLA_Cheq(BaseModel):
         start_date: datetime,
         end_date: datetime,
         payment_status: List[int] = list(range(1, 9)),
-        partner_ids: List[int] = None
+        partner_ids: List[int] = None,
+        order_ids: List[int] = None,
+        include_sku: bool = False
     ) -> List[httpx.Response]:
         
         # initialize
@@ -48,6 +50,8 @@ class FLA_Cheq(BaseModel):
             "start_range": start_date.strftime('%Y-%m-%dT%H:%M:%SZ'),
             "end_range": end_date.strftime('%Y-%m-%dT%H:%M:%SZ'),
             "payment_status": payment_status,
+            **({} if order_ids is None else {"order_id": order_ids}),
+            "include_sku": include_sku, ## Add include_sku to data dictionary
             **({} if partner_ids is None else {"partners": partner_ids})
         }
         continue_counter = 0
