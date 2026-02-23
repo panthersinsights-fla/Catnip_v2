@@ -104,8 +104,40 @@ class FLA_Sharepoint(BaseModel):
 
         ## Return target path
         print(target_file.serverRelativeUrl)
-        return target_file.serverRelativeUrl 
-    
+        return target_file.serverRelativeUrl
+
+
+    def upload_file(
+        self,
+        file: str | BytesIO,
+        folder_path: str,
+        file_name: str,
+        add_log_date: bool = False,
+    ) -> str:
+
+        ## Handle file input
+        if isinstance(file, str):
+            with open(file, "rb") as f:
+                file_content = f.read()
+        else:
+            file.seek(0)
+            file_content = file.read()
+
+        ## Connect folder
+        this_folder = self._my_ctx.web.get_folder_by_server_relative_path(f"Shared Documents/Data Science/{folder_path}")
+        print(this_folder)
+
+        ## Filename
+        if add_log_date:
+            file_name = f"{datetime.strftime(datetime.now(), '%Y%m%d')}-{file_name}"
+
+        ## Upload file
+        target_file = this_folder.upload_file(file_name, file_content).execute_query()
+
+        ## Return target path
+        print(target_file.serverRelativeUrl)
+        return target_file.serverRelativeUrl
+
 
     def download_file(
         self,
